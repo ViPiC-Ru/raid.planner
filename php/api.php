@@ -1,4 +1,4 @@
-<?php # 0.2.0 api для бота в discord
+<?php # 0.2.3 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.5 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.9 класс для работы с файловым реляционным хранилищем
@@ -10,21 +10,27 @@ include_once "../../libs/vendor/webSocketClient-1.0.inc.php";               // 0
 $app = array(// основной массив данных
     "val" => array(// переменные и константы
         "baseUrl" => "../base/%name%.db",                                   // шаблон url для базы данных
-        "appToken" => "MY-APP-TOKEN",                                       // защитный ключ приложения
+        "appToken" => "MY-APP-TOKEN",              						    // защитный ключ приложения
         "statusUnknown" => "Server unknown status",                         // сообщение для неизвестного статуса
         "statusLang" => "en",                                               // язык для кодов расшифровок
         "format" => "json",                                                 // формат вывода поумолчанию
-        "eventTimeAdd" => 3*24*60*60,                                       // максимальное время для записи в событие
+        "eventTimeAdd" => 5*24*60*60,                                       // максимальное время для записи в событие
         "eventTimeDelete" => 12*60*60,                                      // максимальное время хранения записи события
-        "eventTimeStep" => 1*60*60,                                         // шаг записи на событие (округление времени)
-        "eventTimeLimit" => 2,                                              // лимит записей на время для пользователя
+        "eventTimeStep" => 30*60,                                           // шаг записи на событие (округление времени)
+        "eventTimeLimit" => 1,                                              // лимит записей на время для пользователя
         "eventRaidLimit" => 1,                                              // лимит записей на время и рейд для пользователя
+        "eventCommentLength" => 200,                                        // максимальная длина комментария пользователя
+        "eventOperationCycle" => 5,                                         // с какой частотой производить регламентные операции с базой в цикле
         "discordApiUrl" => "https://discordapp.com/api",                    // базовый url для взаимодействия с Discord API
         "discordWebSocketHost" => "gateway.discord.gg",                     // адрес хоста для взаимодействия с Discord через WebSocket
         "discordWebSocketLimit" => 500,                                     // лимит итераций цикла общения WebSocket с Discord
+        "discordMessageLength" => 2000,                                     // максимальная длина сообщения в Discord
+        "discordMessageTime" => 6*60,										// максимально допустимое время между сгруппированными сообщениями
         "discordClientId" => "663665374532993044",                          // идентификатор приложения в Discord
         "discordCreatePermission" => 32768,                                 // разрешения для создание первой записи в событие (прикреплять файлы)
+        "discordUserPermission" => 16384,                                   // разрешения для записи других пользователей (встраивать ссылки)
         "discordBotPermission" => 76800,                                    // минимальные разрешения для работы бота
+        "discordBotGame" => "планирование от @ViPiC#5562",                  // анонс возле аватарки бота
         "discordBotToken" => "MY-DISCORD-BOT-TOKEN"
     ),
     "base" => array(// базы данных
@@ -37,7 +43,7 @@ $app = array(// основной массив данных
         //@param $options {array} - массив внутренних настроек
         //@param $sign {boolean|null} - успешность проверки подписи или null при её отсутствии
         //@param $status {number} - целое число статуса выполнения
-        //@return {true|null} - true или пустое значение null при ошибке
+        //@return {true|false} - были ли изменения базы событий
             global $app; $result = null;
             
             $isSessionUpdate = false;// были ли обновлены данные в базе данных
@@ -90,6 +96,37 @@ $app = array(// основной массив данных
                                             $isSessionUpdate = true;// были обновлены данные в базе данных
                                         }else $status = 309;// не удалось записать данные в базу данных
                                     }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                                case "RESUMED":// resumed
+                                    // обрабатываем возобнавление подключения
+                                    if(empty($status)){// если нет ошибок
+                                        // обновляем информацию о боте
+                                        $data = array(// данные для отправки
+                                            "op" => 3,// status update
+                                            "d" => array(// data
+                                                "since" => null,
+                                                "game" => array(
+                                                    "name" => $app["val"]["discordBotGame"],
+                                                    "type" => 0
+                                                ),
+                                                "status" => "online",
+                                                "afk" => false
+                                            )
+                                        );
+                                        $data = json_encode($data, JSON_UNESCAPED_UNICODE);
+                                        websocket_write($websocket, $data, true);
+                                    };
+                                    break;
+                                case "TYPING_START":// typing start
+                                    // обрабатываем начало набора сообщения
+                                    if(isset($data["d"]["member"]["user"]["id"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
+                                        $member = $app["fun"]["setСache"]("member", $data["d"]["member"], $data["d"]["guild_id"]);
+                                        if($member){// если удалось закешировать данные
+                                            $user = $app["fun"]["setСache"]("user", $data["d"]["member"]["user"]);
+                                            if($user){// если удалось закешировать данные
+                                                $app["fun"]["getСache"]("user", $data["d"]["member"]["user"]["id"]);
+                                            }else $app["fun"]["delСache"]("user", $data["d"]["member"]["user"]["id"]);
+                                        }else $app["fun"]["delСache"]("member", $data["d"]["member"]["user"]["id"], $data["d"]["guild_id"]);
+                                    };
                                     break;
                                 case "GUILD_CREATE":// guild create
                                 case "GUILD_UPDATE":// guild update
@@ -97,6 +134,7 @@ $app = array(// основной массив данных
                                     if(isset($data["d"]["id"])){// если есть обязательное значение
                                         $guild = $app["fun"]["setСache"]("guild", $data["d"]);
                                         if($guild){// если удалось закешировать данные
+                                            // обрабатываем гильдию
                                             $flag = $app["method"]["discord.guild"](
                                                 array(// параметры для метода
                                                     "guild" => $data["d"]["id"]
@@ -104,7 +142,7 @@ $app = array(// основной массив данных
                                                 array("nocontrol" => true),
                                                 $sign, $status
                                             );
-                                            $result = $result || $flag;
+                                            $isEventsUpdate = $isEventsUpdate || $flag;
                                         }else $app["fun"]["delСache"]("guild", $data["d"]["id"]);
                                     };
                                     break;
@@ -133,8 +171,9 @@ $app = array(// основной массив данных
                                 case "CHANNEL_UPDATE":// channel update
                                     // обрабатываем изменение канала
                                     if(isset($data["d"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
-                                        $channel = $app["fun"]["setСache"]("channel", $data["d"], $data["d"]["guild_id"]);
+                                        $channel = $app["fun"]["setСache"]("channel", $data["d"], $data["d"]["guild_id"], null);
                                         if($channel){// если удалось закешировать данные
+                                            // обрабатываем канал
                                             $flag = $app["method"]["discord.channel"](
                                                 array(// параметры для метода
                                                     "channel" => $data["d"]["id"],
@@ -143,7 +182,7 @@ $app = array(// основной массив данных
                                                 array("nocontrol" => true),
                                                 $sign, $status
                                             );
-                                            $result = $result || $flag;
+                                            $isEventsUpdate = $isEventsUpdate || $flag;
                                         }else $app["fun"]["delСache"]("channel", $data["d"]["id"], $data["d"]["guild_id"]);
                                     };
                                     break;
@@ -159,6 +198,7 @@ $app = array(// основной массив данных
                                     if(isset($data["d"]["id"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $message = $app["fun"]["setСache"]("message", $data["d"], $data["d"]["channel_id"], $data["d"]["guild_id"]);
                                         if($message){// если удалось закешировать данные
+                                            // обрабатываем сообщение
                                             $flag = $app["method"]["discord.message"](
                                                 array(// параметры для метода
                                                     "message" => $data["d"]["id"],
@@ -168,7 +208,7 @@ $app = array(// основной массив данных
                                                 array("nocontrol" => true),
                                                 $sign, $status
                                             );
-                                            $result = $result || $flag;
+                                            $isEventsUpdate = $isEventsUpdate || $flag;
                                         }else $app["fun"]["delСache"]("message", $data["d"]["id"], $data["d"]["channel_id"], $data["d"]["guild_id"]);
                                     };
                                     break;
@@ -242,11 +282,11 @@ $app = array(// основной массив данных
                             }else $status = 309;// не удалось записать данные в базу данных
                         };
                     };
-                    // выполняем регламентные операции
+                    // проверяем и поддерживаем серцебиение
                     if(empty($status)){// если нет ошибок
-                        // проверяем и поддерживаем серцебиение
                         if($heartbeatInterval > 0){// если задан интервал серцебиения
                             if($heartbeatSendTime - $heartbeatAcceptTime > $heartbeatInterval + 10){// если соединение зависло
+                                // разрываем соединение
                                 websocket_close($websocket);// закрываем старое подключение
                                 $websocket = false;// подключение закрыто
                             }else if($now - $heartbeatSendTime > $heartbeatInterval){// если нужно отправить серцебиение
@@ -260,11 +300,64 @@ $app = array(// основной массив данных
                                 $heartbeatSendTime = $now;
                             };
                         };
+                    };
+                    // выполняем операции с базами данных
+                    if(!(($index - 3) % $app["val"]["eventOperationCycle"])){// если пришло время
+                        // очищаем устаревшие записи событий
+                        if(empty($status)){// если нет ошибок
+                            if(!get_val($options, "nocontrol", false)){// если это прямой вызов
+                                $counts = array();// счётчик удалённых записей по каналам в разрезе гильдий
+                                // определяем каналы для обновления уведомлений
+                                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
+                                    $event = $events->get($events->key($i));
+                                    if(// множественное условие
+                                        $event["time"] < $now - $app["val"]["eventTimeDelete"]
+                                        or $event["time"] > $now + $app["val"]["eventTimeAdd"]
+                                    ){// если нужно удалить эту запись
+                                        if($events->set($events->key($i))){// если данные успешно добавлены
+                                            if(!isset($counts[$event["guild"]])) $counts[$event["guild"]] = array();
+                                            if(!isset($counts[$event["guild"]][$event["channel"]])) $counts[$event["guild"]][$event["channel"]] = 1;
+                                            else $counts[$event["guild"]][$event["channel"]]++;
+                                            $isEventsUpdate = true;// были обновлены данные в базе данных
+                                        }else $status = 309;// не удалось записать данные в базу данных
+                                    };
+                                };
+                                // выполняем обновление уведомлений
+                                foreach($counts as $gid => $items){// пробигаемся по гильдиям
+                                    foreach($items as $cid => $count){// пробигаемся по каналам
+                                        if($count and empty($status)){// если нужно выполнить
+                                            // обрабатываем канал
+                                            $flag = $app["method"]["discord.channel"](
+                                                array(// параметры для метода
+                                                    "channel" => $cid,
+                                                    "guild" => $gid
+                                                ),
+                                                array("nocontrol" => true),
+                                                $sign, $status
+                                            );
+                                            $isEventsUpdate = $isEventsUpdate || $flag;
+                                        };
+                                    };
+                                };
+                            };
+                        };
+                        // переодически сохраняем базу данных событий
+                        if(empty($status)){// если нет ошибок
+                            if(!get_val($options, "nocontrol", false)){// если это прямой вызов
+                                if($isEventsUpdate){// если нужно сохранить
+                                    if($events->save(true)){// если данные успешно сохранены
+                                        $isEventsUpdate = false;// были сохранены данные в базе данных
+                                    }else $status = 307;// не удалось сохранить базу данных
+                                };
+                            };
+                        };
                         // переодически сохраняем базу данных сесии
-                        if($isSessionUpdate and !(($index - 3) % 15)){// если нужно сохранить
-                            if($session->save(true)){// если данные успешно сохранены
-                                $isSessionUpdate = false;// были сохранены данные в базе данных
-                            }else $status = 307;// не удалось сохранить базу данных
+                        if(empty($status)){// если нет ошибок
+                            if($isSessionUpdate){// если нужно сохранить
+                                if($session->save(true)){// если данные успешно сохранены
+                                    $isSessionUpdate = false;// были сохранены данные в базе данных
+                                }else $status = 307;// не удалось сохранить базу данных
+                            };
                         };
                     };
                     // увеличиваем индексы
@@ -274,24 +367,24 @@ $app = array(// основной массив данных
                     and (!$websocket or websocket_check($websocket))
                 );
             };
-            // сохраняем базу данных сесии
-            if(isset($session) and !empty($session)){// если база данных загружена
-                $lock = get_val($options, "nocontrol", false);
-                if(empty($status) and $isSessionUpdate){// если нет ошибок
-                    if($session->save($lock)){// если данные успешно сохранены
-                    }else $status = 307;// не удалось сохранить базу данных
-                }else if(!$lock) $session->unlock();// разблокируем базу
-            };
             // сохраняем базу данных событий
             if(isset($events) and !empty($events)){// если база данных загружена
-                $lock = get_val($options, "nocontrol", false);
-                if(empty($status) and $isEventsUpdate){// если нет ошибок
-                    if($events->save($lock)){// если данные успешно сохранены
+                if(!get_val($options, "nocontrol", false)){// если это прямой вызов
+                    if(empty($status) and $isEventsUpdate){// если нет ошибок
+                        if($events->save(false)){// если данные успешно сохранены
+                        }else $status = 307;// не удалось сохранить базу данных
+                    }else $events->unlock();// разблокируем базу
+                };
+            };
+            // сохраняем базу данных сесии
+            if(isset($session) and !empty($session)){// если база данных загружена
+                if(empty($status) and $isSessionUpdate){// если нет ошибок
+                    if($session->save(false)){// если данные успешно сохранены
                     }else $status = 307;// не удалось сохранить базу данных
-                }else if(!$lock) $events->unlock();// разблокируем базу
+                }else $session->unlock();// разблокируем базу
             };
             // возвращаем результат
-            if(!$result and !empty($status)) $result = false;
+            $result = $isEventsUpdate;
             return $result;
         },
         "discord.guild" => function($params, $options, $sign, &$status){// обрабатываем гильдию
@@ -299,9 +392,11 @@ $app = array(// основной массив данных
         //@param $options {array} - массив внутренних настроек
         //@param $sign {boolean|null} - успешность проверки подписи или null при её отсутствии
         //@param $status {number} - целое число статуса выполнения
-        //@return {true|null} - true или пустое значение null при ошибке
+        //@return {true|false} - были ли изменения базы событий
             global $app; $result = null;
             
+            $now = microtime(true);// текущее время
+            $isEventsUpdate = false;// были ли обновлены данные в базе данных
             // получаем очищенные значения параметров
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
             $guild = $app["fun"]["getClearParam"]($params, "guild", "string");
@@ -314,29 +409,61 @@ $app = array(// основной массив данных
                     }else $status = 302;// один из обязательных параметров передан в неверном формате
                 }else $status = 301;// не передан один из обязательных параметров
             };
+            // загружаем все необходимые базы данных
+            if(empty($status)){// если нет ошибок
+                $events = $app["fun"]["getStorage"]("events", true);
+                if(!empty($events)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
             // получаем информацию о гильдии
             if(empty($status)){// если нет ошибок
                 $guild = $app["fun"]["getСache"]("guild", $guild);
                 if($guild){// если удалось получить данные
                 }else $status = 303;// переданные параметры не верны
             };
+            // очищаем устаревшие записи событий
+            if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
+                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
+                    $event = $events->get($events->key($i));
+                    if(// множественное условие
+                        $event["time"] < $now - $app["val"]["eventTimeDelete"]
+                        or $event["time"] > $now + $app["val"]["eventTimeAdd"]
+                    ){// если нужно удалить эту запись
+                        if($events->set($events->key($i))){// если данные успешно добавлены
+                            $isEventsUpdate = true;// были обновлены данные в базе данных
+                        }else $status = 309;// не удалось записать данные в базу данных
+                    };
+                };
+            };
             // выполняем обработку каналов в гильдии
             if(empty($status)){// если нет ошибок
                 for($i = count($guild["channels"]) - 1; $i > -1 and empty($status); $i--){
-                    $channel = $guild["channels"][$i];// получаем очередной элимент
-                    $flag = $app["method"]["discord.channel"](
-                        array(// параметры для метода
-                            "channel" => $channel["id"],
-                            "guild" => $guild["id"]
-                        ),
-                        array("nocontrol" => true),
-                        $sign, $status
-                    );
-                    $result = $result || $flag;
+                    if(isset($guild["channels"][$i])){// если очередной элимент существует
+                        $channel = $guild["channels"][$i];// получаем очередной элимент
+                        // обрабатываем канал
+                        $flag = $app["method"]["discord.channel"](
+                            array(// параметры для метода
+                                "channel" => $channel["id"],
+                                "guild" => $guild["id"]
+                            ),
+                            array("nocontrol" => true),
+                            $sign, $status
+                        );
+                        $isEventsUpdate = $isEventsUpdate || $flag;
+                    };
+                };
+            };
+            // сохраняем базу данных событий
+            if(isset($events) and !empty($events)){// если база данных загружена
+                if(!get_val($options, "nocontrol", false)){// если это прямой вызов
+                    if(empty($status) and $isEventsUpdate){// если нет ошибок
+                        if($events->save(false)){// если данные успешно сохранены
+                        }else $status = 307;// не удалось сохранить базу данных
+                    }else $events->unlock();// разблокируем базу
                 };
             };
             // возвращаем результат
-            if(!$result and !empty($status)) $result = false;
+            $result = $isEventsUpdate;
             return $result;
         },
         "discord.channel" => function($params, $options, $sign, &$status){// обрабатываем канал
@@ -344,9 +471,12 @@ $app = array(// основной массив данных
         //@param $options {array} - массив внутренних настроек
         //@param $sign {boolean|null} - успешность проверки подписи или null при её отсутствии
         //@param $status {number} - целое число статуса выполнения
-        //@return {true|null} - true или пустое значение null при ошибке
+        //@return {true|false} - были ли изменения базы событий
             global $app; $result = null;
             
+            $now = microtime(true);// текущее время
+            $hasPermission = false;// есть разрешения
+            $isEventsUpdate = false;// были ли обновлены данные в базе данных
             // получаем очищенные значения параметров
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
             $guild = $app["fun"]["getClearParam"]($params, "guild", "string");
@@ -360,6 +490,12 @@ $app = array(// основной массив данных
                     }else $status = 302;// один из обязательных параметров передан в неверном формате
                 }else $status = 301;// не передан один из обязательных параметров
             };
+            // загружаем все необходимые базы данных
+            if(empty($status)){// если нет ошибок
+                $events = $app["fun"]["getStorage"]("events", true);
+                if(!empty($events)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
             // получаем информацию о гильдии
             if(empty($status)){// если нет ошибок
                 $guild = $app["fun"]["getСache"]("guild", $guild);
@@ -368,28 +504,57 @@ $app = array(// основной массив данных
             };
             // получаем информацию о канале
             if(empty($status)){// если нет ошибок
-                $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"]);
+                $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"], null);
                 if($channel){// если удалось получить данные
+                    // проверяем разрешения
+                    $permission = $app["fun"]["getPermission"]($app["val"]["discordClientId"], $channel, $guild["id"]);
+                    $hasPermission = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                 }else $status = 303;// переданные параметры не верны
             };
+            // очищаем устаревшие записи событий
+            if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
+                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
+                    $event = $events->get($events->key($i));
+                    if(// множественное условие
+                        $event["time"] < $now - $app["val"]["eventTimeDelete"]
+                        or $event["time"] > $now + $app["val"]["eventTimeAdd"]
+                    ){// если нужно удалить эту запись
+                        if($events->set($events->key($i))){// если данные успешно добавлены
+                            $isEventsUpdate = true;// были обновлены данные в базе данных
+                        }else $status = 309;// не удалось записать данные в базу данных
+                    };
+                };
+            };
             // выполняем обработку сообщений в канале
-            if(empty($status)){// если нет ошибок
+            if(empty($status) and $hasPermission){// если нужно выполнить
                 for($i = count($channel["messages"]) - 1; $i > -1 and empty($status); $i--){
-                    $message = $channel["messages"][$i];// получаем очередной элимент
-                    $flag = $app["method"]["discord.message"](
-                        array(// параметры для метода
-                            "message" => $message["id"],
-                            "channel" => $channel["id"],
-                            "guild" => $guild["id"]
-                        ),
-                        array("nocontrol" => true),
-                        $sign, $status
-                    );
-                    $result = $result || $flag;
+                    if(isset($channel["messages"][$i])){// если очередной элимент существует
+                        $message = $channel["messages"][$i];// получаем очередной элимент
+                        // обрабатываем сообшение
+                        $flag = $app["method"]["discord.message"](
+                            array(// параметры для метода
+                                "message" => $message["id"],
+                                "channel" => $channel["id"],
+                                "guild" => $guild["id"]
+                            ),
+                            array("nocontrol" => true),
+                            $sign, $status
+                        );
+                        $isEventsUpdate = $isEventsUpdate || $flag;
+                    };
+                };
+            };
+            // сохраняем базу данных событий
+            if(isset($events) and !empty($events)){// если база данных загружена
+                if(!get_val($options, "nocontrol", false)){// если это прямой вызов
+                    if(empty($status) and $isEventsUpdate){// если нет ошибок
+                        if($events->save(false)){// если данные успешно сохранены
+                        }else $status = 307;// не удалось сохранить базу данных
+                    }else $events->unlock();// разблокируем базу
                 };
             };
             // возвращаем результат
-            if(!$result and !empty($status)) $result = false;
+            $result = $isEventsUpdate;
             return $result;
         },
         "discord.message" => function($params, $options, $sign, &$status){// обрабатываем сообщение
@@ -397,10 +562,11 @@ $app = array(// основной массив данных
         //@param $options {array} - массив внутренних настроек
         //@param $sign {boolean|null} - успешность проверки подписи или null при её отсутствии
         //@param $status {number} - целое число статуса выполнения
-        //@return {true|null} - true или пустое значение null при ошибке
+        //@return {true|false} - были ли изменения базы событий
             global $app; $result = null;
             
             $error = 0;// код ошибки для обратной связи
+            $hasPermission = false;// есть разрешения
             $now = microtime(true);// текущее время
             $isEventsUpdate = false;// были ли обновлены данные в базе данных
             // получаем очищенные значения параметров
@@ -466,19 +632,21 @@ $app = array(// основной массив данных
             };
             // получаем информацию о канале
             if(empty($status)){// если нет ошибок
-                $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"]);
+                $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"], null);
                 if($channel){// если удалось получить данные
+                    // проверяем разрешения
+                    $permission = $app["fun"]["getPermission"]($app["val"]["discordClientId"], $channel, $guild["id"]);
+                    $hasPermission = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                 }else $status = 303;// переданные параметры не верны
             };
             // получаем информацию о сообщении
-            if(empty($status)){// если нет ошибок
+            if(empty($status) and $hasPermission){// если нужно выполнить
                 $message = $app["fun"]["getСache"]("message", $message, $channel["id"], $guild["id"]);
                 if($message){// если удалось получить данные
                 }else $status = 303;// переданные параметры не верны
             };
             // очищаем устаревшие записи событий
-            if(empty($status)){// если нет ошибок
-                $now = microtime(true);// текущее время
+            if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
                 for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
                     $event = $events->get($events->key($i));
                     if(// множественное условие
@@ -492,21 +660,20 @@ $app = array(// основной массив данных
                 };
             };
             // обрабатываем сообщение
-            if(empty($status)){// если нет ошибок
+            if(empty($status) and $hasPermission){// если нужно выполнить
                 if(// множественное условие
                     !$message["pinned"] and !$message["type"]
                     and $message["author"]["id"] != $app["val"]["discordClientId"]
                 ){// если это сообщение с командой
-                    $now = microtime(true);// текущее время
                     $command = array();// команда заложенная в сообщение
                     // определяем команду в сообщении
                     if(empty($error)){// если нет проблем
                         $delim = " ";// разделитель параметров в сообщении
                         $time = "";// дата и время одной строкой
                         $content = $message["content"];// получаем содержимое сообщения
-                        ///////////////////////////////////////////////////////////////////////////////
-                        $value ="";// значение действия
-                        // обробатываем синоним действия
+                        ////////////////////////////////////////////////// - действие
+                        $value ="";// значение
+                        // обробатываем синоним
                         for($i = 0, $iLen = $actions->length; $i < $iLen; $i++){
                             $key = $actions->key($i);// получаем ключевой идентификатор по индексу
                             $item = $actions->get($key);// получаем элимент по идентификатору
@@ -528,28 +695,37 @@ $app = array(// основной массив данных
                         if(0 === mb_stripos($content, $delim)){// если есть разделитель
                             $content = mb_substr($content, mb_strlen($delim));
                         };
-                        ///////////////////////////////////////////////////////////////////////////////
-                        $value ="";// значение роли
+                        ////////////////////////////////////////////////// - роль
+                        $value ="";// значение
                         // обрабатываем параметр
                         if(!mb_strlen($value)){// если параметр ещё не определён
                             $index = mb_stripos($content, $delim);
                             if(false === $index) $value = $content;
                             else $value = mb_substr($content, 0, $index);
                             $command["role"] = mb_strtolower($value);
+                            // обробатываем синоним
+                            for($i = 0, $iLen = $roles->length; $i < $iLen; $i++){
+                                $key = $roles->key($i);// получаем ключевой идентификатор по индексу
+                                $item = $roles->get($key);// получаем элимент по идентификатору
+                                if($item["synonym"] == mb_strtolower($value)){// если найдено совпадение
+                                    $command["role"] = $item["key"];
+                                    break;
+                                };
+                            };
                         };
                         // готовимся к следующему
                         $content = mb_substr($content, mb_strlen($value));
                         if(0 === mb_stripos($content, $delim)){// если есть разделитель
                             $content = mb_substr($content, mb_strlen($delim));
                         };
-                        ///////////////////////////////////////////////////////////////////////////////
-                        $value ="";// значение даты
+                        ////////////////////////////////////////////////// - дата
+                        $value ="";// значение
                         // обрабатываем параметр
                         if(!mb_strlen($value)){// если параметр ещё не определён
                             $index = mb_stripos($content, $delim);
                             if(false === $index) $value = $content;
                             else $value = mb_substr($content, 0, $index);
-                            // обробатываем синоним даты
+                            // обробатываем синоним
                             for($i = 0, $iLen = $dates->length; $i < $iLen; $i++){
                                 $key = $dates->key($i);// получаем ключевой идентификатор по индексу
                                 $item = $dates->get($key);// получаем элимент по идентификатору
@@ -557,16 +733,16 @@ $app = array(// основной массив данных
                                     mb_strtolower($value) == mb_strtolower($item["key"])
                                     or mb_strtolower($value) == mb_strtolower($item["synonym"])
                                 ){// если найдено совпадение
-                                    $time = date("d.m.Y", strtotime($item["key"], $now));
+                                    $time = date("d.m.Y", strtotime($item["key"], $message["timestamp"]));
                                     break;
                                 };
                             };
                             // обрабатваем короткое написание
                             if(!mb_strlen($time)){// если время ещё не задано
                                 if(preg_match("/^\d{1,2}\.\d{2}$/", $value)){
-                                    $t1 = strtotime($value . "." . date("Y", $now), $now);
-                                    $t2 = strtotime($value . "." . date("Y", strtotime("+1 year", $now)), $now);
-                                    $time = date("d.m.Y", abs($t1 - $now) < abs($t2 - $now) ? $t1 : $t2);
+                                    $t1 = strtotime($value . "." . date("Y", $message["timestamp"]), $message["timestamp"]);
+                                    $t2 = strtotime($value . "." . date("Y", strtotime("+1 year", $message["timestamp"])), $message["timestamp"]);
+                                    $time = date("d.m.Y", abs($t1 - $message["timestamp"]) < abs($t2 - $message["timestamp"]) ? $t1 : $t2);
                                 }else $time = $value;
                             };
                         };
@@ -575,8 +751,8 @@ $app = array(// основной массив данных
                         if(0 === mb_stripos($content, $delim)){// если есть разделитель
                             $content = mb_substr($content, mb_strlen($delim));
                         };
-                        ///////////////////////////////////////////////////////////////////////////////
-                        $value ="";// значение времени
+                        ////////////////////////////////////////////////// - время
+                        $value ="";// значение
                         // обрабатываем параметр
                         if(!mb_strlen($value)){// если параметр ещё не определён
                             $index = mb_stripos($content, $delim);
@@ -594,8 +770,8 @@ $app = array(// основной массив данных
                         if(0 === mb_stripos($content, $delim)){// если есть разделитель
                             $content = mb_substr($content, mb_strlen($delim));
                         };
-                        ///////////////////////////////////////////////////////////////////////////////
-                        $value ="";// значение рейда
+                        ////////////////////////////////////////////////// - рейд
+                        $value ="";// значение
                         // обрабатываем параметр
                         if(!mb_strlen($value)){// если параметр ещё не определён
                             $index = mb_stripos($content, $delim);
@@ -608,15 +784,32 @@ $app = array(// основной массив данных
                         if(0 === mb_stripos($content, $delim)){// если есть разделитель
                             $content = mb_substr($content, mb_strlen($delim));
                         };
-                        ///////////////////////////////////////////////////////////////////////////////
-                        $value ="";// значение опции
+                        ////////////////////////////////////////////////// - пользователь
+                        $value ="";// значение
+                        // обрабатываем параметр
+                        if(!mb_strlen($value)){// если параметр ещё не определён
+                            $index = mb_stripos($content, $delim);
+                            if(false === $index) $value = $content;
+                            else $value = mb_substr($content, 0, $index);
+                            $command["user"] = "";// начальное значение
+                            if(preg_match("/^<@!?(\d+)>$/", $value, $list)){
+                                $command["user"] = $list[1];// получаем идентификатор пользователя
+                                // готовимся к следующему
+                                $content = mb_substr($content, mb_strlen($value));
+                                if(0 === mb_stripos($content, $delim)){// если есть разделитель
+                                    $content = mb_substr($content, mb_strlen($delim));
+                                };
+                            };
+                        };
+                        ////////////////////////////////////////////////// - опция
+                        $value ="";// значение
                         // обрабатываем параметр
                         if(!mb_strlen($value)){// если параметр ещё не определён
                             $index = mb_stripos($content, $delim);
                             if(false === $index) $value = $content;
                             else $value = mb_substr($content, 0, $index);
                             $command["addition"] = mb_strtolower($value);
-                            // обробатываем синоним опции
+                            // обробатываем синоним
                             for($i = 0, $iLen = $additions->length; $i < $iLen; $i++){
                                 $key = $additions->key($i);// получаем ключевой идентификатор по индексу
                                 $item = $additions->get($key);// получаем элимент по идентификатору
@@ -627,7 +820,22 @@ $app = array(// основной массив данных
                                     $command["addition"] = $item["key"];
                                     break;
                                 };
-                            };                            
+                            };
+                        };
+                        // готовимся к следующему
+                        $content = mb_substr($content, mb_strlen($value));
+                        if(0 === mb_stripos($content, $delim)){// если есть разделитель
+                            $content = mb_substr($content, mb_strlen($delim));
+                        };
+                        ////////////////////////////////////////////////// - комментарий
+                        $value ="";// значение
+                        $delim = "\n";// разделитель
+                        // обрабатываем параметр
+                        if(!mb_strlen($value)){// если параметр ещё не определён
+                            $index = mb_stripos($content, $delim);
+                            if(false === $index) $value = $content;
+                            else $value = mb_substr($content, 0, $index);
+                            $command["comment"] = trim($value);
                         };
                         // готовимся к следующему
                         $content = mb_substr($content, mb_strlen($value));
@@ -644,33 +852,74 @@ $app = array(// основной массив данных
                                     if(!empty($command["role"])){// если проверка пройдена
                                     }else $error = 2;
                                 };
+                                // проверяем ограничения на комментарий
+                                if(empty($error)){// если нет проблем
+                                    $value = $app["val"]["eventCommentLength"];
+                                    if(mb_strlen($command["comment"]) <= $value){// если проверка пройдена
+                                    }else $error = 3;
+                                };
+                                // считаем записи и задамём значения по умолчанию
+                                if(empty($error)){// если нет проблем
+                                    // считаем количество записей
+                                    $counts = array();// счётчик записи
+                                    for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
+                                        $id = $events->key($i);// получаем ключевой идентификатор по индексу
+                                        $event = $events->get($id);// получаем элимент по идентификатору
+                                        if(// множественное условие
+                                            $event["channel"] == $channel["id"]
+                                            and $event["guild"] == $guild["id"]
+                                        ){// если нужно посчитать счётчик
+                                            if(!isset($counts[$event["time"]])) $counts[$event["time"]] = array();
+                                            if(!isset($counts[$event["time"]][$event["raid"]])) $counts[$event["time"]][$event["raid"]] = 1;
+                                            else $counts[$event["time"]][$event["raid"]]++;
+                                            $item = $event;
+                                        };
+                                    };
+                                    // считаем количество рейдов
+                                    $count = 0;// количество рейдов
+                                    foreach($counts as $items){
+                                        foreach($items as $value){
+                                            $count++;
+                                        };
+                                    };
+                                    // задаём значения по умолчанию
+                                    if(1 == $count){// если в канале один рейд
+                                        $flag = true;// если значение ещё не задано
+                                        // задаём значение рейда по умолчанию
+                                        $flag = ($flag and empty($command["raid"]));
+                                        if($flag) $command["raid"] = mb_strtolower($item["raid"]);
+                                        // задаём значение времени по умолчанию
+                                        $flag = ($flag and empty($command["time"]));
+                                        if($flag) $command["time"] = $item["time"];
+                                    };
+                                };
                                 // проверяем что указано время
                                 if(empty($error)){// если нет проблем
                                     if(!empty($command["time"])){// если проверка пройдена
-                                    }else $error = 3;
+                                    }else $error = 4;
                                 };
                                 // проверяем что указан рейд
                                 if(empty($error)){// если нет проблем
                                     if(!empty($command["raid"])){// если проверка пройдена
-                                    }else $error = 4;
+                                    }else $error = 5;
                                 };
                                 // проверяем ограничения по времени записи
                                 if(empty($error)){// если нет проблем
                                     if(// множественное условие
-                                        $command["time"] >= $now
-                                        and $command["time"] <= $now + $app["val"]["eventTimeAdd"]
+                                        $command["time"] >= $message["timestamp"]
+                                        and $command["time"] <= $message["timestamp"] + $app["val"]["eventTimeAdd"]
                                     ){// если проверка пройдена
-                                    }else $error = 5;
+                                    }else $error = 6;
                                 };
                                 // проверяем корректность указания игровой роли
                                 if(empty($error)){// если нет проблем
                                     for($role = null, $i = 0, $iLen = $roles->length; $i < $iLen and empty($role); $i++){
                                         $key = $roles->key($i);// получаем ключевой идентификатор по индексу
                                         $item = $roles->get($key);// получаем элимент по идентификатору
-                                        if($item["key"] == $command["role"] or $item["synonym"] == $command["role"]) $role = $item;
+                                        if($item["key"] == $command["role"]) $role = $item;
                                     };
                                     if(!empty($role)){// если проверка пройдена
-                                    }else $error = 6;
+                                    }else $error = 7;
                                 };
                                 // проверяем корректность указания рейда
                                 if(empty($error)){// если нет проблем
@@ -680,7 +929,13 @@ $app = array(// основной массив данных
                                         if(mb_strtolower($item["key"]) == $command["raid"]) $raid = $item;
                                     };
                                     if(!empty($raid)){// если проверка пройдена
-                                    }else $error = 7;
+                                    }else $error = 8;
+                                };
+                                // проверяем возможность использовать роль в рейде
+                                if(empty($error)){// если нет проблем
+                                    $limit = $raid[$role["key"]];
+                                    if($limit > -1){// если проверка пройдена
+                                    }else $error = 9;
                                 };
                                 // проверяем ограничивающий фильтр в имени канала
                                 if(empty($error)){// если нет проблем
@@ -697,7 +952,15 @@ $app = array(// основной массив данных
                                         empty($counts["channel"])
                                         or !empty($counts["raid"])
                                     ){// если проверка пройдена
-                                    }else $error = 8;
+                                    }else $error = 10;
+                                };
+                                // определяем контекст пользователя
+                                if(empty($error)){// если нет проблем
+                                    if(!empty($command["user"])) $uid = $command["user"];
+                                    else $uid = $message["author"]["id"];
+                                    $member = $app["fun"]["getСache"]("member", $uid, $guild["id"]);
+                                    if($member){// если удалось получить данные
+                                    }else $error = 11;
                                 };
                                 // считаем записи и проверяем лимиты
                                 if(empty($error)){// если нет проблем
@@ -713,12 +976,12 @@ $app = array(// основной массив данных
                                             if(// множественное условие
                                                 $event["raid"] == $raid["key"]
                                                 and $event["time"] == $command["time"]
-                                            ){// если пользователь и время совпадает
+                                            ){// если рейд и время совпадает
                                                 $counts["item"]++;// увеличиваем счётчик совпадений
                                             };
                                             // в разрезе пользователя
                                             if(// множественное условие
-                                                $event["user"] == $message["author"]["id"]
+                                                $event["user"] == $member["user"]["id"]
                                                 and $event["time"] == $command["time"]
                                             ){// если пользователь и время совпадает
                                                 $counts["time"]++;// увеличиваем счётчик совпадений
@@ -732,14 +995,21 @@ $app = array(// основной массив данных
                                         $counts["raid"] < $app["val"]["eventRaidLimit"]
                                         and $counts["time"] < $app["val"]["eventTimeLimit"]
                                     ){// если проверка пройдена
-                                    }else $error = 9;
+                                    }else $error = 12;
+                                };
+                                // проверяем права на создание записи от других пользователей
+                                if(empty($error) and $member["user"]["id"] != $message["author"]["id"]){// если нужно выполнить
+                                    $permission = $app["fun"]["getPermission"]($message["author"]["id"], $channel["id"], $guild["id"]);
+                                    $flag = ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"];
+                                    if($flag){// если проверка пройдена
+                                    }else $error = 13;
                                 };
                                 // проверяем права на создание первой записи
-                                if(empty($error)){// если нет проблем
+                                if(empty($error) and empty($counts["item"])){// если нужно выполнить
                                     $permission = $app["fun"]["getPermission"]($message["author"]["id"], $channel["id"], $guild["id"]);
                                     $flag = ($permission & $app["val"]["discordCreatePermission"]) == $app["val"]["discordCreatePermission"];
                                     if($flag){// если проверка пройдена
-                                    }else $error = 10;
+                                    }else $error = 14;
                                 };
                                 // формируем элимент события
                                 if(empty($error)){// если нет проблем
@@ -747,7 +1017,8 @@ $app = array(// основной массив данных
                                     $event = array(// новая запись
                                         "guild" => $guild["id"],
                                         "channel" => $channel["id"],
-                                        "user" => $message["author"]["id"],
+                                        "user" => $member["user"]["id"],
+                                        "comment" => $command["comment"],
                                         "time" => $command["time"],
                                         "raid" => $raid["key"],
                                         "role" => $role["key"],
@@ -763,7 +1034,7 @@ $app = array(// основной массив данных
                                         case "":// опция не указана
                                             break;
                                         default:// не известная опция
-                                            $error = 11;
+                                            $error = 15;
                                     };
                                 };
                                 // добавляем данные в базу данных
@@ -774,26 +1045,27 @@ $app = array(// основной массив данных
                                 };
                                 break;
                             case "remove":// удалить запись
+                                $leader = null;// идентификатор рейд лидера
                                 // проверяем ограничения по времени записи
                                 if(empty($error)){// если нет проблем
                                     if(// множественное условие
-                                        $command["time"] >= $now
+                                        $command["time"] >= $message["timestamp"]
                                         or empty($command["time"])
                                     ){// если проверка пройдена
-                                    }else $error = 12;
+                                    }else $error = 16;
                                 };                                
                                 // проверяем корректность указания игровой роли
                                 if(empty($error)){// если нет проблем
                                     for($role = null, $i = 0, $iLen = $roles->length; $i < $iLen and empty($role); $i++){
                                         $key = $roles->key($i);// получаем ключевой идентификатор по индексу
                                         $item = $roles->get($key);// получаем элимент по идентификатору
-                                        if($item["key"] == $command["role"] or $item["synonym"] == $command["role"]) $role = $item;
+                                        if($item["key"] == $command["role"]) $role = $item;
                                     };
                                     if(// множественное условие
                                         empty($command["role"])
                                         or !empty($role)
                                     ){// если проверка пройдена
-                                    }else $error = 13;
+                                    }else $error = 17;
                                 };
                                 // проверяем корректность указания рейда
                                 if(empty($error)){// если нет проблем
@@ -806,7 +1078,22 @@ $app = array(// основной массив данных
                                         empty($command["raid"])
                                         or !empty($raid)
                                     ){// если проверка пройдена
-                                    }else $error = 14;
+                                    }else $error = 18;
+                                };
+                                // определяем контекст пользователя
+                                if(empty($error)){// если нет проблем
+                                    if(!empty($command["user"])) $uid = $command["user"];
+                                    else $uid = $message["author"]["id"];
+                                    $user = $app["fun"]["getСache"]("user", $uid);
+                                    if($user){// если удалось получить данные
+                                    }else $error = 19;
+                                };
+                                // проверяем права на удаление записей других пользователей
+                                if(empty($error) and $user["id"] != $message["author"]["id"]){// если нужно выполнить
+                                    $permission = $app["fun"]["getPermission"]($message["author"]["id"], $channel["id"], $guild["id"]);
+                                    $flag = ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"];
+                                    if($flag){// если проверка пройдена
+                                    }else $error = 20;
                                 };
                                 // удаляем записи событий
                                 if(empty($error)){// если нет проблем
@@ -816,11 +1103,11 @@ $app = array(// основной массив данных
                                         if(// множественное условие
                                             $event["channel"] == $channel["id"]
                                             and $event["guild"] == $guild["id"]
-                                            and $event["user"] == $message["author"]["id"]
+                                            and $event["user"] == $user["id"]
                                             and (empty($command["time"]) or $event["time"] == $command["time"])
                                             and (empty($role) or $event["role"] == $role["key"])
                                             and (empty($raid) or $event["raid"] == $raid["key"])
-                                            and ($event["time"] >= $now)
+                                            and ($event["time"] >= $message["timestamp"])
                                         ){// если нужно удалить запись из событий
                                             if($events->set($id)){// если данные успешно удалены
                                                 $isEventsUpdate = true;// были обновлены данные в базе данных
@@ -839,87 +1126,62 @@ $app = array(// основной массив данных
                         if(empty($status)){// если нет ошибок
                             $feedback = $feedbacks->get($error);// получаем элимент по идентификатору
                             if(!empty($feedback)) $content = template($feedback["content"], $command);
-                            if(empty($content)) $content = "Из-за непредвиденной проблемы я не смог записать вас.";
+                            if(empty($content)) $content = "Ваше сообщение не обработано из-за непредвиденной проблемы.";
                         };
                         // получаем идентификатор личного канала
                         if(empty($status)){// если нет ошибок
-                            $headers = array(// заголовки для запроса
-                                "authorization" => "Bot " . $app["val"]["discordBotToken"],
-                                "content-type" => "application/json;charset=utf-8"
-                            );
-                            $url = $app["val"]["discordApiUrl"] . "/users/" . $app["val"]["discordClientId"] . "/channels";
-                            $data = array("recipient_id" => $message["author"]["id"]);
-                            $data = json_encode($data, JSON_UNESCAPED_UNICODE);
-                            $data = http("post", $url, $data, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                                if(isset($data["id"]) and !empty($data["id"])){// если есть данные
-                                }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
-                            }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                            $user = $app["fun"]["getСache"]("user", $message["author"]["id"]);
+                            if(isset($user["channels"][0])){// если личный канал существует
+                                $item = $user["channels"][0];// получаем очередной элимент
+                            }else $status = 310;// не корректный внутренний запрос
                         };
                         // отправляем личное сообщение
                         if(empty($status)){// если нет ошибок
-                            $headers = array(// заголовки для запроса
-                                "authorization" => "Bot " . $app["val"]["discordBotToken"],
-                                "content-type" => "application/json;charset=utf-8"
-                            );
-                            $url = $app["val"]["discordApiUrl"] . "/channels/" . $data["id"] . "/messages";
+                            $uri = "/channels/" . $item["id"] . "/messages";
                             $data = array("content" => $content);
-                            $data = json_encode($data, JSON_UNESCAPED_UNICODE);
-                            $data = http("post", $url, $data, null, $headers, false);
-                            if(200 == $data["status"] or 403 == $data["status"]){// если была попытка отправить
+                            $data = $app["fun"]["apiRequest"]("post", $uri, $data, $code);
+                            if(200 == $code or 403 == $code){// если запрос выполнен успешно
                             }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                         };
                     };
-                };        
+                };
             };
             // удаляем сообщение
-            if(empty($status)){// если нет ошибок
+            if(empty($status) and $hasPermission){// если нужно выполнить
                 if(// множественное условие
                     !$message["pinned"]
                     and $message["author"]["id"] != $app["val"]["discordClientId"]
                 ){// если это сообщение можно удалить
-                    $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                    $url = $app["val"]["discordApiUrl"] . "/channels/" . $channel["id"] . "/messages/" . $message["id"];
-                    $data = http("delete", $url, null, null, $headers, false);
-                    if(204 == $data["status"] or 404 == $data["status"]){// если сообщение удалено
+                    $uri = "/channels/" . $channel["id"] . "/messages/" . $message["id"];
+                    $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                    if(204 == $code or 404 == $code){// если запрос выполнен успешно
                         $app["fun"]["delСache"]("message", $message["id"], $channel["id"], $guild["id"]);
                     }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                 };
             };
-            // удаляем все сообщения бота кроме первого
-            if(empty($status)){// если нет ошибок
-                $notification = null;// сообщение для уведомления
-                for($i = count($channel["messages"]) - 1; $i > -1 and empty($status); $i--){
-                    $item = $channel["messages"][$i];// получаем очередной элимент
-                    if($item["author"]["id"] == $app["val"]["discordClientId"]){// если это сообщение бота
-                        if($item["type"] or !empty($notification)){// если это сообщение нужно удалить
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/channels/" . $channel["id"] . "/messages/" . $item["id"];
-                            $data = http("delete", $url, null, null, $headers, false);
-                            if(204 == $data["status"] or 404 == $data["status"]){// если сообщение удалено
-                                $app["fun"]["delСache"]("message", $item["id"], $channel["id"], $guild["id"]);
-                            }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
-                        }else $notification = $item;
-                    };
-                };
-            };
-            // формируем текст уведомления
-            if(empty($status)){// если нет ошибок
+            // формируем текст для уведомлений
+            if(empty($status) and $hasPermission){// если нужно выполнить
+                $delim = "\n";// разделитель строк
+                $lines = array();// список строк
+                $blocks = array();// список блоков
+                $contents = array();// контент для сообщений
                 // формируем список записей для отображения
-                $leaders = array();// лидеры для групп
                 $limits = array();// лимиты для рейдов
+                $leaders = array();// лидеры для групп
+                $comments = array();// комментарии для групп
                 $counts = array();// счётчики для распеределения на группы
                 $items = array();// список записей событий
                 $index = 0;// индекс элимента в новом массиве
                 for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
                     $id = $events->key($i);// получаем ключевой идентификатор по индексу
                     $item = $events->get($id);// получаем элимент по идентификатору
+                    $raid = $raids->get($item["raid"]);
+                    $limit = $raid[$item["role"]];
                     if(// множественное условие
                         $item["channel"] == $channel["id"]
                         and $item["guild"] == $guild["id"]
+                        and $limit > -1
                     ){// если нужно включить запись в уведомление
-                        $raid = $raids->get($item["raid"]);
                         // считаем без учётом группы
                         if(!isset($counts[$item["time"]])) $counts[$item["time"]] = array();
                         if(!isset($counts[$item["time"]][$item["raid"]])) $counts[$item["time"]][$item["raid"]] = array();
@@ -934,14 +1196,15 @@ $app = array(// основной массив данных
                             for($limit = 1, $j = 0, $jLen = $roles->length; $j < $jLen and $limit; $j++){
                                 $role = $roles->get($roles->key($j));// получаем очередную роль
                                 $limit = $raid[$role["key"]];// получаем значение лимита
-                                if($limit) $limits[$item["raid"]] += $limit;
-                                else $limits[$item["raid"]] = 0;                                                                    
+                                if($limit > 0) $limits[$item["raid"]] += $limit;
+                                if(!$limit) $limits[$item["raid"]] = 0;
                             };
                         };
                         // определяем группу
                         $limit = $raid[$item["role"]];
                         $count = $counts[$item["time"]][$item["raid"]][0][$item["role"]];
                         $group = $limit ? ceil($count / $limit) : 1;
+                        if(1 != $group) $group = 2;// ризиновая резервная группа
                         // считаем с учётом группы
                         if(!isset($counts[$item["time"]][$item["raid"]][$group])) $counts[$item["time"]][$item["raid"]][$group] = array();
                         if(!isset($counts[$item["time"]][$item["raid"]][$group][""])) $counts[$item["time"]][$item["raid"]][$group][""] = 1;
@@ -955,12 +1218,20 @@ $app = array(// основной массив данных
                         $leader = $leaders[$item["time"]][$item["raid"]][$group];
                         $limit = $limits[$item["raid"]];// получаем значение лимита
                         $count = $counts[$item["time"]][$item["raid"]][$group][""];
-                        if($index != $leader){// если лидер не текущий элимент
-                            if(!$items[$leader]["leader"]){// если лидер выбран системой
-                                if($item["leader"]) $leader = $leaders[$item["time"]][$item["raid"]][$group] = $index;
-                                else if($count == $limit) $items[$leader]["leader"] = true;
-                            }else if($item["leader"]) $item["leader"] = false;
-                        }else if($count == $limit) $item["leader"] = true;
+                        if(1 == $group){// если это основная группа
+                            if($index != $leader){// если лидер не текущий элимент
+                                if(!$items[$leader]["leader"]){// если лидер выбран системой
+                                    if($item["leader"]) $leader = $leaders[$item["time"]][$item["raid"]][$group] = $index;
+                                    else if($count == $limit) $items[$leader]["leader"] = true;
+                                }else if($item["leader"]) $item["leader"] = false;
+                            }else if($count == $limit) $item["leader"] = true;
+                        }else $item["leader"] = false;
+                        // определяем комментарий группы
+                        if(!isset($comments[$item["time"]])) $comments[$item["time"]] = array();
+                        if(!isset($comments[$item["time"]][$item["raid"]])) $comments[$item["time"]][$item["raid"]] = array();
+                        if($index != $leader and $items[$leader]["leader"]) $comment = $items[$leader]["comment"];
+                        else $comment = ($item["leader"] ? $item["comment"] : "");
+                        $comments[$item["time"]][$item["raid"]][$group] = $comment;
                         // расширяем свойства элимента
                         $days = array("Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота");
                         $months = array("", "Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря");
@@ -984,78 +1255,244 @@ $app = array(// основной массив данных
                     // возвращаем результат
                     return $value;
                 });
-                // формируем содержимое сообщения
-                $content = "";// начальное значение для формирования контента
+                // формируем контент для уведомлений
                 $before = null;// предыдущий элимент
+                $length = 0;// длина текущего уведомления
+                $line = "";// сбрасываем значение строки
                 if(count($items)){// если есть элименты для отображения
                     for($i = 0, $iLen = count($items); $i < $iLen; $i++){
                         $item = $items[$i];// получаем очередной элимент
                         $raid = $raids->get($item["raid"]);
                         $role = $roles->get($item["role"]);
+                        $type = $types->get($raid["type"]);
                         // построчно формируем текст содержимого
-                        if(empty($before) or $before["title"] != $item["title"]) $content .= (!empty($content) ? "\n\n" : "") . "__**" . $item["title"] . "** - " . $item["day"] . "__";
-                        if(empty($before) or $before["group"] != $item["group"] or $before["time"] != $item["time"] or $before["raid"] != $item["raid"]){
+                        if(// множественное условие
+                            empty($before)
+                            or $before["title"] != $item["title"]
+                        ){// если нужно добавить информацию о дате
+                            // формируем блок и контент    
+                            $count = 0;// длина текущего блока
+                            $flag = count($lines);
+                            if(mb_strlen($line) and $flag){// если есть строка данных
+                                array_push($lines, $line);
+                                $line = "_ _";// пустая строка
+                                array_push($lines, $line);
+                            };
+                            if($flag){// если сформирован блок
+                                if($length) $length += mb_strlen($delim);
+                                $block = implode($delim, $lines);
+                                $count = mb_strlen($block);
+                            };
+                            if(// множественное условие
+                                count($blocks)
+                                and $length + $count > $app["val"]["discordMessageLength"]
+                            ){// если сформирован контент
+                                $content = implode($delim, $blocks);
+                                array_push($contents, $content);
+                                $blocks = array();
+                                $length = 0;
+                            };
+                            if($flag){// если сформирован блок
+                                array_push($blocks, $block);
+                                $length += $count;
+                                $lines = array();
+                            };
+                            // формируем строки данных
+                            $line = "**```" . $item["title"] . " - " . $item["day"] . "```**";
+                            array_push($lines, $line);
+                        };
+                        if(// множественное условие
+                            empty($before)
+                            or $before["group"] != $item["group"]
+                            or $before["time"] != $item["time"]
+                            or $before["raid"] != $item["raid"]
+                        ){// если нужно добавить информацию о времени
+                            // формируем блок и контент    
+                            $count = 0;// длина текущего блока
+                            $flag = (count($lines) and $before["title"] == $item["title"]);
+                            if(mb_strlen($line) and $flag){// если есть строка данных
+                                array_push($lines, $line);
+                                if(1 == $item["group"]){// если это основная группа
+                                    $line = "_ _";// пустая строка
+                                    array_push($lines, $line);
+                                };
+                            };
+                            if($flag){// если сформирован блок
+                                if($length) $length += mb_strlen($delim);
+                                $block = implode($delim, $lines);
+                                $count = mb_strlen($block);
+                            };
+                            if(// множественное условие
+                                count($blocks)
+                                and $length + $count > $app["val"]["discordMessageLength"]
+                            ){// если сформирован контент
+                                $content = implode($delim, $blocks);
+                                array_push($contents, $content);
+                                $blocks = array();
+                                $length = 0;
+                            };
+                            if($flag){// если сформирован блок
+                                array_push($blocks, $block);
+                                $length += $count;
+                                $lines = array();
+                            };
+                            // формируем строки данных
                             $limit = $limits[$item["raid"]];
                             $count = $counts[$item["time"]][$item["raid"]][$item["group"]][""];
-                            $content .= (!empty($content) ? "\n" : "") . "**" . date("H:i", $item["time"]) . "** - **" . $raid["key"] . "** " . $raid["name"] . (!empty($raid["chapter"]) ? " **DLC**" : "") . ($limit ? " (" . $count . " из " . $limit . ")" : "");
+                            $comment = $comments[$item["time"]][$item["raid"]][$item["group"]];
+                            if(1 == $item["group"]){// если это основная группа
+                                $icon = ($limit and $count < $limit) ? $type["processing"] : $type["icon"];
+                                $line = (!empty($icon) ? $icon . " " : "");
+                                $line .= "**" . date("H:i", $item["time"]) . "** - **" . $raid["key"] . "** " . $raid["name"];
+                                $line .= (!empty($raid["chapter"]) ? " **DLC**" : "") . ($limit ? " (" . $count . " из " . $limit . ")" : "");
+                            }else $line = "__Резерв:__";
+                            array_push($lines, $line);
+                            if(!empty($comment)){// если есть комментарий
+                                $line = $comment;
+                                array_push($lines, $line);
+                            };
+                            $line = "";
                         };
-                        if(empty($before) or $before["role"] != $item["role"] or $before["time"] != $item["time"] or $before["raid"] != $item["raid"] or $before["group"] != $item["group"]){
+                        if(// множественное условие
+                            empty($before)
+                            or $before["role"] != $item["role"]
+                            or $before["time"] != $item["time"]
+                            or $before["raid"] != $item["raid"]
+                            or $before["group"] != $item["group"]
+                        ){// если нужно добавить информацию о роли
                             $count = $counts[$item["time"]][$item["raid"]][$item["group"]][$item["role"]];
-                            $content .= (!empty($content) ? "\n" : "") . $role[1 == $count ? "single" : "multi"] . ": ";
-                        }else $content .= ", ";
-                        $content .= "<@!" . $item["user"] . ">";
-                        if($item["leader"]) $content .= " - лидер";
+                            if(mb_strlen($line)) array_push($lines, $line);
+                            $line = $role[1 == $count ? "single" : "multi"] . ": ";
+                        }else $line .= ", ";
+                        $line .= "<@!" . $item["user"] . ">";
+                        if($item["leader"]) $line .= " - лидер";
                         // сохраняем ссылку на предыдущий элимент
                         $before = $item;
                     };
-                }else $content = "Ещё никто не записался.";
+                }else $line = "Ещё никто не записался.";
+                // формируем блок и контент    
+                $count = 0;// длина текущего блока
+                $flag = (count($lines) or mb_strlen($line));
+                if(mb_strlen($line)){// если есть строка данных
+                    if(count($lines)){// если есть строки
+                        array_push($lines, $line);
+                        $line = "_ _";// пустая строка
+                    };
+                    array_push($lines, $line);
+                };
+                if($flag){// если сформирован блок
+                    if($length) $length += mb_strlen($delim);
+                    $block = implode($delim, $lines);
+                    $count = mb_strlen($block);
+                };
+                if(// множественное условие
+                    count($blocks)
+                    and $length + $count > $app["val"]["discordMessageLength"]
+                ){// если сформирован контент
+                    $content = implode($delim, $blocks);
+                    array_push($contents, $content);
+                    $blocks = array();
+                    $length = 0;
+                };
+                if($flag){// если сформирован блок
+                    array_push($blocks, $block);
+                    $length += $count;
+                    $lines = array();
+                };
+                // формируем контент
+                if(// множественное условие
+                    count($blocks)
+                ){// если сформирован контент
+                    $content = implode($delim, $blocks);
+                    array_push($contents, $content);
+                    $blocks = array();
+                    $length = 0;
+                };
             };
-            // отправляем или изменяем уведомление
-            if(empty($status)){// если нет ошибок
-                if(empty($notification)){// если нужно опубликовать новое сообщение
-                    // отправляем новое сообщение
-                    $headers = array(// заголовки для запроса
-                        "authorization" => "Bot " . $app["val"]["discordBotToken"],
-                        "content-type" => "application/json;charset=utf-8"
-                    );
-                    $url = $app["val"]["discordApiUrl"] . "/channels/" . $channel["id"] . "/messages";
-                    $data = array("content" => $content);
-                    $data = json_encode($data, JSON_UNESCAPED_UNICODE);
-                    $data = http("post", $url, $data, null, $headers, false);
-                    if(200 == $data["status"]){// если сообщение отправлено
-                        $data = json_decode($data["body"], true);
-                        if(isset($data) and !empty($data)){// если есть данные
+            // обрабатываем все сообщения бота
+            if(empty($status) and $hasPermission){// если нужно выполнить
+                $items = array();// массив сообщений расписания
+                $count = count($contents);// нужное количество сообщений
+                // формируем список контентных сообщений бота и удаляем прочие сообщения бота
+                for($i = count($channel["messages"]) - 1; $i > -1 and empty($status); $i--){
+                    $item = $channel["messages"][$i];// получаем очередной элимент
+                    if($item["author"]["id"] == $app["val"]["discordClientId"]){// если это сообщение бота
+                        // удаляем сообщение
+                        if($item["type"]){// если это не контентное сообщение
+                            $uri = "/channels/" . $channel["id"] . "/messages/" . $item["id"];
+                            $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                            if(204 == $code or 404 == $code){// если запрос выполнен успешно
+                                $app["fun"]["delСache"]("message", $message["id"], $channel["id"], $guild["id"]);
+                            }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                        }else array_unshift($items, $item);// добавляем сообщение в список
+                    };
+                };
+                // удаляем лишнии сообщения из сформированного списка
+                for($i = count($items) - 1; $i > $count - 1 and empty($status); $i--){
+                    $item = $items[$i];// получаем очередной элимент
+                    // удаляем сообщение
+                    $uri = "/channels/" . $channel["id"] . "/messages/" . $item["id"];
+                    $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                    if(204 == $code or 404 == $code){// если запрос выполнен успешно
+                        $app["fun"]["delСache"]("message", $message["id"], $channel["id"], $guild["id"]);
+                        array_splice($items, $i, 1);// удаляем текущее сообщение из списка
+                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                };
+                // удаляем не группирующиеся сообщения из сформированного списка
+                $now = microtime(true);// текущее время
+                $time = $count > count($items) ? $now : 0;// время более нового сообщения
+                $flag = false;// нужно ли изначально удалить сообщение
+                for($i = 0; $i < count($items) and empty($status); $i++){
+                    $item = $items[$i];// получаем очередной элимент
+                    $flag = ($flag or $time - $item["timestamp"] > $app["val"]["discordMessageTime"]);
+                    // удаляем сообщение
+                    if($flag){// если сообщения не группируются 
+                        $uri = "/channels/" . $channel["id"] . "/messages/" . $item["id"];
+                        $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                        if(204 == $code or 404 == $code){// если запрос выполнен успешно
+                            $app["fun"]["delСache"]("message", $message["id"], $channel["id"], $guild["id"]);
+                            array_splice($items, $i, 1);// удаляем текущее сообщение из списка
+                            $i--;// уменьшаем индекс
+                        }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                    }else $time = $item["timestamp"];
+                };
+            };
+            // создаём новые или изменяем имеющиеся сообщения бота
+            if(empty($status) and $hasPermission){// если нужно выполнить
+                $index = count($items) - 1;// индекс самого первого сообщения бота
+                for($i = 0, $iLen = count($contents); $i < $iLen and empty($status); $i++){
+                    $content = $contents[$i];// получаем очередной элимент
+                    $item = isset($items[$index - $i]) ? $items[$index - $i] : null;
+                    if(empty($item)){// если нужно опубликовать новое сообщение
+                        // отправляем новое сообщение
+                        $uri = "/channels/" . $channel["id"] . "/messages";
+                        $data = array("content" => $content);
+                        $data = $app["fun"]["apiRequest"]("post", $uri, $data, $code);
+                        if(200 == $code){// если запрос выполнен успешно
                             $app["fun"]["setСache"]("message", $data, $channel["id"], $guild["id"]);
                         }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
-                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
-                }else if($notification["content"] != $content){// если нужно изменить старое сообщение
-                    // изменяем старое сообщение
-                    $headers = array(// заголовки для запроса
-                        "authorization" => "Bot " . $app["val"]["discordBotToken"],
-                        "content-type" => "application/json;charset=utf-8"
-                    );
-                    $url = $app["val"]["discordApiUrl"] . "/channels/" . $channel["id"] . "/messages/" . $notification["id"];
-                    $data = array("content" => $content);
-                    $data = json_encode($data, JSON_UNESCAPED_UNICODE);
-                    $data = http("patch", $url, $data, null, $headers, false);
-                    if(200 == $data["status"]){// если сообщение изменено
-                        $data = json_decode($data["body"], true);
-                        if(isset($data) and !empty($data)){// если есть данные
+                    }else if($item["content"] != $content){// если нужно изменить старое сообщение
+                        // изменяем старое сообщение
+                        $uri = "/channels/" . $channel["id"] . "/messages/" . $item["id"];
+                        $data = array("content" => $content);
+                        $data = $app["fun"]["apiRequest"]("patch", $uri, $data, $code);
+                        if(200 == $code){// если запрос выполнен успешно
                             $app["fun"]["setСache"]("message", $data, $channel["id"], $guild["id"]);
                         }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
-                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                    };
                 };
             };
             // сохраняем базу данных событий
             if(isset($events) and !empty($events)){// если база данных загружена
-                $lock = get_val($options, "nocontrol", false);
-                if(empty($status) and $isEventsUpdate){// если нет ошибок
-                    if($events->save($lock)){// если данные успешно сохранены
-                    }else $status = 307;// не удалось сохранить базу данных
-                }else if(!$lock) $events->unlock();// разблокируем базу
+                if(!get_val($options, "nocontrol", false)){// если это прямой вызов
+                    if(empty($status) and $isEventsUpdate){// если нет ошибок
+                        if($events->save(false)){// если данные успешно сохранены
+                        }else $status = 307;// не удалось сохранить базу данных
+                    }else $events->unlock();// разблокируем базу
+                };
             };
             // возвращаем результат
-            if(!$result and !empty($status)) $result = false;
+            $result = $isEventsUpdate;
             return $result;
         }
     ),
@@ -1164,9 +1601,8 @@ $app = array(// основной массив данных
                     // проверяем наличее данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
-                            isset(// данные для проверки
-                                $data["id"]
-                            ) and $argLength >= 2
+                            isset($data["id"])
+                            and $argLength >= $argFirst
                         ){// если проверка пройдена
                             $gid = $data["id"];
                         }else $error = 2;
@@ -1178,42 +1614,104 @@ $app = array(// основной массив данных
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
-                    // проверяем разрешения
-                    if(!$error){// если нет ошибок
-                        $flag = true;// без ограничений
-                        if($flag){// если проверка пройдена
-                        }else $error = 4;
-                    };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "guilds";// задаём ключ
                         $parent = &$app["cache"];
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["guilds"])) $parent["guilds"] = array();
-                            for($i = 0, $iLen = count($parent["guilds"]); $i < $iLen; $i++){
-                                if($parent["guilds"][$i]["id"] == $gid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $gid) break;
                             };
-                            if(!isset($parent["guilds"][$i])) $parent["guilds"][$i] = array();
-                            $unit = &$parent["guilds"][$i];
-                        }else $error = 5;
+                            if(!isset($parent[$key][$i])) $parent[$key][$i] = array();
+                            $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // формируем структуру
+                    if(!$error){// если нет ошибок
+                        foreach(array("members", "channels") as $key){
+                            if(isset($data[$key]) and !isset($unit[$key])){
+                                $unit[$key] = array();
+                            };
+                        };
                     };
                     // обрабатываем данные
                     if(!$error){// если нет ошибок
                         // идентификатор
-                        if(isset($data["id"])){// если существует
-                            $unit["id"] = $data["id"];
+                        $key = "id";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // список участников
-                        if(isset($data["members"])){// если существует
-                            if(!isset($unit["members"])) $unit["members"] = array();
-                            for($i = 0, $iLen = count($data["members"]); $i < $iLen; $i++){
-                                $app["fun"]["setСache"]("member", $data["members"][$i], $gid);
+                        $key = "members";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            for($i = 0, $iLen = count($data[$key]); $i < $iLen; $i++){
+                                $app["fun"]["setСache"]("member", $data[$key][$i], $gid);
                             };
                         };
                         // список каналов
-                        if(isset($data["channels"])){// если существует
-                            if(!isset($unit["channels"])) $unit["channels"] = array();
-                            for($i = 0, $iLen = count($data["channels"]); $i < $iLen; $i++){
-                                $app["fun"]["setСache"]("channel", $data["channels"][$i], $gid);
+                        $key = "channels";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            for($i = 0, $iLen = count($data[$key]); $i < $iLen; $i++){
+                                $app["fun"]["setСache"]("channel", $data[$key][$i], $gid, null);
+                            };
+                        };
+                    };
+                    // присваеваем ссылку на элимент
+                    if(!$error){// если нет ошибок
+                        $cache = &$unit;
+                    };
+                    break;
+                case "user":// пользователь
+                    // проверяем наличее данных
+                    if(!$error){// если нет ошибок
+                        if(// множественное условие
+                            isset($data["id"])
+                            and $argLength >= $argFirst
+                        ){// если проверка пройдена
+                            $uid = $data["id"];
+                        }else $error = 2;
+                    };
+                    // проверяем значение данных
+                    if(!$error){// если нет ошибок
+                        if(// множественное условие
+                            !empty($uid)
+                        ){// если проверка пройдена
+                        }else $error = 3;
+                    };
+                    // определяем ссылку на элимента
+                    if(!$error){// если нет ошибок
+                        $key = "users";// задаём ключ
+                        $parent = &$app["cache"];
+                        if(!is_null($parent)){// если есть родительский элимент
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $uid) break;
+                            };
+                            if(!isset($parent[$key][$i])) $parent[$key][$i] = array();
+                            $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // формируем структуру
+                    if(!$error){// если нет ошибок
+                        foreach(array("channels") as $key){
+                            if(isset($data[$key]) and !isset($unit[$key])){
+                                $unit[$key] = array();
+                            };
+                        };
+                    };
+                    // обрабатываем данные
+                    if(!$error){// если нет ошибок
+                        // идентификатор
+                        $key = "id";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
+                        };
+                        // список каналов
+                        $key = "channels";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            for($i = 0, $iLen = count($data[$key]); $i < $iLen; $i++){
+                                $app["fun"]["setСache"]("channel", $data[$key][$i], null, $uid);
                             };
                         };
                     };
@@ -1226,9 +1724,8 @@ $app = array(// основной массив данных
                     // проверяем наличее данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
-                            isset(// данные для проверки
-                                $data["user"]["id"]
-                            ) and $argLength > $argFirst
+                            isset($data["user"]["id"])
+                            and $argLength > $argFirst
                         ){// если проверка пройдена
                             $uid = $data["user"]["id"];
                             $gid = func_get_arg($argFirst);
@@ -1242,35 +1739,38 @@ $app = array(// основной массив данных
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
-                    // проверяем разрешения
-                    if(!$error){// если нет ошибок
-                        $flag = true;// без ограничений
-                        if($flag){// если проверка пройдена
-                        }else $error = 4;
-                    };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "members";// задаём ключ
                         $parent = &$app["fun"]["getСache"]("guild", $gid);
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["members"])) $parent["members"] = array();
-                            for($i = 0, $iLen = count($parent["members"]); $i < $iLen; $i++){
-                                if($parent["members"][$i]["user"]["id"] == $uid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["user"]["id"] == $uid) break;
                             };
-                            if(!isset($parent["members"][$i])) $parent["members"][$i] = array();
-                            $unit = &$parent["members"][$i];
-                        }else $error = 5;
+                            if(!isset($parent[$key][$i])) $parent[$key][$i] = array();
+                            $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // формируем структуру
+                    if(!$error){// если нет ошибок
+                        foreach(array("user", "roles") as $key){
+                            if(isset($data[$key]) and !isset($unit[$key])){
+                                $unit[$key] = array();
+                            };
+                        };
                     };
                     // обрабатываем данные
                     if(!$error){// если нет ошибок
                         // идентификатор пользователя
-                        if(isset($data["user"]["id"])){// если существует
-                            if(!isset($unit["user"])) $unit["user"] = array();
-                            $unit["user"]["id"] = $data["user"]["id"];
+                        $key = "user";// задаём ключ
+                        if(isset($data[$key]["id"])){// если существует
+                            $unit[$key]["id"] = $data[$key]["id"];
                         };
                         // список ролей
-                        if(isset($data["roles"])){// если существует
-                            if(!isset($unit["roles"])) $unit["roles"] = array();
-                            $unit["roles"] = $data["roles"];
+                        $key = "roles";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                     };
                     // присваеваем ссылку на элимент
@@ -1282,67 +1782,78 @@ $app = array(// основной массив данных
                     // проверяем наличее данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
-                            isset(// данные для проверки
-                                $data["id"],
-                                $data["name"],
-                                $data["type"]
-                            ) and $argLength > $argFirst
+                            isset($data["id"], $data["type"])
+                            and (isset($data["recipients"][0]["id"]) or isset($data["name"]))
+                            and $argLength > $argFirst + 1
                         ){// если проверка пройдена
                             $cid = $data["id"];
                             $gid = func_get_arg($argFirst);
+                            $uid = func_get_arg($argFirst + 1);
                         }else $error = 2;
                     };
                     // проверяем значение данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
                             !empty($cid)
-                            and !empty($gid)
-                            and 0 == $data["type"]
+                            and (!empty($gid) xor !empty($uid))
+                            and (0 == $data["type"] or 1 == $data["type"])
+                            and (isset($data["recipients"][0]["id"]) ? $uid == $data["recipients"][0]["id"] : 1 != $data["type"])
+                            and 1 == count(get_val($data, "recipients", array($uid)))
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
-                    // проверяем разрешения
-                    if(!$error){// если нет ошибок
-                        $permission = $app["fun"]["getPermission"]($app["val"]["discordClientId"], $data, $gid);
-                        $flag = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
-                        if($flag){// если проверка пройдена
-                        }else $error = 4;
-                    };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
-                        $parent = &$app["fun"]["getСache"]("guild", $gid);
+                        $key = "channels";// задаём ключ
+                        switch(true){// по идентификаторам
+                            case !empty($gid): $parent = &$app["fun"]["getСache"]("guild", $gid); break;
+                            case !empty($uid): $parent = &$app["fun"]["getСache"]("user", $uid); break;
+                            default: $parent = null;
+                        };
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["channels"])) $parent["channels"] = array();
-                            for($i = 0, $iLen = count($parent["channels"]); $i < $iLen; $i++){
-                                if($parent["channels"][$i]["id"] == $cid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $cid) break;
                             };
-                            if(!isset($parent["channels"][$i])) $parent["channels"][$i] = array();
-                            $unit = &$parent["channels"][$i];
-                        }else $error = 5;
+                            if(!isset($parent[$key][$i])) $parent[$key][$i] = array();
+                            $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // формируем структуру
+                    if(!$error){// если нет ошибок
+                        foreach(array("messages") as $key){
+                            if(isset($data[$key]) and !isset($unit[$key])){
+                                $unit[$key] = array();
+                            };
+                        };
                     };
                     // обрабатываем данные
                     if(!$error){// если нет ошибок
                         // идентификатор
-                        if(isset($data["id"])){// если существует
-                            $unit["id"] = $data["id"];
+                        $key = "id";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // название
-                        if(isset($data["name"])){// если существует
-                            $unit["name"] = $data["name"];
+                        $key = "name";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // тип
-                        if(isset($data["type"])){// если существует
-                            $unit["type"] = $data["type"];
+                        $key = "type";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // права доступа
-                        if(isset($data["permission_overwrites"])){// если существует
-                            $unit["permission_overwrites"] = $data["permission_overwrites"];
+                        $key = "permission_overwrites";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // сообщения
-                        if(isset($data["messages"])){// если существует
-                            if(!isset($unit["messages"])) $unit["messages"] = array();
-                            for($i = 0, $iLen = count($data["messages"]); $i < $iLen; $i++){
-                                $app["fun"]["setСache"]("message", $data["messages"][$i], $cid, $gid);
+                        $key = "messages";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            for($i = 0, $iLen = count($data[$key]); $i < $iLen; $i++){
+                                $app["fun"]["setСache"]("message", $data[$key][$i], $cid, $gid);
                             };
                         };
                     };
@@ -1355,12 +1866,8 @@ $app = array(// основной массив данных
                     // проверяем наличее данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
-                            isset(// данные для проверки
-                                $data["id"],
-                                $data["type"],
-                                $data["pinned"],
-                                $data["author"]["id"]
-                            ) and $argLength > $argFirst + 1
+                            isset($data["id"], $data["type"], $data["timestamp"], $data["pinned"], $data["author"]["id"])
+                            and $argLength > $argFirst + 1
                         ){// если проверка пройдена
                             $mid = $data["id"];
                             $cid = func_get_arg($argFirst);
@@ -1373,52 +1880,80 @@ $app = array(// основной массив данных
                             !empty($mid)
                             and !empty($cid)
                             and !empty($gid)
+                            and !empty($data["timestamp"])
                             and !empty($data["author"]["id"])
                             and (!$data["pinned"] or $data["author"]["id"] == $app["val"]["discordClientId"])
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
-                    // проверяем разрешения
-                    if(!$error){// если нет ошибок
-                        $flag = true;// без ограничений
-                        if($flag){// если проверка пройдена
-                        }else $error = 4;
-                    };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
-                        $parent = &$app["fun"]["getСache"]("channel", $cid, $gid);
+                        $key = "messages";// задаём ключ
+                        $parent = &$app["fun"]["getСache"]("channel", $cid, $gid, null);
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["messages"])) $parent["messages"] = array();
-                            for($i = 0, $iLen = count($parent["messages"]); $i < $iLen; $i++){
-                                if($parent["messages"][$i]["id"] == $mid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $mid) break;
                             };
-                            if(!isset($parent["messages"][$i])) $parent["messages"][$i] = array();
-                            $unit = &$parent["messages"][$i];
-                        }else $error = 5;
+                            if(!isset($parent[$key][$i])) $parent[$key][$i] = array();
+                            $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // формируем структуру
+                    if(!$error){// если нет ошибок
+                        foreach(array("author") as $key){
+                            if(isset($data[$key]) and !isset($unit[$key])){
+                                $unit[$key] = array();
+                            };
+                        };
                     };
                     // обрабатываем данные
                     if(!$error){// если нет ошибок
                         // идентификатор
-                        if(isset($data["id"])){// если существует
-                            $unit["id"] = $data["id"];
+                        $key = "id";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // идентификатор автора
-                        if(isset($data["author"]["id"])){// если существует
-                            if(!isset($unit["author"])) $unit["author"] = array();
-                            $unit["author"]["id"] = $data["author"]["id"];
+                        $key = "author";// задаём ключ
+                        if(isset($data[$key]["id"])){// если существует
+                            $unit[$key]["id"] = $data[$key]["id"];
                         };
                         // тип
-                        if(isset($data["type"])){// если существует
-                            $unit["type"] = $data["type"];
+                        $key = "type";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
+                        };
+                        // время создания
+                        $key = "timestamp";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $value = $data[$key];// получаем значение
+                            if(is_string($value)){// если нужно преобразовать в число
+                                $unit[$key] = strtotime(mb_substr($value, 0, 19) . mb_substr($value, 26));
+                                $unit[$key] += (float) "0" . mb_substr($value, 19, 7);
+                            }else $unit[$key] = $value;
                         };
                         // содержимое
-                        if(isset($data["content"])){// если существует
-                            $unit["content"] = $data["content"];
+                        $key = "content";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
                         // закрепление
-                        if(isset($data["pinned"])){// если существует
-                            $unit["pinned"] = $data["pinned"];
+                        $key = "pinned";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
                         };
+                    };
+                    // сортируем элименты
+                    if(!$error){// если нет ошибок
+                        $key = "messages";// задаём ключ
+                        usort($parent[$key], function($a, $b){// пользовательская сортировка
+                            $value = 0;// начальное значение
+                            if(!$value and $a["timestamp"] != $b["timestamp"]) $value = $a["timestamp"] < $b["timestamp"] ? 1 : -1;
+                            if(!$value and $a["id"] != $b["id"]) $value = $a["id"] < $b["id"] ? 1 : -1;
+                            // возвращаем результат
+                            return $value;
+                        });
                     };
                     // присваеваем ссылку на элимент
                     if(!$error){// если нет ошибок
@@ -1461,74 +1996,99 @@ $app = array(// основной массив данных
                     };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "guilds";// задаём ключ
                         $parent = &$app["cache"];
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["guilds"])) $parent["guilds"] = array();
-                            for($i = 0, $iLen = count($parent["guilds"]); $i < $iLen; $i++){
-                                if($parent["guilds"][$i]["id"] == $gid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $gid) break;
                             };
-                            if(isset($parent["guilds"][$i])) $unit = &$parent["guilds"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // получаем элимент через api
-                    if(!$unit){// если элимент не задан
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/guilds/" . $gid;
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 5;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                $unit = &$app["fun"]["setСache"]($type, $data);
-                            }else $error = 6;
-                        };
+                    if(!$error and !$unit){// если нужно выполнить
+                        $uri = "/guilds/" . $gid;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            $unit = &$app["fun"]["setСache"]($type, $data);
+                        }else $error = 5;
                     };
                     // получаем участников через api
-                    if($unit and !isset($unit["members"])){// если данные не запрашивались
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/guilds/" . $gid . "/members";
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 7;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                if(!isset($unit["members"])) $unit["members"] = array();
-                                for($i = 0, $iLen = count($data); $i < $iLen; $i++){
-                                    $app["fun"]["setСache"]("member", $data[$i], $gid);
-                                };
-                            }else $error = 8;
-                        };
+                    $key = "members";// задаём ключ
+                    if(!$error and $unit and !isset($unit[$key])){// если нужно выполнить
+                        $uri = "/guilds/" . $gid . "/" . $key;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            if(!isset($unit[$key])) $unit[$key] = array();
+                            for($i = 0, $iLen = count($data); $i < $iLen; $i++){
+                                $app["fun"]["setСache"]("member", $data[$i], $gid);
+                            };
+                        }else $error = 6;
                     };
                     // получаем каналы через api
-                    if($unit and !isset($unit["channels"])){// если данные не запрашивались
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/guilds/" . $gid . "/channels";
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 9;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                if(!isset($unit["channels"])) $unit["channels"] = array();
-                                for($i = 0, $iLen = count($data); $i < $iLen; $i++){
-                                    $app["fun"]["setСache"]("channel", $data[$i], $gid);
-                                };
-                            }else $error = 10;
-                        };
+                    $key = "channels";// задаём ключ
+                    if(!$error and $unit and !isset($unit[$key])){// если нужно выполнить
+                        $uri = "/guilds/" . $gid . "/" . $key;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            if(!isset($unit[$key])) $unit[$key] = array();
+                            for($i = 0, $iLen = count($data); $i < $iLen; $i++){
+                                $app["fun"]["setСache"]("channel", $data[$i], $gid, null);
+                            };
+                        }else $error = 7;
+                    };
+                    // присваеваем ссылку на элимент
+                    if(!$error){// если нет ошибок
+                        $cache = &$unit;
+                    };
+                    break;
+                case "user":// пользователь
+                    // проверяем наличее параметров
+                    if(!$error){// если нет ошибок
+                        if(// множественное условие
+                            $argLength > $argFirst
+                        ){// если проверка пройдена
+                            $uid = func_get_arg($argFirst);
+                        }else $error = 2;
+                    };
+                    // проверяем значение данных
+                    if(!$error){// если нет ошибок
+                        if(// множественное условие
+                            !empty($uid)
+                        ){// если проверка пройдена
+                        }else $error = 3;
+                    };
+                    // определяем ссылку на элимента
+                    if(!$error){// если нет ошибок
+                        $key = "users";// задаём ключ
+                        $parent = &$app["cache"];
+                        if(!is_null($parent)){// если есть родительский элимент
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $uid) break;
+                            };
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // получаем элимент через api
+                    if(!$error and !$unit){// если нужно выполнить
+                        $uri = "/users/" . $uid;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            $unit = &$app["fun"]["setСache"]($type, $data);
+                        }else $error = 5;
+                    };
+                    // получаем каналы через api
+                    $key = "channels";// задаём ключ
+                    if(!$error and $unit and !isset($unit[$key])){// если нужно выполнить
+                        $uri = "/users/" . $app["val"]["discordClientId"] . "/" . $key;
+                        $data = array("recipient_id" => $uid);
+                        $data = $app["fun"]["apiRequest"]("post", $uri, $data, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            if(!isset($unit[$key])) $unit[$key] = array();
+                            $app["fun"]["setСache"]("channel", $data, null, $uid);
+                        }else $error = 7;
                     };
                     // присваеваем ссылку на элимент
                     if(!$error){// если нет ошибок
@@ -1555,32 +2115,23 @@ $app = array(// основной массив данных
                     };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "members";// задаём ключ
                         $parent = &$app["fun"]["getСache"]("guild", $gid);
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["members"])) $parent["members"] = array();
-                            for($i = 0, $iLen = count($parent["members"]); $i < $iLen; $i++){
-                                if($parent["members"][$i]["user"]["id"] == $uid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["user"]["id"] == $uid) break;
                             };
-                            if(isset($parent["members"][$i])) $unit = &$parent["members"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // получаем элимент через api
-                    if(!$unit){// если элимент не задан
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/guilds/" . $gid . "/members/" . $uid;
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 5;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                $unit = &$app["fun"]["setСache"]($type, $data, $gid);
-                            }else $error = 6;
-                        };
+                    if(!$error and !$unit){// если нужно выполнить
+                        $uri = "/guilds/" . $gid . "/members/" . $uid;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            $unit = &$app["fun"]["setСache"]($type, $data, $gid);
+                        }else $error = 5;
                     };
                     // присваеваем ссылку на элимент
                     if(!$error){// если нет ошибок
@@ -1591,68 +2142,59 @@ $app = array(// основной массив данных
                     // проверяем наличее параметров
                     if(!$error){// если нет ошибок
                         if(// множественное условие
-                            $argLength > $argFirst
+                            $argLength > $argFirst + 2
                         ){// если проверка пройдена
                             $cid = func_get_arg($argFirst);
                             $gid = func_get_arg($argFirst + 1);
+                            $uid = func_get_arg($argFirst + 2);
                         }else $error = 2;
                     };
                     // проверяем значение данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
                             !empty($cid)
-                            and !empty($gid)
+                            and (!empty($gid) xor !empty($uid))
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
-                        $parent = &$app["fun"]["getСache"]("guild", $gid);
+                        $key = "channels";// задаём ключ
+                        switch(true){// по идентификаторам
+                            case !empty($gid): $parent = &$app["fun"]["getСache"]("guild", $gid); break;
+                            case !empty($uid): $parent = &$app["fun"]["getСache"]("user", $uid); break;
+                            default: $parent = null;
+                        };
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["channels"])) $parent["channels"] = array();
-                            for($i = 0, $iLen = count($parent["channels"]); $i < $iLen; $i++){
-                                if($parent["channels"][$i]["id"] == $cid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $cid) break;
                             };
-                            if(isset($parent["channels"][$i])) $unit = &$parent["channels"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // получаем элимент через api
-                    if(!$unit){// если элимент не задан
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/channels/" . $cid;
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 5;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                $unit = &$app["fun"]["setСache"]($type, $data, $gid);
-                            }else $error = 6;
-                        };
+                    if(!$error and !$unit){// если нужно выполнить
+                        $uri = "/channels/" . $cid;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            $unit = &$app["fun"]["setСache"]($type, $data, $gid, $uid);
+                        }else $error = 5;
                     };
                     // получаем сообщения через api
-                    if($unit and !isset($unit["messages"])){// если данные не запрашивались
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/channels/" . $cid . "/messages";
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 7;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                if(!isset($unit["messages"])) $unit["messages"] = array();
+                    $key = "messages";// задаём ключ
+                    if(!$error and $unit and !empty($gid) and !isset($unit[$key])){// если нужно выполнить
+                        $permission = $app["fun"]["getPermission"]($app["val"]["discordClientId"], $unit, $gid);
+                        $flag = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
+                        if($flag){// если проверка пройдена
+                            $uri = "/channels/" . $cid  . "/" . $key;
+                            $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                            if(200 == $code){// если запрос выполнен успешно
+                                if(!isset($unit[$key])) $unit[$key] = array();
                                 for($i = 0, $iLen = count($data); $i < $iLen; $i++){
                                     $app["fun"]["setСache"]("message", $data[$i], $cid, $gid);
                                 };
-                            }else $error = 8;
+                            }else $error = 6;
                         };
                     };
                     // присваеваем ссылку на элимент
@@ -1682,32 +2224,23 @@ $app = array(// основной массив данных
                     };
                     // определяем ссылку на элимента
                     if(!$error){// если нет ошибок
-                        $parent = &$app["fun"]["getСache"]("channel", $cid, $gid);
+                        $key = "messages";// задаём ключ
+                        $parent = &$app["fun"]["getСache"]("channel", $cid, $gid, null);
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["messages"])) $parent["messages"] = array();
-                            for($i = 0, $iLen = count($parent["messages"]); $i < $iLen; $i++){
-                                if($parent["messages"][$i]["id"] == $mid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $mid) break;
                             };
-                            if(isset($parent["messages"][$i])) $unit = &$parent["messages"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // получаем элимент через api
-                    if(!$unit){// если элимент не задан
-                        // делаем запрос через api
-                        if(!$error){// если нет ошибок
-                            $headers = array("authorization" => "Bot " . $app["val"]["discordBotToken"]);
-                            $url = $app["val"]["discordApiUrl"] . "/channels/" . $cid . "/messages/" . $mid;
-                            $data = http("get", $url, null, null, $headers, false);
-                            if(200 == $data["status"]){// если запрос выполнен успешно
-                                $data = json_decode($data["body"], true);
-                            }else $error = 5;
-                        };
-                        // кешируем полученные данные
-                        if(!$error){// если нет ошибок
-                            if(isset($data) and !empty($data)){// если есть данные
-                                $unit = &$app["fun"]["setСache"]($type, $data, $cid, $gid);
-                            }else $error = 6;
-                        };
+                    if(!$error and !$unit){// если нужно выполнить
+                        $uri = "/channels/" . $cid . "/messages/" . $mid;
+                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
+                        if(200 == $code){// если запрос выполнен успешно
+                            $unit = &$app["fun"]["setСache"]($type, $data, $cid, $gid);
+                        }else $error = 5;
                     };
                     // присваеваем ссылку на элимент
                     if(!$error){// если нет ошибок
@@ -1750,19 +2283,57 @@ $app = array(// основной массив данных
                     };
                     // ищем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "guilds";// задаём ключ
                         $parent = &$app["cache"];
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["guilds"])) $parent["guilds"] = array();
-                            for($i = 0, $iLen = count($parent["guilds"]); $i < $iLen; $i++){
-                                if($parent["guilds"][$i]["id"] == $gid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $gid) break;
                             };
-                            if(isset($parent["guilds"][$i])) $unit = &$parent["guilds"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // удаляем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "guilds";// задаём ключ
                         if($unit){// если элимент существует
-                            $cache = array_splice($parent["guilds"], $i, 1)[0];
+                            $cache = array_splice($parent[$key], $i, 1)[0];
+                        }else $error = 5;
+                    };
+                    break;
+                case "user":// пользователь
+                    // проверяем наличее параметров
+                    if(!$error){// если нет ошибок
+                        if(// множественное условие
+                            $argLength > $argFirst
+                        ){// если проверка пройдена
+                            $uid = func_get_arg($argFirst);
+                        }else $error = 2;
+                    };
+                    // проверяем значение данных
+                    if(!$error){// если нет ошибок
+                        if(// множественное условие
+                            !empty($uid)
+                        ){// если проверка пройдена
+                        }else $error = 3;
+                    };
+                    // ищем ссылку на элимента
+                    if(!$error){// если нет ошибок
+                        $key = "users";// задаём ключ
+                        $parent = &$app["cache"];
+                        if(!is_null($parent)){// если есть родительский элимент
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $uid) break;
+                            };
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
+                        }else $error = 4;
+                    };
+                    // удаляем ссылку на элимента
+                    if(!$error){// если нет ошибок
+                        $key = "users";// задаём ключ
+                        if($unit){// если элимент существует
+                            $cache = array_splice($parent[$key], $i, 1)[0];
                         }else $error = 5;
                     };
                     break;
@@ -1786,19 +2357,21 @@ $app = array(// основной массив данных
                     };
                     // ищем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "members";// задаём ключ
                         $parent = &$app["fun"]["getСache"]("guild", $gid);
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["members"])) $parent["members"] = array();
-                            for($i = 0, $iLen = count($parent["members"]); $i < $iLen; $i++){
-                                if($parent["members"][$i]["user"]["id"] == $uid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["user"]["id"] == $uid) break;
                             };
-                            if(isset($parent["members"][$i])) $unit = &$parent["members"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // удаляем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "members";// задаём ключ
                         if($unit){// если элимент существует
-                            $cache = array_splice($parent["members"], $i, 1)[0];
+                            $cache = array_splice($parent[$key], $i, 1)[0];
                         }else $error = 5;
                     };
                     break;
@@ -1806,35 +2379,42 @@ $app = array(// основной массив данных
                     // проверяем наличее параметров
                     if(!$error){// если нет ошибок
                         if(// множественное условие
-                            $argLength > $argFirst
+                            $argLength > $argFirst + 1
                         ){// если проверка пройдена
                             $cid = func_get_arg($argFirst);
                             $gid = func_get_arg($argFirst + 1);
+                            $uid = func_get_arg($argFirst + 2);
                         }else $error = 2;
                     };
                     // проверяем значение данных
                     if(!$error){// если нет ошибок
                         if(// множественное условие
                             !empty($cid)
-                            and !empty($gid)
+                            and (!empty($gid) xor!empty($uid))
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
                     // ищем ссылку на элимента
                     if(!$error){// если нет ошибок
-                        $parent = &$app["fun"]["getСache"]("guild", $gid);
+                        $key = "channels";// задаём ключ
+                        switch(true){// по идентификаторам
+                            case !empty($gid): $parent = &$app["fun"]["getСache"]("guild", $gid); break;
+                            case !empty($uid): $parent = &$app["fun"]["getСache"]("user", $uid); break;
+                            default: $parent = null;
+                        };
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["channels"])) $parent["channels"] = array();
-                            for($i = 0, $iLen = count($parent["channels"]); $i < $iLen; $i++){
-                                if($parent["channels"][$i]["id"] == $cid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $cid) break;
                             };
-                            if(isset($parent["channels"][$i])) $unit = &$parent["channels"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // удаляем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "channels";// задаём ключ
                         if($unit){// если элимент существует
-                            $cache = array_splice($parent["channels"], $i, 1)[0];
+                            $cache = array_splice($parent[$key], $i, 1)[0];
                         }else $error = 5;
                     };
                     break;
@@ -1860,19 +2440,21 @@ $app = array(// основной массив данных
                     };
                     // ищем ссылку на элимента
                     if(!$error){// если нет ошибок
-                        $parent = &$app["fun"]["getСache"]("channel", $cid, $gid);
+                        $key = "messages";// задаём ключ
+                        $parent = &$app["fun"]["getСache"]("channel", $cid, $gid, null);
                         if(!is_null($parent)){// если есть родительский элимент
-                            if(!isset($parent["messages"])) $parent["messages"] = array();
-                            for($i = 0, $iLen = count($parent["messages"]); $i < $iLen; $i++){
-                                if($parent["messages"][$i]["id"] == $mid) break;
+                            if(!isset($parent[$key])) $parent[$key] = array();
+                            for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
+                                if($parent[$key][$i]["id"] == $mid) break;
                             };
-                            if(isset($parent["messages"][$i])) $unit = &$parent["messages"][$i];
+                            if(isset($parent[$key][$i])) $unit = &$parent[$key][$i];
                         }else $error = 4;
                     };
                     // удаляем ссылку на элимента
                     if(!$error){// если нет ошибок
+                        $key = "messages";// задаём ключ
                         if($unit){// если элимент существует
-                            $cache = array_splice($parent["messages"], $i, 1)[0];
+                            $cache = array_splice($parent[$key], $i, 1)[0];
                         }else $error = 5;
                     };
                     break;
@@ -1902,7 +2484,7 @@ $app = array(// основной массив данных
             // получаем канал
             if(!$error){// если нет ошибок
                 if(!is_array($channel) and !empty($channel)){// если нужно получить
-                    $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"]);
+                    $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"], null);
                 };
                 if(!empty($channel)){// если не пустое значение
                 }else $error = 2;
@@ -1916,7 +2498,7 @@ $app = array(// основной массив данных
                 }else $error = 3;
             };
             // последовательно вычисляем разрешения
-            if(!$error){// если нет ошибок
+            if(!$error and isset($channel["permission_overwrites"])){// если нужно выполнить
                 // разрешения по умолчанию
                 $permission |= $app["val"]["discordCreatePermission"];// разрешено создавать рейды
                 // проверяем перезапись разрешений для всех
@@ -1955,6 +2537,43 @@ $app = array(// основной массив данных
             };
             // возвращаем результат
             return $permission;
+        },
+        "apiRequest" => function($metod, $uri, $data = null, &$code = 0){// http запрос к api
+        //@param $metod {string} - методов http запроса в нижнем регистре
+        //@param $uri {string} - конечная часть url адреса запроса
+        //@param $data {array} - строка массив данных для запроса
+        //@param $code {integer} - код ответа сервера
+        //@return {array|null} - полученные данные или null при ошибки
+            global $app;
+            static $time = 0;
+            $response = null;
+            
+            $wait = 0;// время ожидания сброса лимита
+            $remain = 1;// текущий остаток запросов        
+            // делаем запрос через api
+            if(!empty($metod) and !empty($uri)){// если не пустые значения
+                // контролируем скорость запросов
+                $now = microtime(true);// текущее время
+                $value = $time - $now;// время ожидания
+                if($value > 0) usleep(1000000 * $value);
+                // готовим данные и выполняем запрос
+                $headers = array();// стандартные заголовки для запроса
+                $headers["authorization"] = "Bot " . $app["val"]["discordBotToken"];
+                $headers["x-ratelimit-precision"] = "millisecond";
+                if(!empty($data)) $headers["content-type"] = "application/json;charset=utf-8";
+                if(!empty($data)) $data = json_encode($data, JSON_UNESCAPED_UNICODE);
+                $data = http($metod, $app["val"]["discordApiUrl"] . $uri, $data, null, $headers, false);
+                // обрабатываем ограничения скорости запросов
+                foreach($data["headers"] as $key => $value) if("x-ratelimit-remaining" == mb_strtolower($key)) $remain = (int)$value;
+                foreach($data["headers"] as $key => $value) if("x-ratelimit-reset-after" == mb_strtolower($key)) $wait = (float)$value;
+                if(empty($remain) and !empty($wait)) $time = max($time, microtime(true) + $wait);
+                // обрабатываем полученный ответ
+                $code = $data["status"];// устанавливаем код ответа сервера
+                $data = json_decode($data["body"], true);// преобразовываем данные
+                if(!empty($data) or is_array($data)) $response = $data;
+            };
+            // возвращаем результат
+            return $response;
         },
         "getStorage" => function($name, $lock = false){// получает базу данных
         //@param $name {string} - имя запрашиваемой базы данных

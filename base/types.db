@@ -1,5 +1,6 @@
-key:string	name:string	filter:string
-trial	Триал	триал
-dungeon	Подземелье	подземел
-battle	Сражение	сражен
-arena	Арена	арен
+key:string	name:string	icon:string	processing:string	filter:string
+trial	Триал	:calendar_spiral:	:hourglass:	триал
+dungeon	Подземелье	:shield:	:hourglass:	подземел
+battle	Сражение	:crossed_swords:	:hourglass:	сражен
+arena	Арена	:calendar_spiral:	:hourglass:	арен
+activity	Мероприятие	:notepad_spiral:	:hourglass:	мероприят
