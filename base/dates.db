@@ -1,0 +1,11 @@
+key:string	synonym:string
+today	сегодня
+tomorrow	завтра
+tomorrow+1day	послезавтра
+monday	понедельник
+tuesday	вторник
+wednesday	среда
+thursday	четверг
+friday	пятница
+saturday	суббота
+sunday	воскресенье

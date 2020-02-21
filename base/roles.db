@@ -1,4 +1,4 @@
 key:string	synonym:string	single:string	multi:string
-heal	хилером	Хилер	Хилеры
-tank	танком	Танк	Танки
-dd	бойцом	Боец	Бойцы
+heal	хил	Хил	Хилы
+tank	танк	Танк	Танки
+dd	дд	Боец	Бойцы
