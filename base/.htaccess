@@ -1,0 +1,5 @@
+# запрешаем доступ из браузера к нектрым файлам баз данных
+<FilesMatch "^(events|roles|raids|types)\.">
+	Order allow,deny
+	Deny from all
+</FilesMatch>

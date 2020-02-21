@@ -1,0 +1,30 @@
+id:integer	ru:string	en:string
+100	Успешно	Successful
+160	Не удалось отправить данные на сервер	Unable to send data to the server
+161	Не передан один из обязательных параметров	Not passed one of the required parameters
+162	Один из обязательных параметров передан в неверном формате	One of the required parameters passed in the wrong format
+163	Не верная подпись запроса	Not true signature of the request
+164	Не удалось выполнить операцию из-за отмены действия пользователем	The operation failed due to user undo
+165	Переданные параметры не верны	Passed parameters are not correct
+166	Запрашиваемых данных нет в базе данных	The requested data is not present in the database
+167	Слишком много запросов	Too many requests
+168	Один из необязательных параметров передан в неверном формате	One of the optional parameters passed in the wrong format
+169	Отказано в доступе	Access denied
+170	Не удалось зарегистрироватся в приложении из-за не уникальности почтового адреса	Could not be registered in the application due to non-uniqueness of the mailing address
+171	Не удалось выполнить операцию из-за отсутствия средств на балансе	The operation failed due to a lack of funds on the balance sheet
+172	Значение одиного из ключевых параметров не уникально	The value of one of the key parameters is not unique
+200	Успешно	Successful
+261	Не удалось загрузить одну из многих баз данных	Unable to load one of the many databases
+262	Загруженные базы данных не имеют ссылочной целостности	Loaded database does not have referential integrity
+263	Не удалось загрузить предварительный просмотр для этого документа	Failed to load the preview for this document
+264	Не удалось получить ссылку для скачивания этого документа	Could not get the link to download this document
+265	Запрашиваемый метод не поддерживается	The requested method is not supported
+266	Внутренняя система сообщений не смогла отправить сообщение	Internal messaging system could not send a message
+267	Данный провайдер авторизации не поддерживается	This authorization is not supported by the provider
+268	Не удалось получить корректный ответ от удаленного сервера	Failed to get a valid response from the remote server
+269	Не удалось записать данные в базу данных	Failed to write data to the database
+270	Не удалось сохранить базу данных	Failed to save the database
+271	Не корректный внутренний запрос	Do not correct the inner query
+273	Тип файла не поддерживается	File type not supported
+274	Размер файла больше допустимого	File size is larger than allowed
+275	Не удалось произвести операцию над файлом	Unable to perform the operation on the file

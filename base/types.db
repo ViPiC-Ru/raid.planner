@@ -1,0 +1,5 @@
+key:string	name:string	filter:string
+trial	Триал	триал
+dungeon	Подземелье	подземел
+battle	Сражение	сражен
+arena	Арена	арен

@@ -1,0 +1,1 @@
+id:integer	guild:string	channel:string	user:string	time:date	raid:string	role:string	leader:boolean

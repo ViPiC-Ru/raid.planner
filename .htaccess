@@ -1,0 +1,78 @@
+# добавляем заголовок с кодировкой для страниц
+AddDefaultCharset utf-8
+
+# устанавливаем страницу по умолчанию
+DirectoryIndex index.php index.html index.htm
+
+# запрещаем выводить содержимое папок
+Options -Indexes
+Options FollowSymLinks
+
+# разрешаем использовать короткие теги
+php_flag short_open_tag On
+
+# обозначаем текстовый тип для баз данных
+<IfModule mime_module>
+    AddType text/plain db
+</IfModule>
+
+# запрешаем доступ из браузера к временным файлам
+<FilesMatch "\.(tmp|bak)$">
+	Order allow,deny
+	Deny from all
+</FilesMatch>
+
+# компрессия данных для определённых типов
+<IfModule mod_deflate.c>
+	AddOutputFilterByType DEFLATE text/html
+	AddOutputFilterByType DEFLATE text/plain
+	AddOutputFilterByType DEFLATE text/css
+	AddOutputFilterByType DEFLATE application/javascript
+	AddOutputFilterByType DEFLATE application/x-javascript
+	AddOutputFilterByType DEFLATE text/javascript
+	AddOutputFilterByType DEFLATE application/json
+	AddOutputFilterByType DEFLATE text/xml
+	AddOutputFilterByType DEFLATE application/xml
+	AddOutputFilterByType DEFLATE image/svg+xml
+	AddOutputFilterByType DEFLATE application/rss+xml
+	AddOutputFilterByType DEFLATE application/atom+xml
+	<ifModule mod_headers.c>
+		RequestHeader edit If-None-Match "^\"(.*)-gzip\"$" "\"$1\""
+		Header edit ETag "^\"(.*[^g][^z][^i][^p])\"$" "\"$1-gzip\""
+	</IfModule>
+</IfModule>
+
+# включаем кэш для статических файлов
+<FilesMatch "\.(flv|gif|jpg|jpeg|png|ico|swf|js|css|pdf|txt|mp3)$">
+	<ifModule mod_headers.c>
+		Header set Cache-Control "max-age=345600"
+	</IfModule>
+	<ifModule mod_expires.c>
+		ExpiresActive On
+		ExpiresDefault "access plus 345600 seconds"
+	</ifModule>	
+</FilesMatch>
+
+# выключаем кэш для динамических файлов
+<FilesMatch "\.(db|html)$">
+	<ifModule mod_headers.c>
+		Header set Cache-Control "max-age=0"
+	</IfModule>
+	<ifModule mod_expires.c>
+		ExpiresActive On
+		ExpiresDefault "access plus 0 seconds"
+	</ifModule>	
+</FilesMatch>
+
+# выключаем поддержку 3rd party cookies
+<ifModule mod_headers.c>
+	Header set P3P "CP=\"NOI ADM DEV PSAi COM NAV OUR OTRo STP IND DEM\""
+</IfModule>
+
+# удаляем лишнию информацию
+ServerSignature Off
+php_flag expose_php Off
+<ifModule mod_headers.c>
+	Header always unset "X-Powered-By"
+	Header unset "X-Powered-By"
+</IfModule>
