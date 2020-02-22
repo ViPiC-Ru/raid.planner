@@ -1,5 +1,5 @@
-key:string	synonym:string	single:string	multi:string
-heal	хил	Хил	Хилы
-tank	танк	Танк	Танки
-dd	дд	Боец	Бойцы
-member	участник	Участник	Участники
+key:string	synonym:string	name:string
+heal	хил	Хил
+tank	танк	Танк
+dd	дд	Боец
+member	участник	Участник
