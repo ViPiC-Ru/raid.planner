@@ -1011,7 +1011,7 @@ $app = array(// основной массив данных
                                     if(!empty($command["user"])) $uid = $command["user"];
                                     else $uid = $message["author"]["id"];
                                     $member = $app["fun"]["getСache"]("member", $uid, $guild["id"]);
-                                    if($member){// если удалось получить данные
+                                    if($member and !$member["user"]["bot"]){// если проверка пройдена
                                     }else $error = 12;
                                 };
                                 // считаем записи и проверяем лимиты
@@ -1148,7 +1148,7 @@ $app = array(// основной массив данных
                                     if(!empty($command["user"])) $uid = $command["user"];
                                     else $uid = $message["author"]["id"];
                                     $user = $app["fun"]["getСache"]("user", $uid);
-                                    if($user){// если удалось получить данные
+                                    if($user and !$user["bot"]){// если проверка пройдена
                                     }else $error = 21;
                                 };
                                 // проверяем права на удаление записей других пользователей
@@ -1196,17 +1196,15 @@ $app = array(// основной массив данных
                         // получаем идентификатор личного канала
                         if(empty($status)){// если нет ошибок
                             $user = $app["fun"]["getСache"]("user", $message["author"]["id"]);
-                            if(isset($user["channels"][0])){// если личный канал существует
+                            if($user and !$user["bot"] and isset($user["channels"][0])){// если личный канал существует
                                 $item = $user["channels"][0];// получаем очередной элимент
-                            }else $status = 310;// не корректный внутренний запрос
-                        };
-                        // отправляем личное сообщение
-                        if(empty($status)){// если нет ошибок
-                            $uri = "/channels/" . $item["id"] . "/messages";
-                            $data = array("content" => $content);
-                            $data = $app["fun"]["apiRequest"]("post", $uri, $data, $code);
-                            if(200 == $code or 403 == $code){// если запрос выполнен успешно
-                            }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                                // отправляем личное сообщение
+                                $uri = "/channels/" . $item["id"] . "/messages";
+                                $data = array("content" => $content);
+                                $data = $app["fun"]["apiRequest"]("post", $uri, $data, $code);
+                                if(200 == $code or 403 == $code){// если запрос выполнен успешно
+                                }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                            };
                         };
                     };
                 };
@@ -1768,6 +1766,13 @@ $app = array(// основной массив данных
                         if(isset($data[$key])){// если существует
                             $unit[$key] = $data[$key];
                         };
+                        // признак бота
+                        $key = "bot";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
+                        }else if(!isset($unit[$key])){// если не задано
+                            $unit[$key] = false;// по умолчанию
+                        };
                         // список каналов
                         $key = "channels";// задаём ключ
                         if(isset($data[$key])){// если существует
@@ -1824,9 +1829,16 @@ $app = array(// основной массив данных
                     // обрабатываем данные
                     if(!$error){// если нет ошибок
                         // идентификатор пользователя
-                        $key = "user";// задаём ключ
-                        if(isset($data[$key]["id"])){// если существует
-                            $unit[$key]["id"] = $data[$key]["id"];
+                        $key = "id";// задаём ключ
+                        if(isset($data["user"][$key])){// если существует
+                            $unit["user"][$key] = $data["user"][$key];
+                        };
+                        // признак бота для пользователя
+                        $key = "bot";// задаём ключ
+                        if(isset($data["user"][$key])){// если существует
+                            $unit["user"][$key] = $data["user"][$key];
+                        }else if(!isset($unit["user"][$key])){// если не задано
+                            $unit["user"][$key] = false;// по умолчанию
                         };
                         // список ролей
                         $key = "roles";// задаём ключ
@@ -1980,9 +1992,16 @@ $app = array(// основной массив данных
                             $unit[$key] = $data[$key];
                         };
                         // идентификатор автора
-                        $key = "author";// задаём ключ
-                        if(isset($data[$key]["id"])){// если существует
-                            $unit[$key]["id"] = $data[$key]["id"];
+                        $key = "id";// задаём ключ
+                        if(isset($data["author"][$key])){// если существует
+                            $unit["author"][$key] = $data["author"][$key];
+                        };
+                        // признак бота для автора
+                        $key = "bot";// задаём ключ
+                        if(isset($data["author"][$key])){// если существует
+                            $unit["author"][$key] = $data["author"][$key];
+                        }else if(!isset($unit["author"][$key])){// если не задано
+                            $unit["author"][$key] = false;// по умолчанию
                         };
                         // тип
                         $key = "type";// задаём ключ
