@@ -1,4 +1,4 @@
-<?php # 0.2.4 api для бота в discord
+<?php # 0.2.4d api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.5 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.9 подкласс для работы с файловым реляционным хранилищем
@@ -10,7 +10,6 @@ include_once "../../libs/vendor/webSocketClient-1.0.inc.php";               // 0
 $app = array(// основной массив данных
     "val" => array(// переменные и константы
         "baseUrl" => "../base/%name%.db",                                   // шаблон url для базы данных
-        "appToken" => "MY-APP-TOKEN",                                       // защитный ключ приложения
         "statusUnknown" => "Server unknown status",                         // сообщение для неизвестного статуса
         "statusLang" => "en",                                               // язык для кодов расшифровок
         "format" => "json",                                                 // формат вывода поумолчанию
@@ -28,11 +27,12 @@ $app = array(// основной массив данных
         "discordWebSocketLimit" => 500,                                     // лимит итераций цикла общения WebSocket с Discord
         "discordMessageLength" => 2000,                                     // максимальная длина сообщения в Discord
         "discordMessageTime" => 6*60,                                       // максимально допустимое время между сгруппированными сообщениями
-        "discordClientId" => "663665374532993044",                          // идентификатор приложения в Discord
         "discordCreatePermission" => 32768,                                 // разрешения для создание первой записи в событие (прикреплять файлы)
         "discordUserPermission" => 16384,                                   // разрешения для записи других пользователей (встраивать ссылки)
         "discordBotPermission" => 76800,                                    // минимальные разрешения для работы бота
         "discordBotGame" => "планирование от @ViPiC#5562",                  // анонс возле аватарки бота
+        "appToken" => "MY-APP-TOKEN",                                       // защитный ключ приложения
+        "discordBotId" => "MY-DISCORD-BOT-ID",                              // идентификатор приложения в Discord
         "discordBotToken" => "MY-DISCORD-BOT-TOKEN"
     ),
     "base" => array(// базы данных
@@ -316,7 +316,7 @@ $app = array(// основной массив данных
                                         $event["time"] < $now - $app["val"]["eventTimeDelete"]
                                         or $event["time"] > $now + $app["val"]["eventTimeAdd"]
                                     ){// если нужно удалить эту запись
-                                        if($events->set($events->key($i))){// если данные успешно добавлены
+                                        if($events->set($events->key($i))){// если данные успешно удалены
                                             if(!isset($counts[$event["guild"]])) $counts[$event["guild"]] = array();
                                             if(!isset($counts[$event["guild"]][$event["channel"]])) $counts[$event["guild"]][$event["channel"]] = 1;
                                             else $counts[$event["guild"]][$event["channel"]]++;
@@ -326,18 +326,25 @@ $app = array(// основной массив данных
                                 };
                                 // выполняем обновление уведомлений
                                 foreach($counts as $gid => $items){// пробигаемся по гильдиям
-                                    foreach($items as $cid => $count){// пробигаемся по каналам
-                                        if($count and empty($status)){// если нужно выполнить
-                                            // обрабатываем канал
-                                            $flag = $app["method"]["discord.channel"](
-                                                array(// параметры для метода
-                                                    "channel" => $cid,
-                                                    "guild" => $gid
-                                                ),
-                                                array("nocontrol" => true),
-                                                $sign, $status
-                                            );
-                                            $isEventsUpdate = $isEventsUpdate || $flag;
+                                    // обрабатываем гильдию
+                                    if(!empty($status)) break;// не продолжаем при ошибке
+                                    $guild = $app["fun"]["getСache"]("guild", $gid);
+                                    if($guild){// если удалось получить данные
+                                        foreach($items as $cid => $count){// пробигаемся по каналам
+                                            if(!empty($status)) break;// не продолжаем при ошибке
+                                            $channel = $app["fun"]["getСache"]("channel", $cid, $gid, null);
+                                            if($channel and $count){// если нужно выполнить
+                                                // обрабатываем канал
+                                                $flag = $app["method"]["discord.channel"](
+                                                    array(// параметры для метода
+                                                        "channel" => $cid,
+                                                        "guild" => $gid
+                                                    ),
+                                                    array("nocontrol" => true),
+                                                    $sign, $status
+                                                );
+                                                $isEventsUpdate = $isEventsUpdate || $flag;
+                                            };
                                         };
                                     };
                                 };
@@ -509,7 +516,7 @@ $app = array(// основной массив данных
                 $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"], null);
                 if($channel){// если удалось получить данные
                     // проверяем разрешения
-                    $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordClientId"], $channel, $guild["id"]);
+                    $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $channel, $guild["id"]);
                     $hasPermission = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                 }else $status = 303;// переданные параметры не верны
             };
@@ -637,7 +644,7 @@ $app = array(// основной массив данных
                 $channel = $app["fun"]["getСache"]("channel", $channel, $guild["id"], null);
                 if($channel){// если удалось получить данные
                     // проверяем разрешения
-                    $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordClientId"], $channel, $guild["id"]);
+                    $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $channel, $guild["id"]);
                     $hasPermission = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                 }else $status = 303;// переданные параметры не верны
             };
@@ -665,7 +672,7 @@ $app = array(// основной массив данных
             if(empty($status) and $hasPermission){// если нужно выполнить
                 if(// множественное условие
                     !$message["pinned"] and !$message["type"]
-                    and $message["author"]["id"] != $app["val"]["discordClientId"]
+                    and $message["author"]["id"] != $app["val"]["discordBotId"]
                 ){// если это сообщение с командой
                     $command = array();// команда заложенная в сообщение
                     // определяем команду в сообщении
@@ -1208,7 +1215,7 @@ $app = array(// основной массив данных
             if(empty($status) and $hasPermission){// если нужно выполнить
                 if(// множественное условие
                     !$message["pinned"]
-                    and $message["author"]["id"] != $app["val"]["discordClientId"]
+                    and $message["author"]["id"] != $app["val"]["discordBotId"]
                 ){// если это сообщение можно удалить
                     $uri = "/channels/" . $channel["id"] . "/messages/" . $message["id"];
                     $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
@@ -1470,7 +1477,7 @@ $app = array(// основной массив данных
                 // формируем список контентных сообщений бота и удаляем прочие сообщения бота
                 for($i = count($channel["messages"]) - 1; $i > -1 and empty($status); $i--){
                     $item = $channel["messages"][$i];// получаем очередной элимент
-                    if($item["author"]["id"] == $app["val"]["discordClientId"]){// если это сообщение бота
+                    if($item["author"]["id"] == $app["val"]["discordBotId"]){// если это сообщение бота
                         // удаляем сообщение
                         if($item["type"]){// если это не контентное сообщение
                             $uri = "/channels/" . $channel["id"] . "/messages/" . $item["id"];
@@ -1936,7 +1943,7 @@ $app = array(// основной массив данных
                             and !empty($gid)
                             and !empty($data["timestamp"])
                             and !empty($data["author"]["id"])
-                            and (!$data["pinned"] or $data["author"]["id"] == $app["val"]["discordClientId"])
+                            and (!$data["pinned"] or $data["author"]["id"] == $app["val"]["discordBotId"])
                         ){// если проверка пройдена
                         }else $error = 3;
                     };
@@ -1945,7 +1952,7 @@ $app = array(// основной массив данных
                         $key = "messages";// задаём ключ
                         $parent = &$app["fun"]["getСache"]("channel", $cid, $gid, null);
                         if(!is_null($parent)){// если есть родительский элимент
-                            $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordClientId"], $cid, $gid);
+                            $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $cid, $gid);
                             $flag = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                             if($flag or isset($parent[$key])){// если есть разрешения или учёт уже ведётся
                                 if(!isset($parent[$key])) $parent[$key] = array();
@@ -2142,7 +2149,7 @@ $app = array(// основной массив данных
                     // получаем каналы через api
                     $key = "channels";// задаём ключ
                     if(!$error and $unit and !isset($unit[$key])){// если нужно выполнить
-                        $uri = "/users/" . $app["val"]["discordClientId"] . "/" . $key;
+                        $uri = "/users/" . $app["val"]["discordBotId"] . "/" . $key;
                         $data = array("recipient_id" => $uid);
                         $data = $app["fun"]["apiRequest"]("post", $uri, $data, $code);
                         if(200 == $code){// если запрос выполнен успешно
@@ -2244,7 +2251,7 @@ $app = array(// основной массив данных
                     // получаем сообщения через api
                     $key = "messages";// задаём ключ
                     if(!$error and $unit and !empty($gid) and !isset($unit[$key])){// если нужно выполнить
-                        $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordClientId"], $unit, $gid);
+                        $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $unit, $gid);
                         $flag = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                         if($flag){// если проверка пройдена
                             $uri = "/channels/" . $cid  . "/" . $key;
