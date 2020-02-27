@@ -24,13 +24,13 @@ $app = array(// основной массив данных
         "eventOperationCycle" => 5,                                         // с какой частотой производить регламентные операции с базой в цикле
         "discordApiUrl" => "https://discordapp.com/api",                    // базовый url для взаимодействия с Discord API
         "discordWebSocketHost" => "gateway.discord.gg",                     // адрес хоста для взаимодействия с Discord через WebSocket
-        "discordWebSocketLimit" => 500,                                     // лимит итераций цикла общения WebSocket с Discord
+        "discordWebSocketLimit" => 5000,                                    // лимит итераций цикла общения WebSocket с Discord
         "discordMessageLength" => 2000,                                     // максимальная длина сообщения в Discord
         "discordMessageTime" => 6*60,                                       // максимально допустимое время между сгруппированными сообщениями
         "discordCreatePermission" => 32768,                                 // разрешения для создание первой записи в событие (прикреплять файлы)
         "discordUserPermission" => 16384,                                   // разрешения для записи других пользователей (встраивать ссылки)
         "discordBotPermission" => 76800,                                    // минимальные разрешения для работы бота
-        "discordBotGame" => "планирование от @ViPiC#5562",                  // анонс возле аватарки бота
+        "discordBotGame" => "рейды от @ViPiC#5562",                         // анонс возле аватарки бота
         "appToken" => "MY-APP-TOKEN",                                       // защитный ключ приложения
         "discordBotId" => "MY-DISCORD-BOT-ID",                              // идентификатор приложения в Discord
         "discordBotToken" => "MY-DISCORD-BOT-TOKEN"
@@ -121,13 +121,17 @@ $app = array(// основной массив данных
                                 case "TYPING_START":// typing start
                                     // обрабатываем начало набора сообщения
                                     if(isset($data["d"]["member"]["user"]["id"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
-                                        $member = $app["fun"]["setСache"]("member", $data["d"]["member"], $data["d"]["guild_id"]);
-                                        if($member){// если удалось закешировать данные
-                                            $user = $app["fun"]["setСache"]("user", $data["d"]["member"]["user"]);
-                                            if($user){// если удалось закешировать данные
-                                                $app["fun"]["getСache"]("user", $data["d"]["member"]["user"]["id"]);
-                                            }else $app["fun"]["delСache"]("user", $data["d"]["member"]["user"]["id"]);
-                                        }else $app["fun"]["delСache"]("member", $data["d"]["member"]["user"]["id"], $data["d"]["guild_id"]);
+                                        $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $data["d"]["channel_id"], $data["d"]["guild_id"]);
+                                        $flag = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
+                                        if($flag){// если бот контролирует канал в котором пользователь набирает сообщение
+                                            $member = $app["fun"]["setСache"]("member", $data["d"]["member"], $data["d"]["guild_id"]);
+                                            if($member){// если удалось закешировать данные
+                                                $user = $app["fun"]["setСache"]("user", $data["d"]["member"]["user"]);
+                                                if($user){// если удалось закешировать данные
+                                                    $app["fun"]["getСache"]("user", $data["d"]["member"]["user"]["id"]);
+                                                }else $app["fun"]["delСache"]("user", $data["d"]["member"]["user"]["id"]);
+                                            }else $app["fun"]["delСache"]("member", $data["d"]["member"]["user"]["id"], $data["d"]["guild_id"]);
+                                        };
                                     };
                                     break;
                                 case "GUILD_CREATE":// guild create
@@ -264,7 +268,7 @@ $app = array(// основной массив данных
                                     "d" => array(// data
                                         "token" => $app["val"]["discordBotToken"],
                                         "session_id" => $session->get("sid", "value"),
-                                        "seq" => 1*$session->get("seq", "value")
+                                        "seq" => 1 * $session->get("seq", "value")
                                     )
                                 );
                                 $data = json_encode($data, JSON_UNESCAPED_UNICODE);
@@ -295,7 +299,7 @@ $app = array(// основной массив данных
                                 // отправляем серцебиение
                                 $data = array(// данные для отправки
                                     "op" => 1,// heartbeat
-                                    "d" => 1*$session->get("seq", "value")
+                                    "d" => 1 * $session->get("seq", "value")
                                 );
                                 $data = json_encode($data, JSON_UNESCAPED_UNICODE);
                                 websocket_write($websocket, $data, true);
@@ -326,11 +330,12 @@ $app = array(// основной массив данных
                                 };
                                 // выполняем обновление уведомлений
                                 foreach($counts as $gid => $items){// пробигаемся по гильдиям
-                                    // обрабатываем гильдию
+                                    // получаем данные о гильдии
                                     if(!empty($status)) break;// не продолжаем при ошибке
                                     $guild = $app["fun"]["getСache"]("guild", $gid);
                                     if($guild){// если удалось получить данные
                                         foreach($items as $cid => $count){// пробигаемся по каналам
+                                            // получаем данные о канале
                                             if(!empty($status)) break;// не продолжаем при ошибке
                                             $channel = $app["fun"]["getСache"]("channel", $cid, $gid, null);
                                             if($channel and $count){// если нужно выполнить
@@ -2099,18 +2104,6 @@ $app = array(// основной массив данных
                         if(200 == $code){// если запрос выполнен успешно
                             $unit = &$app["fun"]["setСache"]($type, $data);
                         }else $error = 5;
-                    };
-                    // получаем участников через api
-                    $key = "members";// задаём ключ
-                    if(!$error and $unit and !isset($unit[$key])){// если нужно выполнить
-                        $uri = "/guilds/" . $gid . "/" . $key;
-                        $data = $app["fun"]["apiRequest"]("get", $uri, null, $code);
-                        if(200 == $code){// если запрос выполнен успешно
-                            if(!isset($unit[$key])) $unit[$key] = array();
-                            for($i = 0, $iLen = count($data); $i < $iLen; $i++){
-                                $app["fun"]["setСache"]("member", $data[$i], $gid);
-                            };
-                        }else $error = 6;
                     };
                     // получаем каналы через api
                     $key = "channels";// задаём ключ
