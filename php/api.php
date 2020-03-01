@@ -1,4 +1,4 @@
-<?php # 0.2.4d api для бота в discord
+<?php # 0.2.5 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.5 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.9 подкласс для работы с файловым реляционным хранилищем
@@ -309,24 +309,24 @@ $app = array(// основной массив данных
                     };
                     // выполняем операции с базами данных
                     if(!(($index - 3) % $app["val"]["eventOperationCycle"])){// если пришло время
-                        // очищаем устаревшие записи событий
+                        // выполняем регламентные операции с базой событий
                         if(empty($status)){// если нет ошибок
                             if(!get_val($options, "nocontrol", false)){// если это прямой вызов
-                                $counts = array();// счётчик удалённых записей по каналам в разрезе гильдий
+                                $items = $app["fun"]["changeEvents"]($now, $status);
+                                $flag = count($items) > 0;// были ли изменения
+                                $isEventsUpdate = $isEventsUpdate || $flag;
+                                $counts = array();// счётчики для каналов
                                 // определяем каналы для обновления уведомлений
-                                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
-                                    $event = $events->get($events->key($i));
-                                    if(// множественное условие
-                                        $event["time"] < $now - $app["val"]["eventTimeDelete"]
-                                        or $event["time"] > $now + $app["val"]["eventTimeAdd"]
-                                    ){// если нужно удалить эту запись
-                                        if($events->set($events->key($i))){// если данные успешно удалены
-                                            if(!isset($counts[$event["guild"]])) $counts[$event["guild"]] = array();
-                                            if(!isset($counts[$event["guild"]][$event["channel"]])) $counts[$event["guild"]][$event["channel"]] = 1;
-                                            else $counts[$event["guild"]][$event["channel"]]++;
-                                            $isEventsUpdate = true;// были обновлены данные в базе данных
-                                        }else $status = 309;// не удалось записать данные в базу данных
+                                foreach($items as $id => $item){// пробигаемся по значениям
+                                    // создаём структуру счётчика
+                                    $count = &$counts;// счётчик элиментов
+                                    foreach(array($item["guild"], $item["channel"]) as $key){
+                                        if(!isset($count[$key])) $count[$key] = array();
+                                        $count = &$count[$key];// получаем ссылку
                                     };
+                                    // выполняем подсчёт элиментов
+                                    if(!isset($count["item"])) $count["item"] = 0;
+                                    $count["item"]++;
                                 };
                                 // выполняем обновление уведомлений
                                 foreach($counts as $gid => $items){// пробигаемся по гильдиям
@@ -338,7 +338,7 @@ $app = array(// основной массив данных
                                             // получаем данные о канале
                                             if(!empty($status)) break;// не продолжаем при ошибке
                                             $channel = $app["fun"]["getСache"]("channel", $cid, $gid, null);
-                                            if($channel and $count){// если нужно выполнить
+                                            if($channel and $count["item"]){// если нужно выполнить
                                                 // обрабатываем канал
                                                 $flag = $app["method"]["discord.channel"](
                                                     array(// параметры для метода
@@ -435,19 +435,10 @@ $app = array(// основной массив данных
                 if($guild){// если удалось получить данные
                 }else $status = 303;// переданные параметры не верны
             };
-            // очищаем устаревшие записи событий
+            // выполняем регламентные операции с базой событий
             if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
-                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
-                    $event = $events->get($events->key($i));
-                    if(// множественное условие
-                        $event["time"] < $now - $app["val"]["eventTimeDelete"]
-                        or $event["time"] > $now + $app["val"]["eventTimeAdd"]
-                    ){// если нужно удалить эту запись
-                        if($events->set($events->key($i))){// если данные успешно добавлены
-                            $isEventsUpdate = true;// были обновлены данные в базе данных
-                        }else $status = 309;// не удалось записать данные в базу данных
-                    };
-                };
+                $flag = count($app["fun"]["changeEvents"]($now, $status)) > 0;
+                $isEventsUpdate = $isEventsUpdate || $flag;
             };
             // выполняем обработку каналов в гильдии
             if(empty($status)){// если нет ошибок
@@ -524,6 +515,11 @@ $app = array(// основной массив данных
                     $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $channel, $guild["id"]);
                     $hasPermission = ($permission & $app["val"]["discordBotPermission"]) == $app["val"]["discordBotPermission"];
                 }else $status = 303;// переданные параметры не верны
+            };
+            // выполняем регламентные операции с базой событий
+            if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
+                $flag = count($app["fun"]["changeEvents"]($now, $status)) > 0;
+                $isEventsUpdate = $isEventsUpdate || $flag;
             };
             // очищаем устаревшие записи событий
             if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
@@ -659,19 +655,10 @@ $app = array(// основной массив данных
                 if($message){// если удалось получить данные
                 }else $status = 303;// переданные параметры не верны
             };
-            // очищаем устаревшие записи событий
+            // выполняем регламентные операции с базой событий
             if(empty($status) and !get_val($options, "nocontrol", false)){// если нужно выполнить
-                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
-                    $event = $events->get($events->key($i));
-                    if(// множественное условие
-                        $event["time"] < $now - $app["val"]["eventTimeDelete"]
-                        or $event["time"] > $now + $app["val"]["eventTimeAdd"]
-                    ){// если нужно удалить эту запись
-                        if($events->set($events->key($i))){// если данные успешно добавлены
-                            $isEventsUpdate = true;// были обновлены данные в базе данных
-                        }else $status = 309;// не удалось записать данные в базу данных
-                    };
-                };
+                $flag = count($app["fun"]["changeEvents"]($now, $status)) > 0;
+                $isEventsUpdate = $isEventsUpdate || $flag;
             };
             // обрабатываем сообщение
             if(empty($status) and $hasPermission){// если нужно выполнить
@@ -679,7 +666,15 @@ $app = array(// основной массив данных
                     !$message["pinned"] and !$message["type"]
                     and $message["author"]["id"] != $app["val"]["discordBotId"]
                 ){// если это сообщение с командой
-                    $command = array();// команда заложенная в сообщение
+                    $command = array(// пустая команда
+                        "action" => "",     // действие
+                        "role" => "",       // роль
+                        "raid" => "",       // рейд
+                        "time" => 0,        // время
+                        "user" => "",       // пользователь
+                        "addition" => "",   // опция
+                        "comment" => ""     // комментарий
+                    );
                     // определяем команду в сообщении
                     if(empty($error)){// если нет проблем
                         $delim = " ";// разделитель параметров в сообщении
@@ -762,8 +757,7 @@ $app = array(// основной массив данных
                                 }else if(preg_match("/^(\d{1,2}\.)(\d{2}\.)(\d{2})$/", $value, $list)){// если указано число, месяц и кратко год
                                     $time = $list[1] . $list[2] . mb_substr(date("Y", $message["timestamp"]), 0, 2) . $list[3];
                                 }else if(preg_match($userPattern, $value, $list)){// если указан пользователь
-                                    $command["raid"] = $value = "";
-                                    $command["time"] = 0;
+                                    $value = "";// сбрасываем значение
                                     $goToUserSet = true;
                                 }else if(strtotime($value, $message["timestamp"]) <= 0){// если указано не время
                                     // проверяем необходимость перехода к опции
@@ -774,8 +768,7 @@ $app = array(// основной массив данных
                                             mb_strtolower($value) == mb_strtolower($item["key"])
                                             or mb_strtolower($value) == mb_strtolower($item["synonym"])
                                         ){// если найдено совпадение
-                                            $command["raid"] = $value = "";
-                                            $command["time"] = 0;
+                                            $value = "";// сбрасываем значение
                                             $goToUserSet = true;
                                             break;
                                         };
@@ -796,8 +789,9 @@ $app = array(// основной массив данных
                             $index = mb_stripos($content, $delim);
                             if(false === $index) $value .= $content;
                             else $value .= mb_substr($content, 0, $index);
-                            if(!$time or !$value) $time = 0;
-                            else $time = strtotime($time . " " . $value);
+                            if($time and $value) $time = strtotime($time . " " . $value);
+                            else if(!$time and !$value) $time = 0;
+                            else $time = -1;
                             if(false === $time) $time = -1;// приводим к единобразному написанию
                             $offset = 1 * date("Z");// смещение временной зоны
                             if($time > 0) $time = ceil(($time - $offset) /$app["val"]["eventTimeStep"]) * $app["val"]["eventTimeStep"] + $offset;
@@ -837,7 +831,6 @@ $app = array(// основной массив данных
                             $index = mb_stripos($content, $delim);
                             if(false === $index) $value .= $content;
                             else $value .= mb_substr($content, 0, $index);
-                            $command["user"] = "";// начальное значение
                             if(preg_match($userPattern, $value, $list)){
                                 $command["user"] = $list[1];// получаем идентификатор пользователя
                                 // готовимся к следующему
@@ -882,9 +875,9 @@ $app = array(// основной массив данных
                             if(false === $index) $value .= $content;
                             else $value .= mb_substr($content, 0, $index);
                             // приводим комментарий к единому оформлению
-                            $comment = trim($value);// удаляем пробелы по краям с обоих сторон комментария
-                            $comment = mb_strtoupper(mb_substr($comment, 0, 1)) . mb_substr($comment, 1);
-                            $command["comment"] = $comment;
+                            $text = trim($value);// удаляем пробелы по краям с обоих сторон комментария
+                            $text = mb_strtoupper(mb_substr($text, 0, 1)) . mb_substr($text, 1);
+                            $command["comment"] = $text;
                         };
                         // готовимся к следующему
                         $content = mb_substr($content, mb_strlen($value));
@@ -909,8 +902,8 @@ $app = array(// основной массив данных
                                 };
                                 // считаем записи и задамём значения по умолчанию
                                 if(empty($error)){// если нет проблем
+                                    $counts = array();// счётчики элиментов
                                     // считаем количество записей
-                                    $counts = array();// счётчик записи
                                     for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
                                         $id = $events->key($i);// получаем ключевой идентификатор по индексу
                                         $event = $events->get($id);// получаем элимент по идентификатору
@@ -918,21 +911,28 @@ $app = array(// основной массив данных
                                             $event["channel"] == $channel["id"]
                                             and $event["guild"] == $guild["id"]
                                         ){// если нужно посчитать счётчик
-                                            if(!isset($counts[$event["time"]])) $counts[$event["time"]] = array();
-                                            if(!isset($counts[$event["time"]][$event["raid"]])) $counts[$event["time"]][$event["raid"]] = 1;
-                                            else $counts[$event["time"]][$event["raid"]]++;
+                                            // создаём структуру счётчика
+                                            $count = &$counts;// счётчик элиментов
+                                            foreach(array($event["time"], $event["raid"]) as $key){
+                                                if(!isset($count[$key])) $count[$key] = array();
+                                                $count = &$count[$key];// получаем ссылку
+                                            };
+                                            // выполняем подсчёт элиментов
+                                            if(!isset($count["item"])) $count["item"] = 0;
+                                            $count["item"]++;
+                                            // сохраняем исходный элимент
                                             $item = $event;
                                         };
                                     };
                                     // считаем количество рейдов
-                                    $count = 0;// количество рейдов
+                                    $index = 0;// количество рейдов
                                     foreach($counts as $items){
-                                        foreach($items as $value){
-                                            $count++;
+                                        foreach($items as $count){
+                                            $index++;
                                         };
                                     };
                                     // задаём значения по умолчанию
-                                    if(1 == $count){// если в канале один рейд
+                                    if(1 == $index){// если в канале один рейд
                                         $flag = true;// если значение ещё не задано
                                         // задаём значение рейда по умолчанию
                                         $flag = ($flag and empty($command["raid"]));
@@ -996,18 +996,22 @@ $app = array(// основной массив данных
                                 };
                                 // проверяем ограничивающий фильтр в имени канала
                                 if(empty($error)){// если нет проблем
-                                    $counts = array("channel" => 0, "raid" => 0);// счётчик совпадений ограничений
+                                    $count = array();// счётчик элиментов
+                                    // считаем количество записей
                                     for($i = 0, $iLen = $types->length; $i < $iLen; $i++){
                                         $key = $types->key($i);// получаем ключевой идентификатор по индексу
                                         $item = $types->get($key);// получаем элимент по идентификатору
                                         if(preg_match($item["filter"], $channel["name"], $list)){// если есть совподение
-                                            if($item["key"] == $raid["type"]) $counts["raid"]++;
-                                            $counts["channel"]++;// увеличиваем счётчик совпадений
+                                            // выполняем подсчёт элиментов
+                                            if(!isset($count["raid"])) $count["raid"] = 0;
+                                            if(!isset($count["channel"])) $count["channel"] = 0;
+                                            if($item["key"] == $raid["type"]) $count["raid"]++;
+                                            $count["channel"]++;
                                         };
                                     };
                                     if(// множественное условие
-                                        empty($counts["channel"])
-                                        or !empty($counts["raid"])
+                                        empty($count["channel"])
+                                        or !empty($count["raid"])
                                     ){// если проверка пройдена
                                     }else $error = 11;
                                 };
@@ -1021,10 +1025,14 @@ $app = array(// основной массив данных
                                 };
                                 // считаем записи и проверяем лимиты
                                 if(empty($error)){// если нет проблем
-                                    $counts = array("time" => 0, "raid" => 0, "item" => 0);// счётчик записи
+                                    $count = array();// счётчик элиментов
                                     for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
                                         $id = $events->key($i);// получаем ключевой идентификатор по индексу
                                         $event = $events->get($id);// получаем элимент по идентификатору
+                                        // выполняем подсчёт элиментов
+                                        if(!isset($count["time"])) $count["time"] = 0;
+                                        if(!isset($count["raid"])) $count["raid"] = 0;
+                                        if(!isset($count["item"])) $count["item"] = 0;
                                         if(// множественное условие
                                             $event["channel"] == $channel["id"]
                                             and $event["guild"] == $guild["id"]
@@ -1034,23 +1042,23 @@ $app = array(// основной массив данных
                                                 $event["raid"] == $raid["key"]
                                                 and $event["time"] == $command["time"]
                                             ){// если рейд и время совпадает
-                                                $counts["item"]++;// увеличиваем счётчик совпадений
+                                                $count["item"]++;
                                             };
                                             // в разрезе пользователя
                                             if(// множественное условие
                                                 $event["user"] == $member["user"]["id"]
                                                 and $event["time"] == $command["time"]
                                             ){// если пользователь и время совпадает
-                                                $counts["time"]++;// увеличиваем счётчик совпадений
+                                                $count["time"]++;
                                                 if($event["raid"] == $raid["key"]){// если рейд совпадает
-                                                    $counts["raid"]++;// увеличиваем счётчик совпадений
+                                                    $count["raid"]++;
                                                 };
                                             };
                                         };
                                     };
                                     if(// множественное условие
-                                        $counts["raid"] < $app["val"]["eventRaidLimit"]
-                                        and $counts["time"] < $app["val"]["eventTimeLimit"]
+                                        $count["raid"] < $app["val"]["eventRaidLimit"]
+                                        and $count["time"] < $app["val"]["eventTimeLimit"]
                                     ){// если проверка пройдена
                                     }else $error = 13;
                                 };
@@ -1062,7 +1070,7 @@ $app = array(// основной массив данных
                                     }else $error = 14;
                                 };
                                 // проверяем права на создание первой записи
-                                if(empty($error) and empty($counts["item"])){// если нужно выполнить
+                                if(empty($error) and empty($count["item"])){// если нужно выполнить
                                     $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
                                     $flag = ($permission & $app["val"]["discordCreatePermission"]) == $app["val"]["discordCreatePermission"];
                                     if($flag){// если проверка пройдена
@@ -1079,12 +1087,22 @@ $app = array(// основной массив данных
                                         "time" => $command["time"],
                                         "raid" => $raid["key"],
                                         "role" => $role["key"],
-                                        "leader" => false
+                                        "leader" => false,
+                                        "repeat" => 0
                                     );
                                 };
                                 // обрабатываем дополнительные опции
                                 if(empty($error)){// если нет проблем
+                                    $value = 24*60*60;// база для повторения
                                     switch($command["addition"]){// поддержмваемые опции
+                                        case "weekly"://еженедельно
+                                            $value = 7 * $value;
+                                        case "daily"://ежедневно
+                                            $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
+                                            $flag = ($permission & $app["val"]["discordCreatePermission"]) == $app["val"]["discordCreatePermission"];
+                                            if($flag){// если проверка пройдена
+                                                $event["repeat"] = $value;
+                                            }else $error = 16;
                                         case "leader":// лидер
                                             $event["leader"] = true;
                                             break;
@@ -1092,7 +1110,7 @@ $app = array(// основной массив данных
                                         case "":// опция не указана
                                             break;
                                         default:// не известная опция
-                                            $error = 16;
+                                            $error = 17;
                                     };
                                 };
                                 // добавляем данные в базу данных
@@ -1103,14 +1121,13 @@ $app = array(// основной массив данных
                                 };
                                 break;
                             case "remove":// удалить запись
-                                $leader = null;// идентификатор рейд лидера
                                 // проверяем корректность указания времени
                                 if(empty($error)){// если нет проблем
                                     if(// множественное условие
                                         $command["time"] > 0
                                         or empty($command["time"])
                                     ){// если проверка пройдена
-                                    }else $error = 17;
+                                    }else $error = 18;
                                 };
                                 // проверяем ограничения по времени записи
                                 if(empty($error)){// если нет проблем
@@ -1120,7 +1137,7 @@ $app = array(// основной массив данных
                                         ($flag or $command["time"] >= $message["timestamp"] + $app["val"]["eventTimeClose"])
                                         or empty($command["time"])
                                     ){// если проверка пройдена
-                                    }else $error = 18;
+                                    }else $error = 19;
                                 };    
                                 // проверяем корректность указания игровой роли
                                 if(empty($error)){// если нет проблем
@@ -1133,7 +1150,7 @@ $app = array(// основной массив данных
                                         empty($command["role"])
                                         or !empty($role)
                                     ){// если проверка пройдена
-                                    }else $error = 19;
+                                    }else $error = 20;
                                 };
                                 // проверяем корректность указания рейда
                                 if(empty($error)){// если нет проблем
@@ -1146,7 +1163,7 @@ $app = array(// основной массив данных
                                         empty($command["raid"])
                                         or !empty($raid)
                                     ){// если проверка пройдена
-                                    }else $error = 20;
+                                    }else $error = 21;
                                 };
                                 // определяем контекст пользователя
                                 if(empty($error)){// если нет проблем
@@ -1154,14 +1171,14 @@ $app = array(// основной массив данных
                                     else $uid = $message["author"]["id"];
                                     $user = $app["fun"]["getСache"]("user", $uid);
                                     if($user and !$user["bot"]){// если проверка пройдена
-                                    }else $error = 21;
+                                    }else $error = 22;
                                 };
                                 // проверяем права на удаление записей других пользователей
                                 if(empty($error) and $user["id"] != $message["author"]["id"]){// если нужно выполнить
                                     $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
                                     $flag = ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"];
                                     if($flag){// если проверка пройдена
-                                    }else $error = 22;
+                                    }else $error = 23;
                                 };
                                 // удаляем записи событий
                                 if(empty($error)){// если нет проблем
@@ -1235,9 +1252,10 @@ $app = array(// основной массив данных
                 $contents = array();// контент для сообщений
                 // формируем список записей для отображения
                 $limits = array();// лимиты для рейдов
+                $counts = array();// счётчики для групп
                 $leaders = array();// лидеры для групп
                 $comments = array();// комментарии для групп
-                $counts = array();// счётчики для распеределения на группы
+                $repeats = array();// повторяемость события
                 $items = array();// список записей событий
                 $index = 0;// индекс элимента в новом массиве
                 for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
@@ -1251,14 +1269,17 @@ $app = array(// основной массив данных
                         and $item["guild"] == $guild["id"]
                         and $limit > -1
                     ){// если нужно включить запись в уведомление
+                        // создаём структуру счётчика
+                        $count = &$counts;// счётчик элиментов
+                        foreach(array($item["time"], $item["raid"], 0) as $key){
+                            if(!isset($count[$key])) $count[$key] = array();
+                            $count = &$count[$key];// получаем ссылку
+                        };
                         // считаем без учётом группы
-                        if(!isset($counts[$item["time"]])) $counts[$item["time"]] = array();
-                        if(!isset($counts[$item["time"]][$item["raid"]])) $counts[$item["time"]][$item["raid"]] = array();
-                        if(!isset($counts[$item["time"]][$item["raid"]][0])) $counts[$item["time"]][$item["raid"]][0] = array();
-                        if(!isset($counts[$item["time"]][$item["raid"]][0][""])) $counts[$item["time"]][$item["raid"]][0][""] = 1;
-                        else $counts[$item["time"]][$item["raid"]][0][""]++;
-                        if(!isset($counts[$item["time"]][$item["raid"]][0][$item["role"]])) $counts[$item["time"]][$item["raid"]][0][$item["role"]] = 1;
-                        else $counts[$item["time"]][$item["raid"]][0][$item["role"]]++;
+                        if(!isset($count[$item["role"]])) $count[$item["role"]] = 0;
+                        if(!isset($count[""])) $count[""] = 0;
+                        $count[$item["role"]]++;
+                        $count[""]++;
                         // вычисляем лимит
                         if(!isset($limits[$item["raid"]])){// если нужно вычислить общий лимит
                             $limits[$item["raid"]] = 0;// начальное значение лимита
@@ -1271,35 +1292,54 @@ $app = array(// основной массив данных
                         };
                         // определяем группу
                         $limit = $raid[$item["role"]];
-                        $count = $counts[$item["time"]][$item["raid"]][0][$item["role"]];
-                        $group = $limit ? ceil($count / $limit) : 1;
+                        $group = $limit ? ceil($count[$item["role"]] / $limit) : 1;
                         if(1 != $group) $group = 2;// ризиновая резервная группа
+                        // создаём структуру счётчика
+                        $count = &$counts;// счётчик элиментов
+                        foreach(array($item["time"], $item["raid"], $group) as $key){
+                            if(!isset($count[$key])) $count[$key] = array();
+                            $count = &$count[$key];// получаем ссылку
+                        };
                         // считаем с учётом группы
-                        if(!isset($counts[$item["time"]][$item["raid"]][$group])) $counts[$item["time"]][$item["raid"]][$group] = array();
-                        if(!isset($counts[$item["time"]][$item["raid"]][$group][""])) $counts[$item["time"]][$item["raid"]][$group][""] = 1;
-                        else $counts[$item["time"]][$item["raid"]][$group][""]++;
-                        if(!isset($counts[$item["time"]][$item["raid"]][$group][$item["role"]])) $counts[$item["time"]][$item["raid"]][$group][$item["role"]] = 1;
-                        else $counts[$item["time"]][$item["raid"]][$group][$item["role"]]++;
+                        if(!isset($count[$item["role"]])) $count[$item["role"]] = 0;
+                        if(!isset($count[""])) $count[""] = 0;
+                        $count[$item["role"]]++;
+                        $count[""]++;
+                        // создаём структуру лидера
+                        $leader = &$leaders;// лидер по группам
+                        foreach(array($item["time"], $item["raid"]) as $key){
+                            if(!isset($leader[$key])) $leader[$key] = array();
+                            $leader = &$leader[$key];// получаем ссылку
+                        };
                         // определяем лидера группы
-                        if(!isset($leaders[$item["time"]])) $leaders[$item["time"]] = array();
-                        if(!isset($leaders[$item["time"]][$item["raid"]])) $leaders[$item["time"]][$item["raid"]] = array();
-                        if(!isset($leaders[$item["time"]][$item["raid"]][$group])) $leaders[$item["time"]][$item["raid"]][$group] = $index;
-                        $leader = $leaders[$item["time"]][$item["raid"]][$group];
+                        if(!isset($leader[$group])) $leader[$group] = $index;
                         $limit = $limits[$item["raid"]];// получаем значение лимита
-                        $count = $counts[$item["time"]][$item["raid"]][$group][""];
                         if(1 == $group){// если это основная группа
-                            if($index != $leader){// если лидер не текущий элимент
-                                if(!$items[$leader]["leader"]){// если лидер выбран системой
-                                    if($item["leader"]) $leader = $leaders[$item["time"]][$item["raid"]][$group] = $index;
-                                    else if($count == $limit) $items[$leader]["leader"] = true;
+                            if($index != $leader[$group]){// если лидер не текущий элимент
+                                if(!$items[$leader[$group]]["leader"]){// если лидер выбран системой
+                                    if($item["leader"]) $leader[$group] = $index;
+                                    else if($count[""] == $limit) $items[$leader[$group]]["leader"] = true;
                                 }else if($item["leader"]) $item["leader"] = false;
-                            }else if($count == $limit) $item["leader"] = true;
+                            }else if($count[""] == $limit) $item["leader"] = true;
                         }else $item["leader"] = false;
+                        // создаём структуру комментария
+                        $comment = &$comments;// комментарий по группам
+                        foreach(array($item["time"], $item["raid"]) as $key){
+                            if(!isset($comment[$key])) $comment[$key] = array();
+                            $comment = &$comment[$key];// получаем ссылку
+                        };
                         // определяем комментарий группы
-                        if(!isset($comments[$item["time"]])) $comments[$item["time"]] = array();
-                        if(!isset($comments[$item["time"]][$item["raid"]])) $comments[$item["time"]][$item["raid"]] = array();
-                        if(!isset($comments[$item["time"]][$item["raid"]][$group])) $comments[$item["time"]][$item["raid"]][$group] = "";
-                        if($item["leader"] and $unit["leader"]) $comments[$item["time"]][$item["raid"]][$group] = $item["comment"];
+                        if(!isset($comment[$group])) $comment[$group] = "";
+                        if($item["leader"] and $unit["leader"]) $comment[$group] = $item["comment"];
+                        // создаём структуру повторения события
+                        $repeat = &$repeats;// повторяемость по рейдам
+                        foreach(array($item["time"]) as $key){
+                            if(!isset($repeat[$key])) $repeat[$key] = array();
+                            $repeat = &$repeat[$key];// получаем ссылку
+                        };
+                        // определяем повторяемость события
+                        if(!isset($repeat[$item["raid"]])) $repeat[$item["raid"]] = false;
+                        if($item["repeat"]) $repeat[$item["raid"]] = true;
                         // расширяем свойства элимента
                         $days = array("Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота");
                         $months = array("", "Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря");
@@ -1324,7 +1364,8 @@ $app = array(// основной массив данных
                 });
                 // формируем контент для уведомлений
                 $before = null;// предыдущий элимент
-                $length = 0;// длина текущего уведомления
+                $mLen = 0;// длина текущего уведомления
+                $bLen = 0;// длина текущего блока
                 $line = "";// сбрасываем значение строки
                 $position = 0;// позиция пользователя в рейде
                 if(count($items)){// если есть элименты для отображения
@@ -1333,35 +1374,36 @@ $app = array(// основной массив данных
                         $raid = $raids->get($item["raid"]);
                         $role = $roles->get($item["role"]);
                         $type = $types->get($raid["type"]);
+                        $group = $item["group"];
                         // построчно формируем текст содержимого
                         if(// множественное условие
                             empty($before)
                             or $before["title"] != $item["title"]
                         ){// если нужно добавить информацию о дате
                             // формируем блок и контент    
-                            $count = 0;// длина текущего блока
+                            $bLen = 0;// длина текущего блока
                             $flag = count($lines);
                             if($flag){// если есть строка данных
                                 $line = "_ _";// пустая строка
                                 array_push($lines, $line);
                             };
                             if($flag){// если сформирован блок
-                                if($length) $length += mb_strlen($delim);
+                                if($mLen) $mLen += mb_strlen($delim);
                                 $block = implode($delim, $lines);
-                                $count = mb_strlen($block);
+                                $bLen = mb_strlen($block);
                             };
                             if(// множественное условие
                                 count($blocks)
-                                and $length + $count > $app["val"]["discordMessageLength"]
+                                and $mLen + $bLen > $app["val"]["discordMessageLength"]
                             ){// если сформирован контент
                                 $content = implode($delim, $blocks);
                                 array_push($contents, $content);
                                 $blocks = array();
-                                $length = 0;
+                                $mLen = 0;
                             };
                             if($flag){// если сформирован блок
                                 array_push($blocks, $block);
-                                $length += $count;
+                                $mLen += $bLen;
                                 $lines = array();
                             };
                             // формируем строки данных
@@ -1370,50 +1412,64 @@ $app = array(// основной массив данных
                         };
                         if(// множественное условие
                             empty($before)
-                            or $before["group"] != $item["group"]
+                            or $before["group"] != $group
                             or $before["time"] != $item["time"]
                             or $before["raid"] != $item["raid"]
                         ){// если нужно добавить информацию о времени
                             // формируем блок и контент    
-                            $count = 0;// длина текущего блока
-                            $flag = (count($lines) and $before["title"] == $item["title"] and 1 == $item["group"]);
+                            $bLen = 0;// длина текущего блока
+                            $flag = (count($lines) and $before["title"] == $item["title"] and 1 == $group);
                             if($flag){// если есть строка данных
                                 $line = "_ _";// пустая строка
                                 array_push($lines, $line);
                             };
                             if($flag){// если сформирован блок
-                                if($length) $length += mb_strlen($delim);
+                                if($mLen) $mLen += mb_strlen($delim);
                                 $block = implode($delim, $lines);
-                                $count = mb_strlen($block);
+                                $bLen = mb_strlen($block);
                             };
                             if(// множественное условие
                                 count($blocks)
-                                and $length + $count > $app["val"]["discordMessageLength"]
+                                and $mLen + $bLen > $app["val"]["discordMessageLength"]
                             ){// если сформирован контент
                                 $content = implode($delim, $blocks);
                                 array_push($contents, $content);
                                 $blocks = array();
-                                $length = 0;
+                                $mLen = 0;
                             };
                             if($flag){// если сформирован блок
                                 array_push($blocks, $block);
-                                $length += $count;
+                                $mLen += $bLen;
                                 $lines = array();
+                            };
+                            // получаем счётчик из структуру
+                            $count = &$counts;// счётчик элиментов
+                            foreach(array($item["time"], $item["raid"], $group) as $key){
+                                $count = &$count[$key];// получаем ссылку
+                            };
+                            // получаем комментарий из структуру
+                            $comment = &$comments;// комментарий по группам
+                            foreach(array($item["time"], $item["raid"]) as $key){
+                                $comment = &$comment[$key];// получаем ссылку
+                            };
+                            // получаем повторяемость из структуру
+                            $repeat = &$repeats;// повторяемость по рейдам
+                            foreach(array($item["time"]) as $key){
+                                $repeat = &$repeat[$key];// получаем ссылку
                             };
                             // формируем строки данных
                             $limit = $limits[$item["raid"]];
-                            $count = $counts[$item["time"]][$item["raid"]][$item["group"]][""];
-                            $comment = $comments[$item["time"]][$item["raid"]][$item["group"]];
-                            if(1 == $item["group"]){// если это основная группа
-                                $icon = ($limit and $count < $limit) ? $type["processing"] : $type["icon"];
+                            if(1 == $group){// если это основная группа
+                                $icon = ($limit and $count[""] < $limit) ? $type["processing"] : $type["icon"];
                                 $line = (!empty($icon) ? $icon . " " : "");
                                 $line .= "**" . date("H:i", $item["time"]) . "** - **" . $raid["key"] . "** " . $raid["name"];
-                                $line .= (!empty($raid["chapter"]) ? " **DLC**" : "") . ($limit ? " (" . $count . " из " . $limit . ")" : "");
+                                $line .= (!empty($raid["chapter"]) ? " **DLC**" : "") . ($limit ? " (" . $count[""] . " из " . $limit . ")" : "");
+                                $line .= ($repeat[$item["raid"]] ? "  :repeat:" : "");
                                 $position = 1;
                             }else $line = " __Резерв:__";
                             array_push($lines, $line);
-                            if(!empty($comment)){// если есть комментарий
-                                $line = " __Комментарий__: " . $comment;
+                            if(!empty($comment[$group])){// если есть комментарий
+                                $line = " __Комментарий__: " . $comment[$group];
                                 array_push($lines, $line);
                             };
                         };
@@ -1438,29 +1494,29 @@ $app = array(// основной массив данных
                     array_push($lines, $line);
                 };
                 // формируем блок и контент    
-                $count = 0;// длина текущего блока
+                $bLen = 0;// длина текущего блока
                 $flag = count($lines);
                 if($flag and count($items)){// если нужно выполнить
                     $line = "_ _";// пустая строка
                     array_push($lines, $line);
                 };
                 if($flag){// если сформирован блок
-                    if($length) $length += mb_strlen($delim);
+                    if($mLen) $mLen += mb_strlen($delim);
                     $block = implode($delim, $lines);
-                    $count = mb_strlen($block);
+                    $bLen = mb_strlen($block);
                 };
                 if(// множественное условие
                     count($blocks)
-                    and $length + $count > $app["val"]["discordMessageLength"]
+                    and $mLen + $bLen > $app["val"]["discordMessageLength"]
                 ){// если сформирован контент
                     $content = implode($delim, $blocks);
                     array_push($contents, $content);
                     $blocks = array();
-                    $length = 0;
+                    $mLen = 0;
                 };
                 if($flag){// если сформирован блок
                     array_push($blocks, $block);
-                    $length += $count;
+                    $mLen += $bLen;
                     $lines = array();
                 };
                 // формируем контент
@@ -1470,13 +1526,12 @@ $app = array(// основной массив данных
                     $content = implode($delim, $blocks);
                     array_push($contents, $content);
                     $blocks = array();
-                    $length = 0;
+                    $mLen = 0;
                 };
             };
             // обрабатываем все сообщения бота
             if(empty($status) and $hasPermission){// если нужно выполнить
                 $items = array();// массив сообщений расписания
-                $count = count($contents);// нужное количество сообщений
                 // формируем список контентных сообщений бота и удаляем прочие сообщения бота
                 for($i = count($channel["messages"]) - 1; $i > -1 and empty($status); $i--){
                     $item = $channel["messages"][$i];// получаем очередной элимент
@@ -1492,7 +1547,7 @@ $app = array(// основной массив данных
                     };
                 };
                 // удаляем лишнии сообщения из сформированного списка
-                for($i = count($items) - 1; $i > $count - 1 and empty($status); $i--){
+                for($i = count($items) - 1; $i > count($contents) - 1 and empty($status); $i--){
                     $item = $items[$i];// получаем очередной элимент
                     // удаляем сообщение
                     $uri = "/channels/" . $channel["id"] . "/messages/" . $item["id"];
@@ -1504,7 +1559,7 @@ $app = array(// основной массив данных
                 };
                 // удаляем не группирующиеся сообщения из сформированного списка
                 $now = microtime(true);// текущее время
-                $time = $count > count($items) ? $now : 0;// время более нового сообщения
+                $time = count($contents) > count($items) ? $now : 0;// время более нового сообщения
                 $flag = false;// нужно ли изначально удалить сообщение
                 for($i = 0; $i < count($items) and empty($status); $i++){
                     $item = $items[$i];// получаем очередной элимент
@@ -2547,6 +2602,100 @@ $app = array(// основной массив данных
             };
             // возвращаем результат
             return $cache;
+        },
+        "changeEvents" => function($time, &$status){// делаем регламентные операции с событиями
+        //@param $time {float} - данные о времени для выполнения регламентных операций
+        //@param $status {number} - целое число статуса выполнения
+        //@return {array} - список изменённых событий по идентификаторам
+            global $app; $list = array();
+        
+            // загружаем все необходимые базы данных
+            if(empty($status)){// если нет ошибок
+                $events = $app["fun"]["getStorage"]("events", true);
+                if(!empty($events)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            // корректируем события по времени
+            if(empty($status)){// если нет ошибок
+                for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
+                    $id = $events->key($i);// получаем ключевой идентификатор по индексу
+                    $event = $events->get($id);// получаем элимент по идентификатору
+                    $value = $event["time"];// время события
+                    // корректируем повторяющиеся события
+                    if($event["repeat"]){// если это повторяющиеся событие
+                        // корректируем устаревшие повторяющиеся события
+                        while($value < $time - $app["val"]["eventTimeDelete"]){
+                            $value = $event["time"] + $event["repeat"];
+                        };
+                        // корректируем слишком далёкие повторяющиеся события
+                        while($value > $time + $app["val"]["eventTimeAdd"]){
+                            $value = $event["time"] - $event["repeat"];
+                        };
+                    };
+                    // определяем события выходящие за ограничения по времени
+                    if(// множественное условие
+                        $value < $time - $app["val"]["eventTimeDelete"]
+                        or $value > $time + $app["val"]["eventTimeAdd"]
+                    ){// если нужно удалить событие
+                        $value = 0;
+                    };
+                    // вносим изменения в базу данных
+                    if($event["time"] != $value){// если есть изменения
+                        $flag = $value ? $events->set($id, "time", $value) : $events->set($id);
+                        if($flag){// если данные успешно изменены
+                            $list[$id] = $event;// добавляем событие в список изменённых
+                        }else $status = 309;// не удалось записать данные в базу данных
+                    };
+                };
+            };
+            // считаем события для проверки лимитов
+            if(empty($status)){// если нет ошибок
+                $counts = array();// счётчики записи
+                for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
+                    $id = $events->key($i);// получаем ключевой идентификатор по индексу
+                    $event = $events->get($id);// получаем элимент по идентификатору
+                    // создаём структуру счётчика
+                    $count = &$counts;// счётчик элиментов
+                    foreach(array($event["guild"], $event["channel"], $event["user"], $event["time"]) as $key){
+                        if(!isset($count[$key])) $count[$key] = array();
+                        $count = &$count[$key];// получаем ссылку
+                    };
+                    // выполняем подсчёт событий
+                    if(!isset($count[$event["raid"]])) $count[$event["raid"]] = 0;
+                    if(!isset($count[""])) $count[""] = 0;
+                    $count[$event["raid"]]++;
+                    $count[""]++;
+                };
+            };
+            // удаляем события по лимитам
+            if(empty($status)){// если нет ошибок
+                foreach(array(false, true) as $repeat){// пробегаемся по значениям повторяемости
+                    for($i = $events->length - 1; $i >= 0 and empty($status); $i--){
+                        $id = $events->key($i);// получаем ключевой идентификатор по индексу
+                        $event = $events->get($id);// получаем элимент по идентификатору
+                        if($repeat == !!$event["repeat"]){// если событие соответствует
+                            // получаем счётчик из структуру
+                            $count = &$counts;// счётчик элиментов
+                            foreach(array($event["guild"], $event["channel"], $event["user"], $event["time"]) as $key){
+                                $count = &$count[$key];// получаем ссылку
+                            };
+                            // работаем с лимитами
+                            if(// множественное условие
+                                $count[$event["raid"]] > $app["val"]["eventRaidLimit"]
+                                or $count[""] > $app["val"]["eventTimeLimit"]
+                            ){// если есть привышение лимитов
+                                if($events->set($id)){// если данные успешно изменены
+                                    $list[$id] = $event;// добавляем событие в список изменённых
+                                    $count[$event["raid"]]--;
+                                    $count[""]--;
+                                }else $status = 309;// не удалось записать данные в базу данных
+                            };
+                        };
+                    };
+                };
+            };
+            // возвращаем результат
+            return $list;
         },
         "getPermission" => function($level, $member, $channel, $guild){// получаем разрешения
         //@param $level {string} - уровень проверки разрешений

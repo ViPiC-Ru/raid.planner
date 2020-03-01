@@ -1,3 +1,5 @@
 key:string	synonym:string
 leader	лидер
 note	-
+daily	ежедневно
+weekly	еженедельно
