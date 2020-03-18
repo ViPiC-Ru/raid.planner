@@ -1369,6 +1369,28 @@ $app = array(// основной массив данных
                                 $line = " __Комментарий__: " . $comment[$any];
                                 array_push($lines, $line);
                             };
+                            // формируем пример строки для записи
+                            if($flag){// если это основная или другая полная группа
+                                // определяем самую свободную роль в рейде
+                                $max = null;// идентификатор самой свободной роли
+                                for($j = 0, $jLen = $roles->length; $j < $jLen; $j++){
+                                    $key = $roles->key($j);// получаем идентификатор роли
+                                    $value = isset($count[$key]) ? $raid[$key] - $count[$key] : $raid[$key];
+                                    if($max) $value -= isset($count[$max]) ? $raid[$max] - $count[$max] : $raid[$max];
+                                    if($raid[$key] > -1 and (!$max or $value > 0)) $max = $key;
+                                };
+                                // готовим пример комманды
+                                $value = implode(" ", array(
+                                    $actions->get("add", "synonym"),
+                                    $roles->get($max, "synonym"),
+                                    date("d.m.Y", $item["time"]),
+                                    date("H:i", $item["time"]),
+                                    $raid["key"]
+                                ));
+                                // добавляем отдельной строкой
+                                $line = " Записаться `". $value ."`";
+                                array_push($lines, $line);
+                            };
                         };
                         // формируем строки данных
                         $line = " **" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["name"] . ": <@!" . $item["user"] . ">";
