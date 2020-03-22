@@ -1,6 +1,7 @@
 key:string	name:string	icon:string	processing:string	filter:string
-trial	Триал	:shield:	:hourglass:	/триал/i
+trial	Триал	:calendar_spiral:	:hourglass:	/триал/i
 dungeon	Подземелье	:shield:	:hourglass:	/подземел|данж/i
-arena	Арена	:calendar_spiral:	:hourglass:	/арен|данж/i
+undaunted	Неустрашимые	:shield:	:hourglass:	/неустрашим|данж/i
 battle	Сражение	:crossed_swords:	:hourglass:	/сражен/i
+arena	Арена	:shield:	:hourglass:	/арен/i
 activity	Мероприятие	:notepad_spiral:	:hourglass:	/мероприят/i
