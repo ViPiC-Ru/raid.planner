@@ -381,7 +381,7 @@ $app = array(// основной массив данных
                                             // получаем данные о канале
                                             if(!empty($status)) break;// не продолжаем при ошибке
                                             $channel = $app["fun"]["getСache"]("channel", $cid, $gid, null);
-                                            if($channel and $count["item"]){// если нужно выполнить
+                                            if($channel){// если удалось получить данные
                                                 // обрабатываем канал
                                                 $flag = $app["method"]["discord.channel"](
                                                     array(// параметры для метода
@@ -396,6 +396,19 @@ $app = array(// основной массив данных
                                                 $isEventsUpdate = $isEventsUpdate || $flag;
                                             };
                                         };
+                                        // обновляем сводное расписание в гильдии
+                                        if(!empty($status)) break;// не продолжаем при ошибке
+                                        $flag = $app["method"]["discord.guild"](
+                                            array(// параметры для метода
+                                                "guild" => $gid
+                                            ),
+                                            array(// внутренние опции
+                                                "nocontrol" => true,
+                                                "consolidated" => true
+                                            ),
+                                            $sign, $status
+                                        );
+                                        $isEventsUpdate = $isEventsUpdate || $flag;
                                     };
                                 };
                             };
@@ -847,6 +860,7 @@ $app = array(// основной массив данных
                                 };
                                 // считаем записи и задамём значения по умолчанию
                                 if(empty($error)){// если нет проблем
+                                    $unit = null;// ближайщее событие
                                     $counts = array();// счётчики элиментов
                                     // считаем количество записей
                                     for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
@@ -869,6 +883,13 @@ $app = array(// основной массив данных
                                             // выполняем подсчёт элиментов
                                             if(!isset($count["item"])) $count["item"] = 0;
                                             $count["item"]++;
+                                            // определяем ближайшее событие
+                                            if(// множественное условие
+                                                $event["time"] >= $message["timestamp"] + $app["val"]["eventTimeClose"]
+                                                and (empty($unit) or $unit["time"] > $event["time"])
+                                            ){// если ближайшее событие
+                                                $unit = $event;
+                                            };
                                             // сохраняем исходный элимент
                                             $item = $event;
                                         };
@@ -891,6 +912,16 @@ $app = array(// основной массив данных
                                         $flag = ($flag and empty($command["time"]));
                                         if($flag) $command["time"] = $item["time"];
                                         if($flag) $command["date"] = $time;
+                                    }else if(// множественное условие
+                                        !empty($unit)
+                                        and empty($command["raid"])
+                                        and empty($command["time"])
+                                        and empty($command["date"])
+                                    ){// если есть ближайшее событие
+                                        $time = strtotime(date("d.m.Y", $unit["time"]));
+                                        $command["raid"] = $unit["raid"];
+                                        $command["time"] = $unit["time"];
+                                        $command["date"] = $time;
                                     };
                                 };
                                 // проверяем что указано время
@@ -1448,8 +1479,8 @@ $app = array(// основной массив данных
                                     if($raid[$key] > -1 and (!$max or $value > 0)) $max = $key;
                                 };
                                 // готовим пример команды
-                                $value = implode(" ", array(
-                                    $actions->get("add", "synonym"),
+                                $value = $actions->get("add", "synonym");
+                                $value .= implode(" ", array(
                                     $roles->get($max, "synonym"),
                                     date("d.m.Y", $item["time"]),
                                     date("H:i", $item["time"]),
