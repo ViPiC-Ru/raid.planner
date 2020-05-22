@@ -1345,6 +1345,7 @@ $app = array(// основной массив данных
                     if(!$value and $a["channel"] != $b["channel"]) $value = $a["channel"] > $b["channel"] ? 1 : -1;
                     if(!$value and $a["raid"] != $b["raid"]) $value = $a["raid"] > $b["raid"] ? 1 : -1;
                     if(!$value and $a["group"] != $b["group"]) $value = $a["group"] > $b["group"] ? 1 : -1;
+                    if(!$value and $a["role"] != $b["role"]) $value = $a["role"] < $b["role"] ? 1 : -1;
                     if(!$value and $a["id"] != $b["id"]) $value = $a["id"] > $b["id"] ? 1 : -1;
                     // возвращаем результат
                     return $value;
@@ -1461,11 +1462,11 @@ $app = array(// основной массив данных
                                 array_push($lines, $line);
                                 $position = 1;
                             }else if((2 == $group or $before["count"] == $limit) and !$isConsolidated){// если это не полная группа
-                                $line = " __Резерв:__";
+                                $line = "__Резерв:__";
                                 array_push($lines, $line);
                             };
                             if($flag and !empty($comment[$any]) and !$isConsolidated){// если есть комментарий
-                                $line = " __Комментарий__: " . $comment[$any];
+                                $line = "__Комментарий__: " . $comment[$any];
                                 array_push($lines, $line);
                             };
                             // формируем пример строки для записи
@@ -1487,13 +1488,13 @@ $app = array(// основной массив данных
                                     $raid["key"]
                                 ));
                                 // добавляем отдельной строкой
-                                $line = " Записаться `". $value ."`";
+                                $line = "Записаться `". $value ."`";
                                 array_push($lines, $line);
                             };
                         };
                         // формируем строки данных
                         if(!$isConsolidated){// если это не сводное расписание
-                            $line = " **" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["name"] . ": <@!" . $item["user"] . ">";
+                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["name"] . ": <@!" . $item["user"] . ">";
                             $key = "лидер";// идентификатор обозначающий лидера
                             $value = $item["comment"];// комментарий для обработки
                             for($j = -1, $jLen = mb_strlen($key); $j !== false; $j = mb_stripos($value, $key)){
