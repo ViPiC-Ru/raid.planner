@@ -1477,7 +1477,8 @@ $app = array(// основной массив данных
                                     $key = $roles->key($j);// получаем идентификатор роли
                                     $value = isset($count[$key]) ? $raid[$key] - $count[$key] : $raid[$key];
                                     if($max) $value -= isset($count[$max]) ? $raid[$max] - $count[$max] : $raid[$max];
-                                    if($raid[$key] > -1 and (!$max or $value > 0)) $max = $key;
+                                    if($raid[$key] > 0 and (!$max or $value > 0)) $max = $key;
+                                    else if(!$raid[$key]) $max = $key;
                                 };
                                 // готовим пример команды
                                 $value = $actions->get("add", "synonym");
