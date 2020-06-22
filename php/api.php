@@ -19,9 +19,10 @@ $app = array(// основной массив данных
         "eventTimeStep" => 30*60,                                           // шаг записи на событие (округление времени)
         "eventTimeLimit" => 1,                                              // лимит записей на время для пользователя
         "eventRaidLimit" => 1,                                              // лимит записей на время и рейд для пользователя
-        "eventCommentLength" => 300,                                        // максимальная длина комментария пользователя
-        "eventNoteLength" => 20,                                            // максимальная длина заметки пользователя
+        "eventCommentLength" => 500,                                        // максимальная длина комментария пользователя
+        "eventNoteLength" => 25,                                            // максимальная длина заметки пользователя
         "eventOperationCycle" => 5,                                         // с какой частотой производить регламентные операции с базой в цикле
+        "discordLang" => "ru",                                              // язык отображения мнформации в Discord
         "discordApiUrl" => "https://discordapp.com/api",                    // базовый url для взаимодействия с Discord API
         "discordWebSocketHost" => "gateway.discord.gg",                     // адрес хоста для взаимодействия с Discord через WebSocket
         "discordWebSocketLimit" => 1500,                                    // лимит итераций цикла общения WebSocket с Discord
@@ -645,6 +646,7 @@ $app = array(// основной массив данных
             $isEventsUpdate = false;// были ли обновлены данные в базе данных
             $hasMainPermission = false;// есть основные разрешения
             $hasListPermission = false;// есть разрешения для сводного расписания
+            $language = $app["val"]["discordLang"];// локализация
             // получаем очищенные значения параметров
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
             $guild = $app["fun"]["getClearParam"]($params, "guild", "string");
@@ -696,6 +698,11 @@ $app = array(// основной массив данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
             };
             if(empty($status)){// если нет ошибок
+                $months = $app["fun"]["getStorage"]("months", false);
+                if(!empty($months)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            if(empty($status)){// если нет ошибок
                 $feedbacks = $app["fun"]["getStorage"]("feedbacks", false);
                 if(!empty($feedbacks)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
@@ -744,106 +751,153 @@ $app = array(// основной массив данных
                         "addition" => "",   // опция
                         "comment" => ""     // комментарий
                     );
-                    // определяем команду в сообщении
+                    // формируем команду из сообщения
                     if(empty($error)){// если нет проблем
-                        $content = $message["content"];// получаем содержимое сообщения
-                        $userPattern = "/^<@!?(\d+)>$|^(".$app["val"]["discordAllUser"].")$/";
-                        $goToUserSet = false;// перескочить к указанию пользователя
                         $delim = " ";// разделитель параметров в сообщении
-                        /////////////////////////////////////////////////////////////////// - действие
-                        $value = $app["fun"]["getNextValue"]($content, $delim);
-                        $key = $app["fun"]["getItemKey"]($actions, $value, true, true);
-                        if(mb_strlen($key)) $command["action"] = $key;
-                        /////////////////////////////////////////////////////////////////// - роль
-                        if(!mb_strlen($value)) $value = $app["fun"]["getNextValue"]($content, $delim);
-                        $key = $app["fun"]["getItemKey"]($roles, $value, false, true);
-                        if(mb_strlen($key)) $command["role"] = $key;
-                        /////////////////////////////////////////////////////////////////// - дата
-                        if(!$goToUserSet){// если нужно выполнить обработку этого параметра
-                            $text = $content;// сохраняем текущее состояния строки для пропуска параметра
-                            $value = $app["fun"]["getNextValue"]($content, $delim);
-                            $key = $app["fun"]["getItemKey"]($dates, $value, false, true);
-                            $t1 = strtotime($key, $message["timestamp"]);
-                            $time = 0;// вспомогательная переменная для обработки времени
-                            if(preg_match("/^(\d{1,2}\.)(\d{2})$/", $key, $list)){// если указано число и месяц
-                                $t1 = strtotime($key . "." . date("Y", $message["timestamp"]), $message["timestamp"]);
-                                $t2 = strtotime($key . "." . date("Y", strtotime("+1 year", $message["timestamp"])), $message["timestamp"]);
-                                $time = (abs($t1 - $message["timestamp"]) < abs($t2 - $message["timestamp"]) ? $t1 : $t2);
-                            }else if(preg_match("/^(\d{1,2}\.)(\d{2}\.)(\d{2})$/", $key, $list)){// если указано число, месяц и кратко год
-                                $time = strtotime($list[1] . $list[2] . mb_substr(date("Y", $message["timestamp"]), 0, 2) . $list[3], $message["timestamp"]);
-                            }else if(preg_match($userPattern, $key, $list)){// если указан пользователь
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($app["fun"]["getItemKey"]($additions, $key, false, false))){// если указана опция
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($key) and $t1 <= 0){// если указано не время
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($key)) $time = $t1;
-                            if(false === $time) $time = -1;// приводим к единобразному написанию
-                            if(!$goToUserSet and $time) $command["date"] = $time;
-                        };
-                        /////////////////////////////////////////////////////////////////// - время
-                        if(!$goToUserSet){// если нужно выполнить обработку этого параметра
-                            $text = $content;// сохраняем текущее состояния строки для пропуска параметра
-                            if(!mb_strlen($value)) $value = $app["fun"]["getNextValue"]($content, $delim);
-                            $key = $value;// копируем значение в ключ для дальнейшей обработки
-                            $value = "";// сбрасываем значение для корректной обработки следующего параметра
-                            $t1 = strtotime(date("d.m.Y", $time) . $delim . $key, $message["timestamp"]);
-                            $time = 0;// вспомогательная переменная для обработки времени
-                            if(preg_match($userPattern, $key, $list)){// если указан пользователь
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($app["fun"]["getItemKey"]($additions, $key, false, false))){// если указана опция
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($key) and $t1 <= 0){// если указано не время
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($key)) $time = $t1;
-                            if(false === $time) $time = -1;// приводим к единобразному написанию
-                            $offset = 1 * date("Z");// определяем текущее смещение временной зоны
-                            if($time > 0) $time = ceil(($time - $offset) / $app["val"]["eventTimeStep"]) * $app["val"]["eventTimeStep"] + $offset;
-                            if(!$goToUserSet and $time) $command["time"] = $time;
-                        };
-                        /////////////////////////////////////////////////////////////////// - рейд
-                        if(!$goToUserSet){// если нужно выполнить обработку этого параметра
-                            $text = $content;// сохраняем текущее состояния строки для пропуска параметра
-                            if(!mb_strlen($value)) $value = $app["fun"]["getNextValue"]($content, $delim);
-                            $key = $app["fun"]["getItemKey"]($raids, $value, false, true);
-                            if(preg_match($userPattern, $key, $list)){// если указан пользователь
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($app["fun"]["getItemKey"]($additions, $key, false, false))){// если указана опция
-                                $content = $text;// восстанавливаем сохранённое состояние строки
-                                $goToUserSet = true;// перескочить к указанию пользователя
-                            }else if(mb_strlen($key)){// если есть данные для обработки
-                                if(1 == mb_strlen($key)){// если пользователь отделил первый символ
-                                    $value = $key . $app["fun"]["getNextValue"]($content, $delim);
-                                    $key = $app["fun"]["getItemKey"]($raids, $value, false, true);
+                        $content = $message["content"];// получаем содержимое сообщения
+                        $content = trim($content);// убираем пробелы с концов сообщения
+                        $time = "";// вспомогательная переменная для обработки времени
+                        for($index = 0; true; $index++){// циклическая обработка
+                            // действие - KEY
+                            $key = "action";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!$index and !mb_strlen($value)){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, true, $actions);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $command[$key] = $value;
+                                    continue;
                                 };
-                                $command["raid"] = $key;
                             };
+                            // роль - KEY
+                            $key = "role";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!mb_strlen($value)){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, $roles);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $command[$key] = $value;
+                                    continue;
+                                };
+                            };
+                            // дата - KEY
+                            $key = "date";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!$value){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, $dates);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $value = strtotime($value, $message["timestamp"]);
+                                    if(false === $value) $value = -1;// приводим к единобразному написанию
+                                    $command[$key] = $value;
+                                    continue;
+                                };
+                            };
+                            // дата - DD.MM
+                            $key = "date";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!$value){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\.)(\d{2})$/", $list);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $t1 = strtotime($value . "." . date("Y", $message["timestamp"]), $message["timestamp"]);
+                                    $t2 = strtotime($value . "." . date("Y", strtotime("+1 year", $message["timestamp"])), $message["timestamp"]);
+                                    $value = (abs($t1 - $message["timestamp"]) < abs($t2 - $message["timestamp"]) ? $t1 : $t2);
+                                    if(false === $value) $value = -1;// приводим к единобразному написанию
+                                    $command[$key] = $value;
+                                    continue;
+                                };
+                            };
+                            // дата - DD.MM.YY
+                            $key = "date";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!$value){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\.)(\d{2}\.)(\d{2})$/", $list);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $value = $list[1] . $list[2] . mb_substr(date("Y", $message["timestamp"]), 0, 2) . $list[3];
+                                    $value = strtotime($value, $message["timestamp"]);
+                                    if(false === $value) $value = -1;// приводим к единобразному написанию
+                                    $command[$key] = $value;
+                                    continue;
+                                };
+                            };
+                            // дата - DD.MM.YYYY
+                            $key = "date";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!$value){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\.)(\d{2}\.)(\d{4})$/", $list);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $value = strtotime($value, $message["timestamp"]);
+                                    if(false === $value) $value = -1;// приводим к единобразному написанию
+                                    $command[$key] = $value;
+                                    continue;
+                                };
+                            };
+                            // время - HH:MM
+                            $value = $time;// текущий значение параметра
+                            if(!mb_strlen($value)){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\:)(\d{2})$/", $list);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $time = $value;
+                                    continue;
+                                };
+                            };
+                            // рейд - KEY
+                            $key = "raid";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!mb_strlen($value)){// если нужно выполнить
+                                $text = $content;// копируем состояния строки
+                                $value = $app["fun"]["getCommandValue"]($text, $delim);
+                                if(1 == mb_strlen($value)) $value .= $app["fun"]["getCommandValue"]($text, $delim);
+                                $value = $app["fun"]["getCommandValue"]($value, $delim, false, $raids);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $command[$key] = $value;
+                                    $content = $text;
+                                    continue;
+                                };
+                            };
+                            // пользователь - ID
+                            $key = "user";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!mb_strlen($value)){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^<@!?(\d+)>$|^(".$app["val"]["discordAllUser"].")$/", $list);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $command[$key] = array_pop($list);
+                                    continue;
+                                };
+                            };
+                            // опция - KEY
+                            $key = "addition";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!mb_strlen($value)){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false, $additions);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $command[$key] = $value;
+                                    continue;
+                                };
+                            };
+                            // комментарий - TEXT
+                            $delim = "\n";// разделитель
+                            $key = "comment";// текущий параметр команды
+                            $value = $command[$key];// текущий значение параметра
+                            if(!mb_strlen($value)){// если нужно выполнить
+                                $value = $app["fun"]["getCommandValue"]($content, $delim, false);
+                                if(mb_strlen($value)){// если найдено ключевое значение
+                                    $command[$key] = $value;
+                                };
+                            };
+                            // корректируем дату и время
+                            $key = "time";// текущий параметр команды
+                            if(mb_strlen($time)){// если нужно выполнить
+                                $value = date("d.m.Y", $message["timestamp"]);// дата по умолчанию
+                                if(!$command["date"]) $command["date"] = strtotime($value, $message["timestamp"]);
+                                if($command["date"] > 0) $value = date("d.m.Y", $command["date"]) . " " . $time;
+                                else $value = false;// фиксируем ошибку разбора параметра дата в команде
+                                if($value) $value = strtotime($value, $message["timestamp"]);
+                                if(false === $value) $value = -1;// приводим к единобразному написанию
+                                $offset = 1 * date("Z");// определяем текущее смещение временной зоны
+                                if($value > 0) $value = ceil(($value - $offset) / $app["val"]["eventTimeStep"]) * $app["val"]["eventTimeStep"] + $offset;
+                                $command[$key] = $value;
+                            };
+                            // завершаем обработку
+                            break;
                         };
-                        /////////////////////////////////////////////////////////////////// - пользователь
-                        $text = $content;// сохраняем текущее состояния строки для пропуска параметра
-                        if(!mb_strlen($value)) $value = $app["fun"]["getNextValue"]($content, $delim);
-                        $key = $value;// копируем значение в ключ для дальнейшей обработки
-                        $value = "";// сбрасываем значение для корректной обработки следующего параметра
-                        if(preg_match($userPattern, $key, $list)) $command["user"] = array_pop($list);
-                        else $content = $text;// восстанавливаем сохранённое состояние строки
-                        /////////////////////////////////////////////////////////////////// - опция
-                        if(!mb_strlen($value)) $value = $app["fun"]["getNextValue"]($content, $delim);
-                        $key = $app["fun"]["getItemKey"]($additions, $value, false, true);
-                        if(mb_strlen($key)) $command["addition"] = $key;
-                        /////////////////////////////////////////////////////////////////// - комментарий
-                        $delim = "\n";// разделитель
-                        if(!mb_strlen($value)) $value = $app["fun"]["getNextValue"]($content, $delim);
-                        $key = trim($value);// копируем значение в ключ для дальнейшей обработки
-                        $key = mb_strtoupper(mb_substr($key, 0, 1)) . mb_substr($key, 1);
-                        $value = "";// сбрасываем значение для корректной обработки следующего параметра
-                        if(mb_strlen($key)) $command["comment"] = $key;
                     };
                     // обрабатываем команду в сообщении
                     if(empty($error)){// если нет проблем
@@ -888,19 +942,22 @@ $app = array(// основной массив данных
                                 $index++;
                             };
                         };
+                        // проверяем задан ли не фильтрующий параметр
+                        $flag = false;// задан ли не фильтрующий параметр
+                        foreach($command as $key => $value){
+                            switch($key){// поддерживаемые параметры
+                                case "action": case "raid": case "time": case "date": break;
+                                default: $flag = ($flag or !empty($value));
+                            };
+                        };
                         // задаём значения по умолчанию
                         if(1 == $index){// если в канале один рейд
-                            $flag = true;// если значение ещё не задано
-                            // задаём значение рейда по умолчанию
-                            $flag = ($flag and empty($command["raid"]));
-                            if($flag) $command["raid"] = $item["raid"];
-                            // задаём значение времени по умолчанию
                             $time = strtotime(date("d.m.Y", $item["time"]));
-                            $flag = ($flag and empty($command["time"]));
-                            if($flag) $command["time"] = $item["time"];
-                            if($flag) $command["date"] = $time;
+                            if(empty($command["raid"])) $command["raid"] = $item["raid"];
+                            if(empty($command["time"])) $command["time"] = $item["time"];
+                            if(empty($command["date"])) $command["date"] = $time;
                         }else if(// множественное условие
-                            !empty($unit)
+                            !empty($unit) and $flag
                             and empty($command["raid"])
                             and empty($command["time"])
                             and empty($command["date"])
@@ -912,13 +969,15 @@ $app = array(// основной массив данных
                         };
                         // обрабатываем команду
                         switch($command["action"]){// поддержмваемые команды
-                            case "edit":// изменить запись
+                            case "*":// изменить запись
                                 $isEdit = true;
-                            case "add":// добавить запись
+                            case "+":// добавить запись
                                 // проверяем что указана роль
                                 if(empty($error)){// если нет проблем
+                                    $role = null;// сбрасываем значение
                                     if(!empty($command["role"])){// если проверка пройдена
-                                    }else $error = 2;
+                                        $role = $roles->get($command["role"]);
+                                    }else $error = $isEdit ? $error : 2;
                                 };
                                 // проверяем ограничения на комментарий
                                 if(empty($error)){// если нет проблем
@@ -926,26 +985,32 @@ $app = array(// основной массив данных
                                     if(mb_strlen($command["comment"]) <= $value){// если проверка пройдена
                                     }else $error = 3;
                                 };
+                                // проверяем что указана дата
+                                if(empty($error)){// если нет проблем
+                                    if(!empty($command["date"])){// если проверка пройдена
+                                    }else $error = $isEdit ? 21 : 4;
+                                };
                                 // проверяем что указано время
                                 if(empty($error)){// если нет проблем
-                                    if(// множественное условие
-                                        !empty($command["date"])
-                                        and !empty($command["time"])
-                                    ){// если проверка пройдена
-                                    }else $error = $isEdit ? 23 : 4;
+                                    if(!empty($command["time"])){// если проверка пройдена
+                                    }else $error = $isEdit ? 21 : 5;
+                                };
+                                // проверяем корректность указания даты
+                                if(empty($error)){// если нет проблем
+                                    if($command["date"] > 0){// если проверка пройдена
+                                    }else $error = $isEdit ? 21 : 6;
                                 };
                                 // проверяем корректность указания времени
                                 if(empty($error)){// если нет проблем
-                                    if(// множественное условие
-                                        $command["date"] > 0
-                                        and $command["time"] > 0
-                                    ){// если проверка пройдена
-                                    }else $error = 5;
+                                    if($command["time"] > 0){// если проверка пройдена
+                                    }else $error = $isEdit ? 21 : 7;
                                 };
                                 // проверяем что указан рейд
                                 if(empty($error)){// если нет проблем
+                                    $raid = null;// сбрасываем значение
                                     if(!empty($command["raid"])){// если проверка пройдена
-                                    }else $error = $isEdit ? 23 : 6;
+                                        $raid = $raids->get($command["raid"]);
+                                    }else $error = $isEdit ? 21 : 8;
                                 };
                                 // проверяем ограничения по времени записи
                                 if(empty($error)){// если нет проблем
@@ -957,22 +1022,10 @@ $app = array(// основной массив данных
                                         and $command["time"] > $message["timestamp"] - $app["val"]["eventTimeDelete"]
                                         and $command["time"] < $message["timestamp"] + $app["val"]["eventTimeAdd"]
                                     ){// если проверка пройдена
-                                    }else $error = 7;
-                                };
-                                // проверяем корректность указания игровой роли
-                                if(empty($error)){// если нет проблем
-                                    $role = $roles->get($command["role"]);
-                                    if(!empty($role)){// если проверка пройдена
-                                    }else $error = 8;
-                                };
-                                // проверяем корректность указания рейда
-                                if(empty($error)){// если нет проблем
-                                    $raid = $raids->get($command["raid"]);
-                                    if(!empty($raid)){// если проверка пройдена
                                     }else $error = 9;
                                 };
                                 // проверяем возможность использовать роль в рейде
-                                if(empty($error)){// если нет проблем
+                                if(empty($error) and !empty($role)){// если нужно выполнить
                                     $limit = $raid[$role["key"]];
                                     if($limit > -1){// если проверка пройдена
                                     }else $error = 10;
@@ -1084,13 +1137,16 @@ $app = array(// основной массив данных
                                         case "member":// участник
                                             $unit["leader"] = false;
                                             break;
-                                        case "note":// заметка
-                                            $unit["comment"] = $command["comment"];
                                         case "":// опция не указана
                                             break;
                                         default:// не известная опция
                                             $error = 17;
                                     };
+                                };
+                                // обрабатываем комментарий
+                                if(empty($error)){// если нет проблем
+                                    if("-" == $command["comment"]) $command["comment"] = $unit["comment"] = "";
+                                    else if(mb_strlen($command["comment"])) $unit["comment"] = $command["comment"];
                                 };
                                 // изменяем данные в базе данных
                                 if(empty($error) and $isEdit){// если нужно выполнить
@@ -1114,7 +1170,6 @@ $app = array(// основной массив данных
                                             if(!empty($raid)) $unit["raid"] = $raid["key"];
                                             if(!empty($role)) $unit["role"] = $role["key"];
                                             if(!empty($command["time"])) $unit["time"] = $command["time"];
-                                            if(mb_strlen($command["comment"])) $unit["comment"] = $command["comment"];
                                             if($events->set($id, null, $unit)){// если данные успешно изменены
                                                 $isEventsUpdate = true;// были обновлены данные в базе данных
                                                 $index++;// увиличиваем счётчик количества изменённых записей
@@ -1122,7 +1177,7 @@ $app = array(// основной массив данных
                                         };
                                     };
                                     if($index){// если изменены записи
-                                    }else $error = 23;
+                                    }else $error = 21;
                                 };
                                 // добавляем данные в базу данных
                                 if(empty($error) and !$isEdit){// если нужно выполнить
@@ -1145,10 +1200,10 @@ $app = array(// основной массив данных
                                         $index++;// увиличиваем счётчик количества добавленных записей
                                     }else $status = 309;// не удалось записать данные в базу данных
                                     if($index){// если добавлены записи
-                                    }else $error = 23;
+                                    }else $error = 21;
                                 };
                                 break;
-                            case "remove":// удалить запись
+                            case "-":// удалить запись
                                 // проверяем корректность указания времени
                                 if(empty($error)){// если нет проблем
                                     if(// множественное условие
@@ -1168,23 +1223,19 @@ $app = array(// основной массив данных
                                     ){// если проверка пройдена
                                     }else $error = 19;
                                 };    
-                                // проверяем корректность указания игровой роли
+                                // получаем игровую роль
                                 if(empty($error)){// если нет проблем
-                                    $role = $roles->get($command["role"]);
-                                    if(// множественное условие
-                                        empty($command["role"])
-                                        or !empty($role)
-                                    ){// если проверка пройдена
-                                    }else $error = 20;
+                                    $role = null;// сбрасываем значение
+                                    if(!empty($command["role"])){// если проверка пройдена
+                                        $role = $roles->get($command["role"]);
+                                    };
                                 };
-                                // проверяем корректность указания рейда
+                                // получаем рейд
                                 if(empty($error)){// если нет проблем
-                                    $raid = $raids->get($command["raid"]);
-                                    if(// множественное условие
-                                        empty($command["raid"])
-                                        or !empty($raid)
-                                    ){// если проверка пройдена
-                                    }else $error = 21;
+                                    $raid = null;// сбрасываем значение
+                                    if(!empty($command["raid"])){// если проверка пройдена
+                                        $raid = $raids->get($command["raid"]);
+                                    };
                                 };
                                 // определяем контекст пользователя
                                 if(empty($error)){// если нет проблем
@@ -1199,7 +1250,7 @@ $app = array(// основной массив данных
                                     if(!$flag) $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
                                     $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
                                     if($flag){// если проверка пройдена
-                                    }else $error = 22;
+                                    }else $error = 20;
                                 };
                                 // удаляем записи событий
                                 if(empty($error)){// если нет проблем
@@ -1228,7 +1279,7 @@ $app = array(// основной массив данных
                                         };
                                     };
                                     if($index){// если удалены записи
-                                    }else $error = 23;
+                                    }else $error = 21;
                                 };
                                 break;
                             default:// не известная команда
@@ -1240,7 +1291,7 @@ $app = array(// основной массив данных
                         // готовим контент для личного сообщения
                         if(empty($status)){// если нет ошибок
                             $feedback = $feedbacks->get($error);// получаем элимент по идентификатору
-                            if(!empty($feedback)) $content = template($feedback["content"], $command);
+                            if(!empty($feedback)) $content = template($feedback[$language], $command);
                             if(empty($content)) $content = "Ваше сообщение не обработано из-за непредвиденной проблемы.";
                         };
                         // получаем идентификатор личного канала
@@ -1257,19 +1308,6 @@ $app = array(// основной массив данных
                             };
                         };
                     };
-                };
-            };
-            // удаляем сообщение
-            if(empty($status) and !empty($message) and $hasMainPermission){// если нужно выполнить
-                if(// множественное условие
-                    !$message["pinned"]
-                    and $message["author"]["id"] != $app["val"]["discordBotId"]
-                ){// если это сообщение можно удалить
-                    $uri = "/channels/" . $channel["id"] . "/messages/" . $message["id"];
-                    $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
-                    if(204 == $code or 404 == $code){// если запрос выполнен успешно
-                        $app["fun"]["delСache"]("message", $message["id"], $channel["id"], $guild["id"]);
-                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                 };
             };
             // формируем текст для уведомлений
@@ -1374,10 +1412,8 @@ $app = array(// основной массив данных
                             if($item["repeat"]) $repeat[$any] = true;
                             if($item["repeat"]) $repeat[$group] = true;
                             // расширяем свойства элимента
-                            $days = array("Воскресенье", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота");
-                            $months = array("", "Января", "Февраля", "Марта", "Апреля", "Мая", "Июня", "Июля", "Августа", "Сентября", "Октября", "Ноября", "Декабря");
-                            $item["title"] = date("d", $item["time"]) . " " . $months[date("n", $item["time"])];
-                            $item["day"] = $days[date("w", $item["time"])];
+                            $item["title"] = date("d", $item["time"]) . " " . $months->get(date("n", $item["time"]), $language);
+                            $item["day"] = $dates->get(mb_strtolower(date("l", $item["time"])), $language);
                             $item["group"] = $group;
                             // сохраняем элимент в массив
                             $items[$index] = $item;
@@ -1500,8 +1536,8 @@ $app = array(// основной массив данных
                             if($flag){// если это основная или другая полная группа
                                 $icon = ($limit and $count[$all] < $limit) ? $type["processing"] : $type["icon"];
                                 $line = ((!empty($icon) and !$isConsolidated) ? $icon . " " : "");
-                                $line .= "**" . date("H:i", $item["time"]) . "** - **" . $raid["key"] . "** " . $raid["name"];
-                                $line .= ($isConsolidated ? " (" . mb_strtolower($type["name"]) . ")" : "");
+                                $line .= "**" . date("H:i", $item["time"]) . "**" . ($isConsolidated ? " — " : " - ") . "**" . $raid["key"] . "** " . $raid[$language];
+                                $line .= ($isConsolidated ? " (" . mb_strtolower($type[$language]) . ")" : "");
                                 $line .= (!empty($raid["chapter"]) ? " **DLC" . ($isConsolidated ? " " . $raid["chapter"] : "") . "**" : "");
                                 $line .= (($limit and !$isConsolidated) ? " (" . $count[$all] . " из " . $limit . ")" : "");
                                 $line .= ((1 == $group and $repeat[$any] and !$isConsolidated) ? "  :repeat:" : "");
@@ -1528,9 +1564,8 @@ $app = array(// основной массив данных
                                     else if(!$raid[$key]) $max = $key;
                                 };
                                 // готовим пример команды
-                                $value = $actions->get("add", "synonym");
-                                $value .= implode(" ", array(
-                                    $roles->get($max, "synonym"),
+                                $value = "+" . implode(" ", array(
+                                    mb_strtolower($roles->get($max, $language)),
                                     date("d.m.Y", $item["time"]),
                                     date("H:i", $item["time"]),
                                     $raid["key"]
@@ -1542,7 +1577,7 @@ $app = array(// основной массив данных
                         };
                         // формируем строки данных
                         if(!$isConsolidated){// если это не сводное расписание
-                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["name"] . ": <@!" . $item["user"] . ">";
+                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["synonym"] . ": <@!" . $item["user"] . ">";
                             $key = "лидер";// идентификатор обозначающий лидера
                             $value = $item["comment"];// комментарий для обработки
                             for($j = -1, $jLen = mb_strlen($key); $j !== false; $j = mb_stripos($value, $key)){
@@ -1670,6 +1705,19 @@ $app = array(// основной массив данных
                             $app["fun"]["setСache"]("message", $data, $channel["id"], $guild["id"]);
                         }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                     };
+                };
+            };
+            // удаляем сообщение
+            if(empty($status) and !empty($message) and $hasMainPermission){// если нужно выполнить
+                if(// множественное условие
+                    !$message["pinned"]
+                    and $message["author"]["id"] != $app["val"]["discordBotId"]
+                ){// если это сообщение можно удалить
+                    $uri = "/channels/" . $channel["id"] . "/messages/" . $message["id"];
+                    $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                    if(204 == $code or 404 == $code){// если запрос выполнен успешно
+                        $app["fun"]["delСache"]("message", $message["id"], $channel["id"], $guild["id"]);
+                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                 };
             };
             // обновляем сводное расписание в гильдии
@@ -2787,60 +2835,65 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $list;
         },
-        "getNextValue" => function(&$content, $delim){// получаем очередное значение
+        "getCommandValue" => function(&$content, $delim, $begin = false, $filter = null, &$list = null){// получаем очередное значение
         //@param $content {string} - страка значений для обработки (сокращается на значение и разделители)
         //@param $delim {string} - разделитель значенией в строке
-        //@return {string} - очередное значение
-            
+        //@param $begin {boolean} - совпадение с началом значения или полное совподение
+        //@param $filter {FileStorage|string} - база данных или регулярное выражение для поиска совподения
+        //@param $list {array} - результаты поиска для регулярного выражения
+        //@return {string} - очередное ключевое значение или пустая строка
+            global $app;
+            $result = "";
+
+            $flag = false;// найдено совпадение
+            $language = $app["val"]["discordLang"];// локализация
             // получаем значение из строки по разделителю
             $index = mb_stripos($content, $delim);
-            if(false === $index) $value = $content;
-            else $value = mb_substr($content, 0, $index);
-            // сокращаем строку на значение и разделители
-            $content = mb_substr($content, mb_strlen($value));
-            while(0 === mb_stripos($content, $delim)){// пока есть разделитель
-                $content = mb_substr($content, mb_strlen($delim));
-            };
-            // возвращаем результат
-            return $value;
-        },
-        "getItemKey" => function($items, &$content, $begin, $cut){// получаем ключевой идентификатор
-        //@param $items {FileStorage} - база данных для поиска совподений значений
-        //@param $content {string} - страка для обработки (может сокращается)
-        //@param $begin {boolean} - совпадение с началом свойства элимента
-        //@param $cut {boolean} - сократить исходную строку на совподение
-        //@return {string} - ключ или изначальное значение
-            
-            $key = "";// значение по умолчанию
-            $flag = false;// найдено совпадение
-            // выполняем последовательную проверку элиментов
-            if(mb_strlen($content)){// если передана не пустая строка
-                for($i = 0, $iLen = $items->length; $i < $iLen and !$flag; $i++){
-                    $id = $items->key($i);// получаем ключевой идентификатор по индексу
-                    $item = $items->get($id);// получаем элимент по идентификатору
-                    // выполняем последовательную проверку свойств элиментов
-                    foreach(array($items->primary, "synonym") as $property){// пробигаемся по свойствам
-                        if(isset($item[$property])){// если свойство существует
-                            $value = $item[$property];// получаем значение свойства
-                            $length = mb_strlen($value);// получаем длину значения
-                            $index = mb_stripos($content, $value);// позиция начала совпадения
-                            $flag = (0 === $index and ($begin or mb_strlen($content) == $length));
-                            if($flag){// если найдено совпадение со свойством элимента
-                                if($cut) $content = mb_substr($content, $length);
-                                $key = $id;
-                                break;
+            if(false === $index) $fragment = $content;
+            else $fragment = mb_substr($content, 0, $index);
+            // выполняем проверку полученного значение
+            if(!empty($filter)){// если есть ограничивающий фильтр
+               if(!is_string($filter)){// если передана база данных
+                    // выполняем последовательную проверку с элиментами базы данных
+                    for($i = 0, $iLen = $filter->length; $i < $iLen and !$flag; $i++){
+                        $id = $filter->key($i);// получаем ключевой идентификатор по индексу
+                        $item = $filter->get($id);// получаем элимент по идентификатору
+                        foreach(array("key", $language) as $key){// пробигаемся по свойствам
+                            if(isset($item[$key])){// если свойство существует
+                                $value = $item[$key];// получаем значение свойства
+                                $length = mb_strlen($value);// получаем длину значения
+                                $index = mb_stripos($fragment, $value);// позиция начала совпадения
+                                $flag = (0 === $index and ($begin or mb_strlen($fragment) == $length));
+                                if($flag){// если найдено совпадение со свойством элимента
+                                    $content = mb_substr($content, $length);
+                                    $result = $id;
+                                    break;
+                                };
                             };
                         };
                     };
+                }else{// если передано регулярное выражение
+                    // выполняем проверку на совподение с шаблоном
+                    $flag = preg_match($filter, $fragment, $list);
+                    if($flag){// если совподает с шаблоном
+                        $length = mb_strlen($fragment);
+                        $content = mb_substr($content, $length);
+                        $result = $fragment;
+                    };
                 };
+            }else{// если нет ограничивающего фильтра
+                // сокращаем строку на значение
+                $length = mb_strlen($fragment);
+                $content = mb_substr($content, $length);
+                $result = $fragment;
             };
-            //обрабатываем отсутствие совпадений
-            if($cut and !$flag){// если нужно обрезать
-                $key = $content;
-                $content = "";
+            // сокращаем на разделители
+            while(0 === mb_stripos($content, $delim)){// пока есть разделитель
+                $length = mb_strlen($delim);
+                $content = mb_substr($content, $length);
             };
             // возвращаем результат
-            return $key;
+            return $result;
         },
         "getPermission" => function($level, $member, $channel, $guild){// получаем разрешения
         //@param $level {string} - уровень проверки разрешений

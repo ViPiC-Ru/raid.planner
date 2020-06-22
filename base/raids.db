@@ -1,12 +1,17 @@
-key:string	name:string	chapter:string	type:string	tank:integer	heal:integer	dd:integer
+key:string	ru:string	chapter:string	type:string	tank:integer	heal:integer	dd:integer
 nAA	нор. Этерианский архив		trial	1	2	9
 nHRC	нор. Цитадель Хель Ра		trial	1	2	9
 nSO	нор. Святилище Офидии		trial	1	2	9
-nMoL	нор. Пасть Лорхаджа	Гильдия воров	trial	2	2	8
+nMoL	нор. Пасть Лорхаджа	Гильдия воров	trial	1	2	9
 nHoF	нор. Залы фабрикации	Морровинд	trial	2	2	8
 nAS	нор. Изоляционный санктуарий	Заводной город	trial	1	2	9
-nCR	нор. Клаудрест	Саммерсет	trial	1	2	9
+nCR	нор. Клаудрест	Саммерсет	trial	2	2	8
+nCR+0	нор. Клаудрест	Саммерсет	trial	2	2	8
+nCR+1	нор. Клаудрест	Саммерсет	trial	2	2	8
+nCR+2	нор. Клаудрест	Саммерсет	trial	2	2	8
+nCR+3	нор. Клаудрест	Саммерсет	trial	2	2	8
 nSS	нор. Солнечный шпиль	Эльсвейр	trial	1	2	9
+nKA	нор. Эгида Кин	Греймур	trial	1	2	9
 nTRL	нор. Триалы		trial	1	2	9
 vAA	вет. Этерианский архив		trial	1	2	9
 vHRC	вет. Цитадель Хель Ра		trial	1	2	9
@@ -15,7 +20,12 @@ vMoL	вет. Пасть Лорхаджа	Гильдия воров	trial	2	2	8
 vHoF	вет. Залы фабрикации	Морровинд	trial	2	2	8
 vAS	вет. Изоляционный санктуарий	Заводной город	trial	2	2	8
 vCR	вет. Клаудрест	Саммерсет	trial	2	2	8
+vCR+0	вет. Клаудрест	Саммерсет	trial	3	2	7
+vCR+1	вет. Клаудрест	Саммерсет	trial	3	2	7
+vCR+2	вет. Клаудрест	Саммерсет	trial	3	2	7
+vCR+3	вет. Клаудрест	Саммерсет	trial	3	2	7
 vSS	вет. Солнечный шпиль	Эльсвейр	trial	2	2	8
+vKA	вет. Эгида Кин	Греймур	trial	2	2	8
 vTRL	вет. Триалы		trial	2	2	8
 vAA+HM	хм. Этерианский архив		trial	2	2	8
 vHRC+HM	хм. Цитадель Хель Ра		trial	2	2	8
@@ -25,6 +35,7 @@ vHoF+HM	хм. Залы фабрикации	Морровинд	trial	2	2	8
 vAS+HM	хм. Изоляционный санктуарий	Заводной город	trial	2	2	8
 vCR+HM	хм. Клаудрест	Саммерсет	trial	3	2	7
 vSS+HM	хм. Солнечный шпиль	Эльсвейр	trial	2	2	8
+vKA+HM	хм. Эгида Кин	Греймур	trial	2	2	8
 vTRL+HM	хм. Триалы		trial	2	2	8
 nTBC1	нор. Темницы Изгнанников I		dungeon	1	1	2
 nTBC2	нор. Темницы Изгнанников II		dungeon	1	1	2

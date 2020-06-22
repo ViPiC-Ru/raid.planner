@@ -1,4 +1,4 @@
-key:string	name:string	icon:string	processing:string	filter:string
+key:string	ru:string	icon:string	processing:string	filter:string
 trial	Триал	:calendar_spiral:	:hourglass:	/триал/i
 dungeon	Подземелье	:shield:	:hourglass:	/подземел|данж/i
 undaunted	Неустрашимые	:shield:	:hourglass:	/неустрашим|данж/i

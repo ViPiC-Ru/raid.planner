@@ -1,7 +1,6 @@
-key:string	synonym:string
+key:string	ru:string
 leader	лидер
 member	участник
-note	-
 daily	ежедневно
 weekly	еженедельно
 once	однократно
