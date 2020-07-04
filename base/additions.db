@@ -1,6 +1,8 @@
-key:string	ru:string
-leader	лидер
-member	участник
-daily	ежедневно
-weekly	еженедельно
-once	однократно
+key:string	ru:string	icon:string
+leader	лидер	
+member	участник	
+daily	ежедневно	:repeat:
+weekly	еженедельно	
+once	однократно	
+accept	принят	:flag_ch:
+reject	нет	

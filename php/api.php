@@ -22,7 +22,7 @@ $app = array(// основной массив данных
         "eventCommentLength" => 500,                                        // максимальная длина комментария пользователя
         "eventNoteLength" => 25,                                            // максимальная длина заметки пользователя
         "eventOperationCycle" => 5,                                         // с какой частотой производить регламентные операции с базой в цикле
-        "discordLang" => "ru",                                              // язык отображения мнформации в Discord
+        "discordLang" => "ru",                                              // язык отображения информации в Discord
         "discordApiUrl" => "https://discordapp.com/api",                    // базовый url для взаимодействия с Discord API
         "discordWebSocketHost" => "gateway.discord.gg",                     // адрес хоста для взаимодействия с Discord через WebSocket
         "discordWebSocketLimit" => 1500,                                    // лимит итераций цикла общения WebSocket с Discord
@@ -962,10 +962,28 @@ $app = array(// основной массив данных
                             and empty($command["time"])
                             and empty($command["date"])
                         ){// если есть ближайшее событие
-                            $time = strtotime(date("d.m.Y", $unit["time"]));
-                            $command["raid"] = $unit["raid"];
-                            $command["time"] = $unit["time"];
+                            $item = $unit;// приводим к единобразию
+                            $time = strtotime(date("d.m.Y", $item["time"]));
+                            $command["raid"] = $item["raid"];
+                            $command["time"] = $item["time"];
                             $command["date"] = $time;
+                        }else $item = null;
+                        // определяем лидера для события
+                        $leader = null;// сбрасываем значение
+                        if(!empty($item)){// если событие существует
+                            for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
+                                $id = $events->key($i);// получаем ключевой идентификатор по индексу
+                                $event = $events->get($id);// получаем элимент по идентификатору
+                                if(// множественное условие
+                                    $event["channel"] == $item["channel"]
+                                    and $event["guild"] == $item["guild"]
+                                    and $event["raid"] == $item["raid"]
+                                    and $event["time"] == $item["time"]
+                                    and $event["leader"]
+                                ){// если лидер найден
+                                    $leader = $event["user"];
+                                };
+                            };
                         };
                         // обрабатываем команду
                         switch($command["action"]){// поддержмваемые команды
@@ -988,29 +1006,29 @@ $app = array(// основной массив данных
                                 // проверяем что указана дата
                                 if(empty($error)){// если нет проблем
                                     if(!empty($command["date"])){// если проверка пройдена
-                                    }else $error = $isEdit ? 21 : 4;
+                                    }else $error = $isEdit ? 22 : 4;
                                 };
                                 // проверяем что указано время
                                 if(empty($error)){// если нет проблем
                                     if(!empty($command["time"])){// если проверка пройдена
-                                    }else $error = $isEdit ? 21 : 5;
+                                    }else $error = $isEdit ? 22 : 5;
                                 };
                                 // проверяем корректность указания даты
                                 if(empty($error)){// если нет проблем
                                     if($command["date"] > 0){// если проверка пройдена
-                                    }else $error = $isEdit ? 21 : 6;
+                                    }else $error = $isEdit ? 22 : 6;
                                 };
                                 // проверяем корректность указания времени
                                 if(empty($error)){// если нет проблем
                                     if($command["time"] > 0){// если проверка пройдена
-                                    }else $error = $isEdit ? 21 : 7;
+                                    }else $error = $isEdit ? 22 : 7;
                                 };
                                 // проверяем что указан рейд
                                 if(empty($error)){// если нет проблем
                                     $raid = null;// сбрасываем значение
                                     if(!empty($command["raid"])){// если проверка пройдена
                                         $raid = $raids->get($command["raid"]);
-                                    }else $error = $isEdit ? 21 : 8;
+                                    }else $error = $isEdit ? 22 : 8;
                                 };
                                 // проверяем ограничения по времени записи
                                 if(empty($error)){// если нет проблем
@@ -1101,7 +1119,7 @@ $app = array(// основной массив данных
                                 };
                                 // проверяем права на создание записи от других пользователей
                                 if(empty($error) and (!$member or $member["user"]["id"] != $message["author"]["id"])){// если нужно выполнить
-                                    $flag = false;// есть ли необходимые права для выполнения действия
+                                    $flag = (!empty($leader) and $message["author"]["id"] == $leader);// есть ли необходимые права для выполнения действия
                                     if(!$flag) $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
                                     $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
                                     if($flag){// если проверка пройдена
@@ -1137,10 +1155,20 @@ $app = array(// основной массив данных
                                         case "member":// участник
                                             $unit["leader"] = false;
                                             break;
+                                        case "reject":// нет
+                                            $value = 0;
+                                        case "accept":// принят
+                                            $flag = (!empty($leader) and $message["author"]["id"] == $leader);// есть ли необходимые права для выполнения действия
+                                            if(!$flag) $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
+                                            $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                            if($flag){// если проверка пройдена
+                                                $unit["accept"] = !!$value;
+                                            }else $error = 17;
+                                            break;
                                         case "":// опция не указана
                                             break;
                                         default:// не известная опция
-                                            $error = 17;
+                                            $error = 18;
                                     };
                                 };
                                 // обрабатываем комментарий
@@ -1170,6 +1198,12 @@ $app = array(// основной массив данных
                                             if(!empty($raid)) $unit["raid"] = $raid["key"];
                                             if(!empty($role)) $unit["role"] = $role["key"];
                                             if(!empty($command["time"])) $unit["time"] = $command["time"];
+                                            if(// множественное условие
+                                                !isset($unit["accept"]) and !empty($role) and $event["role"] != $role["key"]
+                                                and (empty($leader) or $message["author"]["id"] != $leader)
+                                            ){// если нужно сбросить подтверждение
+                                                $unit["accept"] = false;
+                                            };
                                             if($events->set($id, null, $unit)){// если данные успешно изменены
                                                 $isEventsUpdate = true;// были обновлены данные в базе данных
                                                 $index++;// увиличиваем счётчик количества изменённых записей
@@ -1177,7 +1211,7 @@ $app = array(// основной массив данных
                                         };
                                     };
                                     if($index){// если изменены записи
-                                    }else $error = 21;
+                                    }else $error = 22;
                                 };
                                 // добавляем данные в базу данных
                                 if(empty($error) and !$isEdit){// если нужно выполнить
@@ -1191,6 +1225,7 @@ $app = array(// основной массив данных
                                         "raid" => $raid["key"],
                                         "role" => $role["key"],
                                         "leader" => false,
+                                        "accept" => false,
                                         "repeat" => 0
                                     );
                                     $unit = array_merge($event, $unit);
@@ -1200,7 +1235,7 @@ $app = array(// основной массив данных
                                         $index++;// увиличиваем счётчик количества добавленных записей
                                     }else $status = 309;// не удалось записать данные в базу данных
                                     if($index){// если добавлены записи
-                                    }else $error = 21;
+                                    }else $error = 22;
                                 };
                                 break;
                             case "-":// удалить запись
@@ -1210,7 +1245,7 @@ $app = array(// основной массив данных
                                         ($command["date"] > 0 or empty($command["date"]))
                                         and ($command["time"] > 0 or empty($command["time"]))
                                     ){// если проверка пройдена
-                                    }else $error = 18;
+                                    }else $error = 19;
                                 };
                                 // проверяем ограничения по времени записи
                                 if(empty($error)){// если нет проблем
@@ -1221,7 +1256,7 @@ $app = array(// основной массив данных
                                         ($flag or $command["time"] >= $message["timestamp"] + $app["val"]["eventTimeClose"])
                                         or (empty($command["date"]) or empty($command["time"]))
                                     ){// если проверка пройдена
-                                    }else $error = 19;
+                                    }else $error = 20;
                                 };    
                                 // получаем игровую роль
                                 if(empty($error)){// если нет проблем
@@ -1246,11 +1281,11 @@ $app = array(// основной массив данных
                                 };
                                 // проверяем права на удаление записей других пользователей
                                 if(empty($error) and (!$user or $user["id"] != $message["author"]["id"])){// если нужно выполнить
-                                    $flag = false;// есть ли необходимые права для выполнения действия
+                                    $flag = (!empty($leader) and $message["author"]["id"] == $leader);// есть ли необходимые права для выполнения действия
                                     if(!$flag) $permission = $app["fun"]["getPermission"]("channel", $message["author"]["id"], $channel["id"], $guild["id"]);
                                     $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
                                     if($flag){// если проверка пройдена
-                                    }else $error = 20;
+                                    }else $error = 21;
                                 };
                                 // удаляем записи событий
                                 if(empty($error)){// если нет проблем
@@ -1279,7 +1314,7 @@ $app = array(// основной массив данных
                                         };
                                     };
                                     if($index){// если удалены записи
-                                    }else $error = 21;
+                                    }else $error = 22;
                                 };
                                 break;
                             default:// не известная команда
@@ -1314,112 +1349,149 @@ $app = array(// основной массив данных
             if(empty($status) and ($hasMainPermission or $hasListPermission)){// если нужно выполнить
                 $blank = "_ _";// не удаляемый пустой символ
                 $delim = "\n";// разделитель строк
-                $all = "";// идентификатор всех ролей
-                $any = 0;// идентификатор любой группы
                 $lines = array();// список строк
                 $blocks = array();// список блоков
                 $contents = array();// контент для сообщений
-                // формируем список записей для отображения
-                $limits = array();// лимиты для рейдов
-                $counts = array();// счётчики для групп
-                $leaders = array();// лидеры для групп
-                $comments = array();// комментарии для групп
-                $repeats = array();// повторяемость события
-                $items = array();// список записей событий
+                // формируем список записей
                 $index = 0;// индекс элимента в новом массиве
+                $items = array();// список записей событий
                 for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
+                    // обробатываем каждую запись
                     $id = $events->key($i);// получаем ключевой идентификатор по индексу
                     $item = $events->get($id);// получаем элимент по идентификатору
-                    $unit = $events->get($id);// получаем элимент по идентификатору
-                    $raid = $raids->get($item["raid"]);
-                    $limit = $raid[$item["role"]];
-                    if($item["guild"] == $guild["id"] and $limit > -1){// если нужно выполнить дополнительные проверки
+                    if($item["guild"] == $guild["id"]){// если нужно выполнить дополнительные проверки
                         // проверяем разрешения для сводного расписания
                         $flag = $item["channel"] == $channel["id"];// есть ли необходимые права для выполнения действия
                         if(!$flag) $permission = $app["fun"]["getPermission"]("member", $app["val"]["discordBotId"], $item["channel"], $guild["id"]);
                         $flag = ($flag or ($permission & $app["val"]["discordListPermission"]) == $app["val"]["discordListPermission"]);
                         if($flag and ($isConsolidated or $item["channel"] == $channel["id"])){// если нужно включить запись в уведомление
-                            // создаём структуру счётчика
-                            $count = &$counts;// счётчик элиментов
-                            foreach(array($item["time"], $item["raid"], $any) as $key){
-                                if(!isset($count[$key])) $count[$key] = array();
-                                $count = &$count[$key];// получаем ссылку
-                            };
-                            // считаем без учётом группы
-                            if(!isset($count[$item["role"]])) $count[$item["role"]] = 0;
-                            if(!isset($count[$all])) $count[$all] = 0;
-                            $count[$item["role"]]++;
-                            $count[$all]++;
-                            // вычисляем лимит
-                            if(!isset($limits[$item["raid"]])){// если нужно вычислить общий лимит
-                                $limits[$item["raid"]] = 0;// начальное значение лимита
-                                for($limit = 1, $j = 0, $jLen = $roles->length; $j < $jLen and $limit; $j++){
-                                    $role = $roles->get($roles->key($j));// получаем очередную роль
-                                    $limit = $raid[$role["key"]];// получаем значение лимита
-                                    if($limit > 0) $limits[$item["raid"]] += $limit;
-                                    if(!$limit) $limits[$item["raid"]] = 0;
-                                };
-                            };
-                            // определяем группу
+                            // проверяем доступность этой роли в рейде
+                            $raid = $raids->get($item["raid"]);
                             $limit = $raid[$item["role"]];
-                            $group = $limit ? ceil($count[$item["role"]] / $limit) : 1;
-                            // создаём структуру счётчика
-                            $count = &$counts;// счётчик элиментов
-                            foreach(array($item["time"], $item["raid"], $group) as $key){
-                                if(!isset($count[$key])) $count[$key] = array();
-                                $count = &$count[$key];// получаем ссылку
+                            if($limit > -1){// если эта роль доступна в рейде
+                                // сохраняем элимент в массив
+                                $items[$index] = $item;
+                                $index++;
                             };
-                            // считаем с учётом группы
-                            if(!isset($count[$item["role"]])) $count[$item["role"]] = 0;
-                            if(!isset($count[$all])) $count[$all] = 0;
-                            $count[$item["role"]]++;
-                            $count[$all]++;
-                            // создаём структуру лидера
-                            $leader = &$leaders;// лидер по группам
-                            foreach(array($item["time"], $item["raid"]) as $key){
-                                if(!isset($leader[$key])) $leader[$key] = array();
-                                $leader = &$leader[$key];// получаем ссылку
-                            };
-                            // определяем лидера группы
-                            if(!isset($leader[$group])) $leader[$group] = $index;
-                            $limit = $limits[$item["raid"]];// получаем значение лимита
-                            if($index != $leader[$group]){// если лидер не текущий элимент
-                                if(!$items[$leader[$group]]["leader"]){// если лидер выбран системой
-                                    if($item["leader"]) $leader[$group] = $index;
-                                    else if($count[$all] == $limit) $items[$leader[$group]]["leader"] = true;
-                                }else if($item["leader"]) $item["leader"] = false;
-                            }else if($count[$all] == $limit) $item["leader"] = true;
-                            // создаём структуру комментария
-                            $comment = &$comments;// комментарий по группам
-                            foreach(array($item["time"], $item["raid"]) as $key){
-                                if(!isset($comment[$key])) $comment[$key] = array();
-                                $comment = &$comment[$key];// получаем ссылку
-                            };
-                            // определяем комментарий группы
-                            if(!isset($comment[$any])) $comment[$any] = "";
-                            if(!isset($comment[$group])) $comment[$group] = "";
-                            if($item["leader"] and $unit["leader"]) $comment[$group] = $item["comment"];
-                            if(1 == $group) $comment[$any] = $comment[$group];
-                            // создаём структуру повторения события
-                            $repeat = &$repeats;// повторяемость по группам
-                            foreach(array($item["time"], $item["raid"]) as $key){
-                                if(!isset($repeat[$key])) $repeat[$key] = array();
-                                $repeat = &$repeat[$key];// получаем ссылку
-                            };
-                            // определяем повторяемость события
-                            if(!isset($repeat[$any])) $repeat[$any] = false;
-                            if(!isset($repeat[$group])) $repeat[$group] = false;
-                            if($item["repeat"]) $repeat[$any] = true;
-                            if($item["repeat"]) $repeat[$group] = true;
-                            // расширяем свойства элимента
-                            $item["title"] = date("d", $item["time"]) . " " . $months->get(date("n", $item["time"]), $language);
-                            $item["day"] = $dates->get(mb_strtolower(date("l", $item["time"])), $language);
-                            $item["group"] = $group;
-                            // сохраняем элимент в массив
-                            $items[$index] = $item;
-                            $index++;
                         };
                     };
+                };
+                // сортируем список записей для обработки
+                usort($items, function($a, $b){// сортировка
+                    $value = 0;// начальное значение
+                    if(!$value and $a["accept"] != $b["accept"]) $value = $b["accept"] ? 1 : -1;
+                    if(!$value and $a["id"] != $b["id"]) $value = $a["id"] > $b["id"] ? 1 : -1;
+                    // возвращаем результат
+                    return $value;
+                });
+                // обрабатываем список записей
+                $all = "";// идентификатор всех ролей
+                $any = 0;// идентификатор любой группы
+                $tips = array();// подсказки для записи
+                $limits = array();// лимиты для рейдов
+                $counts = array();// счётчики для групп
+                $leaders = array();// лидеры для групп
+                $comments = array();// комментарии для групп
+                $repeats = array();// повторяемость события
+                for($i = 0, $iLen = count($items); $i < $iLen; $i++){
+                    $item = $items[$i];// получаем очередной элимент
+                    $unit = $events->get($item["id"]);
+                    $raid = $raids->get($item["raid"]);
+                    // создаём структуру подсказок для записи в события
+                    $time = strtotime(date("d.m.Y", $item["time"]));
+                    $tip = &$tips;// советы по рейдам
+                    foreach(array($item["raid"], $time, $item["time"]) as $key){
+                        if(!isset($tip[$key])) $tip[$key] = array();
+                        $tip = &$tip[$key];// получаем ссылку
+                    };
+                    // вычисляем лимиты для подсказок
+                    if(!isset($tip[$item["role"]])){// если нужно вычислить лимит для роли
+                        for($j = 0, $jLen = $roles->length; $j < $jLen; $j++){
+                            $role = $roles->get($roles->key($j));// получаем очередную роль
+                            $limit = $raid[$role["key"]];// получаем значение лимита
+                            if($limit > -1 and !isset($tip[$role["key"]])) $tip[$role["key"]] = $limit;
+                        };
+                    };
+                    // считаем с учётом роли
+                    $tip[$item["role"]]--;
+                    // создаём структуру счётчика
+                    $count = &$counts;// счётчик элиментов
+                    foreach(array($item["time"], $item["raid"], $any) as $key){
+                        if(!isset($count[$key])) $count[$key] = array();
+                        $count = &$count[$key];// получаем ссылку
+                    };
+                    // считаем без учётом группы
+                    if(!isset($count[$item["role"]])) $count[$item["role"]] = 0;
+                    if(!isset($count[$all])) $count[$all] = 0;
+                    $count[$item["role"]]++;
+                    $count[$all]++;
+                    // вычисляем лимиты для счётчика
+                    if(!isset($limits[$item["raid"]])){// если нужно вычислить общий лимит
+                        $limits[$item["raid"]] = 0;// начальное значение лимита
+                        for($limit = 1, $j = 0, $jLen = $roles->length; $j < $jLen and $limit; $j++){
+                            $role = $roles->get($roles->key($j));// получаем очередную роль
+                            $limit = $raid[$role["key"]];// получаем значение лимита
+                            if($limit > 0) $limits[$item["raid"]] += $limit;
+                            if(!$limit) $limits[$item["raid"]] = 0;
+                        };
+                    };
+                    // определяем группу
+                    $limit = $raid[$item["role"]];
+                    $group = $limit ? ceil($count[$item["role"]] / $limit) : 1;
+                    // создаём структуру счётчика
+                    $count = &$counts;// счётчик элиментов
+                    foreach(array($item["time"], $item["raid"], $group) as $key){
+                        if(!isset($count[$key])) $count[$key] = array();
+                        $count = &$count[$key];// получаем ссылку
+                    };
+                    // считаем с учётом группы
+                    if(!isset($count[$item["role"]])) $count[$item["role"]] = 0;
+                    if(!isset($count[$all])) $count[$all] = 0;
+                    $count[$item["role"]]++;
+                    $count[$all]++;
+                    // создаём структуру лидера
+                    $leader = &$leaders;// лидер по группам
+                    foreach(array($item["time"], $item["raid"]) as $key){
+                        if(!isset($leader[$key])) $leader[$key] = array();
+                        $leader = &$leader[$key];// получаем ссылку
+                    };
+                    // определяем лидера группы
+                    if(!isset($leader[$group])) $leader[$group] = $i;
+                    $limit = $limits[$item["raid"]];// получаем значение лимита
+                    if($i != $leader[$group]){// если лидер не текущий элимент
+                        if(!$items[$leader[$group]]["leader"]){// если лидер выбран системой
+                            if($item["leader"]) $leader[$group] = $i;
+                            else if($count[$all] == $limit) $items[$leader[$group]]["leader"] = true;
+                        }else if($item["leader"]) $item["leader"] = false;
+                    }else if($count[$all] == $limit) $item["leader"] = true;
+                    // создаём структуру комментария
+                    $comment = &$comments;// комментарий по группам
+                    foreach(array($item["time"], $item["raid"]) as $key){
+                        if(!isset($comment[$key])) $comment[$key] = array();
+                        $comment = &$comment[$key];// получаем ссылку
+                    };
+                    // определяем комментарий группы
+                    if(!isset($comment[$any])) $comment[$any] = "";
+                    if(!isset($comment[$group])) $comment[$group] = "";
+                    if($item["leader"] and $unit["leader"]) $comment[$group] = $item["comment"];
+                    if(1 == $group) $comment[$any] = $comment[$group];
+                    // создаём структуру повторения события
+                    $repeat = &$repeats;// повторяемость по группам
+                    foreach(array($item["time"], $item["raid"]) as $key){
+                        if(!isset($repeat[$key])) $repeat[$key] = array();
+                        $repeat = &$repeat[$key];// получаем ссылку
+                    };
+                    // определяем повторяемость события
+                    if(!isset($repeat[$any])) $repeat[$any] = false;
+                    if(!isset($repeat[$group])) $repeat[$group] = false;
+                    if($item["repeat"]) $repeat[$any] = true;
+                    if($item["repeat"]) $repeat[$group] = true;
+                    // расширяем свойства элимента
+                    $item["title"] = date("d", $item["time"]) . " " . $months->get(date("n", $item["time"]), $language);
+                    $item["day"] = $dates->get(mb_strtolower(date("l", $item["time"])), $language);
+                    $item["group"] = $group;
+                    // сохраняем элимент в массив
+                    $items[$i] = $item;
                 };
                 // сортируем список записей для отображения
                 usort($items, function($a, $b){// сортировка
@@ -1428,6 +1500,7 @@ $app = array(// основной массив данных
                     if(!$value and $a["channel"] != $b["channel"]) $value = $a["channel"] > $b["channel"] ? 1 : -1;
                     if(!$value and $a["raid"] != $b["raid"]) $value = $a["raid"] > $b["raid"] ? 1 : -1;
                     if(!$value and $a["group"] != $b["group"]) $value = $a["group"] > $b["group"] ? 1 : -1;
+                    if(!$value and $a["accept"] != $b["accept"]) $value = $b["accept"] ? 1 : -1;
                     if(!$value and $a["role"] != $b["role"]) $value = $a["role"] < $b["role"] ? 1 : -1;
                     if(!$value and $a["id"] != $b["id"]) $value = $a["id"] > $b["id"] ? 1 : -1;
                     // возвращаем результат
@@ -1540,7 +1613,7 @@ $app = array(// основной массив данных
                                 $line .= ($isConsolidated ? " (" . mb_strtolower($type[$language]) . ")" : "");
                                 $line .= (!empty($raid["chapter"]) ? " **DLC" . ($isConsolidated ? " " . $raid["chapter"] : "") . "**" : "");
                                 $line .= (($limit and !$isConsolidated) ? " (" . $count[$all] . " из " . $limit . ")" : "");
-                                $line .= ((1 == $group and $repeat[$any] and !$isConsolidated) ? "  :repeat:" : "");
+                                $line .= ((1 == $group and $repeat[$any] and !$isConsolidated) ? "  " . $additions->get("daily", "icon") : "");
                                 $line .= ($isConsolidated ? " <#" . $item["channel"] . ">" : "");
                                 array_push($lines, $line);
                                 $position = 1;
@@ -1552,33 +1625,62 @@ $app = array(// основной массив данных
                                 $line = "__Комментарий__: " . $comment[$any];
                                 array_push($lines, $line);
                             };
-                            // формируем пример строки для записи
+                            // формируем подсказку для записи
                             if($flag and !$isConsolidated){// если это основная или другая полная группа
-                                // определяем самую свободную роль в рейде
-                                $max = null;// идентификатор самой свободной роли
-                                for($j = 0, $jLen = $roles->length; $j < $jLen; $j++){
-                                    $key = $roles->key($j);// получаем идентификатор роли
-                                    $value = isset($count[$key]) ? $raid[$key] - $count[$key] : $raid[$key];
-                                    if($max) $value -= isset($count[$max]) ? $raid[$max] - $count[$max] : $raid[$max];
-                                    if($raid[$key] > 0 and (!$max or $value > 0)) $max = $key;
-                                    else if(!$raid[$key]) $max = $key;
+                                $time = strtotime(date("d.m.Y", $item["time"]));
+                                // получаем подсказку из структуру
+                                $tip = &$tips;// советы по рейдам
+                                foreach(array($item["raid"], $time, $item["time"]) as $key){
+                                    $tip = &$tip[$key];// получаем ссылку
                                 };
-                                // готовим пример команды
-                                $value = "+" . implode(" ", array(
-                                    mb_strtolower($roles->get($max, $language)),
-                                    date("d.m.Y", $item["time"]),
-                                    date("H:i", $item["time"]),
-                                    $raid["key"]
-                                ));
+                                // сортируем роли в подсказке
+                                arsort($tip);// сортируем по убыванию свободных мест
+                                // определяем уровень детализации подсказки
+                                if(count($tips[$item["raid"]][$time]) > 1) $detail = 3;     // время
+                                else if(count($tips[$item["raid"]]) > 1) $detail = 2;       // дата
+                                else if(count($tips) > 1) $detail = 1;                      // рейд
+                                else $detail = 0;                                           // роль
+                                // готовим текст подсказок по уровеню детализации
+                                $list = array();// список подсказок для записи
+                                foreach($tip as $key => $value){// пробигаемся по ролям
+                                    $value = "+" . mb_strtolower($roles->get($key, $language));
+                                    if($detail >= 2) $value .= " " . date("d.m.y", $item["time"]);
+                                    if($detail >= 3) $value .= " " . date("H:i", $item["time"]);
+                                    if($detail >= 1) $value .= " " . $raid["key"];
+                                    $value = "**" . $value . "**";
+                                    array_push($list, $value);
+                                    if($detail >= 1 and mb_strlen($raid["key"]) > 4) break;
+                                    if($detail >= 2) break;
+                                };
+                                // объединяем текст подсказок в одну строку
+                                $value = "";// сбрасываем значение
+                                for($j = 0, $jLen = count($list); $j < $jLen; $j++){
+                                    $key = $j ? ($j == $jLen - 1 ? " или " : ", ") : "";
+                                    $value .= $key . $list[$j];
+                                };
                                 // добавляем отдельной строкой
-                                $line = "Записаться `". $value ."`";
+                                $line = "Записаться " . $value;
                                 array_push($lines, $line);
                             };
                         };
+                        // отделяем согласованных
+                        if(// множественное условие
+                            !empty($before) and !$isConsolidated
+                            and (1 == $group or $limit and $count[$all] == $limit)
+                            and $before["accept"] and !$item["accept"]
+                            and $before["time"] == $item["time"]
+                            and $before["channel"] == $item["channel"]
+                            and $before["raid"] == $item["raid"]
+                            and $before["group"] == $group
+                        ){// если нужно отделить согласованных
+                            $line = "__Кандидаты:__";
+                            array_push($lines, $line);
+                        };
                         // формируем строки данных
                         if(!$isConsolidated){// если это не сводное расписание
-                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["synonym"] . ": <@!" . $item["user"] . ">";
-                            $key = "лидер";// идентификатор обозначающий лидера
+                            $value = $item["accept"] ? " " . $additions->get("accept", "icon") : "";
+                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["synonym"] . ": <@!" . $item["user"] . ">" . $value;
+                            $key = mb_strtolower($additions->get("leader", $language));// идентификатор обозначающий лидера
                             $value = $item["comment"];// комментарий для обработки
                             for($j = -1, $jLen = mb_strlen($key); $j !== false; $j = mb_stripos($value, $key)){
                                 if($j > -1) $value = mb_substr($value, 0,  $j) .  mb_substr($value, $j + $jLen);
