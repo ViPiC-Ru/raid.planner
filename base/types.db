@@ -1,7 +1,7 @@
-key:string	ru:string	icon:string	processing:string	filter:string
-trial	Триал	:calendar_spiral:	:hourglass:	/триал/i
-dungeon	Подземелье	:shield:	:hourglass:	/подземел|данж/i
-undaunted	Неустрашимые	:shield:	:hourglass:	/неустрашим|данж/i
-battle	Сражение	:crossed_swords:	:hourglass:	/сражен/i
-arena	Арена	:shield:	:hourglass:	/арен/i
-activity	Мероприятие	:notepad_spiral:	:hourglass:	/мероприят/i
+key:string	ru:string	icon:string	complete:string	processing:string	filter:string
+trial	Триал	<:trial:733924812304547911> 	:shield:	:hourglass:	/триал/i
+dungeon	Подземелье	<:dungeon:733924812539428904>	:shield:	:hourglass:	/подземел|данж/i
+undaunted	Неустрашимые	<:undaunted:733924812426051638>	:shield:	:hourglass:	/неустрашим|данж/i
+battle	Сражение	<:battle:733924812488966144>	:crossed_swords:	:hourglass:	/сражен/i
+arena	Арена	<:arena:733924812539428944>	:shield:	:hourglass:	/арен/i
+activity	Мероприятие	 <:activity:733924812539428874> 	:calendar_spiral:	:hourglass:	/мероприят/i

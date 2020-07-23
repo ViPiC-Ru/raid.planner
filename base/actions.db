@@ -1,4 +1,4 @@
-key:string	ru:string
-+	записаться
--	выписаться
-*	изменить
+key:string
++
+-
+*
