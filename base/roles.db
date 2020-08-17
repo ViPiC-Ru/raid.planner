@@ -1,4 +1,4 @@
-key:string	ru:string	synonym:string
-tank	Танк	Танк
-heal	Хил	Хил
-dd	ДД	Боец
+key:string	ru:string	en:string
+tank	Танк	Tank
+heal	Хил	Heal
+dd	Дд	Dd

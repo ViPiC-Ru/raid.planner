@@ -1,13 +1,13 @@
-id:integer	ru:string
-1	Января
-2	Февраля
-3	Марта
-4	Апреля
-5	Мая
-6	Июня
-7	Июля
-8	Августа
-9	Сентября
-10	Октября
-11	Ноября
-12	Декабря
+id:integer	ru:string	en:string
+1	Января	January
+2	Февраля	February
+3	Марта	March
+4	Апреля	April
+5	Мая	May
+6	Июня	June
+7	Июля	July
+8	Августа	August
+9	Сентября	September
+10	Октября	October
+11	Ноября	November
+12	Декабря	December

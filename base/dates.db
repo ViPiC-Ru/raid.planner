@@ -1,10 +1,10 @@
-key:string	ru:string
-today	Сегодня
-tomorrow	Завтра
-monday	Понедельник
-tuesday	Вторник
-wednesday	Среда
-thursday	Четверг
-friday	Пятница
-saturday	Суббота
-sunday	Воскресенье
+key:string	ru:string	en:string
+today	сегодня	today
+tomorrow	завтра	tomorrow
+monday	ПоНедельник	MONday
+tuesday	ВТорник	TUEsday
+wednesday	СРеда	WEDnesday
+thursday	ЧеТверг	THUrsday
+friday	ПяТница	FRIday
+saturday	СуБбота	SATurday
+sunday	ВоСкресенье	SUNday

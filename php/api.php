@@ -1,8 +1,8 @@
-<?php # 0.2.6 api для бота в discord
+<?php # 0.2.7 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.5 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.9 подкласс для работы с файловым реляционным хранилищем
-include_once "../../libs/phpEasy-0.3.inc.php";                              // 0.3.7 основная библиотека упрощённого взаимодействия
+include_once "../../libs/phpEasy-0.3.inc.php";                              // 0.3.8 основная библиотека упрощённого взаимодействия
 include_once "../../libs/vendor/webSocketClient-1.0.inc.php";               // 0.1.0 набор функций для работы с websocket
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,13 +16,13 @@ $app = array(// основной массив данных
         "eventTimeAdd" => 8*24*60*60,                                       // максимальное время для записи в событие
         "eventTimeDelete" => 4*60*60,                                       // максимальное время хранения записи события
         "eventTimeClose" => -15*60,                                         // время за которое закрывается событие для изменения
-        "eventTimeStep" => 30*60,                                           // шаг записи на событие (округление времени)
         "eventTimeLimit" => 1,                                              // лимит записей на время для пользователя
         "eventRaidLimit" => 1,                                              // лимит записей на время и рейд для пользователя
         "eventCommentLength" => 500,                                        // максимальная длина комментария пользователя
         "eventNoteLength" => 50,                                            // максимальная длина заметки пользователя
         "eventOperationCycle" => 5,                                         // с какой частотой производить регламентные операции с базой в цикле
-        "discordLang" => "ru",                                              // язык отображения информации в Discord
+        "timeZone" => "Europe/Moscow",                                      // временная зона по умолчанию для работы со временем
+        "discordLang" => "ru",                                              // язык по умолчанию для отображения информации в канале Discord
         "discordApiUrl" => "https://discord.com/api",                       // базовый url для взаимодействия с Discord API
         "discordWebSocketHost" => "gateway.discord.gg",                     // адрес хоста для взаимодействия с Discord через WebSocket
         "discordWebSocketLimit" => 1500,                                    // лимит итераций цикла общения WebSocket с Discord
@@ -33,7 +33,7 @@ $app = array(// основной массив данных
         "discordMainPermission" => 338944,                                  // минимальные разрешения для работы бота
         "discordListPermission" => 347136,                                  // разрешения для ведения сводного расписания ботом
         "discordTalkPermission" => 64,                                      // разрешения для ведения обсуждения в канале
-        "discordBotGame" => "рейды от @ViPiC#5562",                         // анонс возле аватарки бота
+        "discordBotGame" => "discord.gg/J8smX6R",                           // анонс возле аватарки бота
         "discordAllUser" => "@everyone",                                    // идентификатор всех пользователей
         "appToken" => "MY-APP-TOKEN",                                       // защитный ключ приложения
         "discordBotId" => "MY-DISCORD-BOT-ID",                              // идентификатор приложения в Discord
@@ -661,6 +661,7 @@ $app = array(// основной массив данных
             $hasMainPermission = false;// есть основные разрешения
             $hasListPermission = false;// есть разрешения для сводного расписания
             $hasTalkPermission = false;// есть разрешения для ведения обсуждения
+            $timezone = $app["val"]["timeZone"];// временная зона
             $language = $app["val"]["discordLang"];// локализация
             // получаем очищенные значения параметров
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
@@ -688,6 +689,11 @@ $app = array(// основной массив данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
             };
             if(empty($status)){// если нет ошибок
+                $chapters = $app["fun"]["getStorage"]("chapters", false);
+                if(!empty($chapters)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            if(empty($status)){// если нет ошибок
                 $types = $app["fun"]["getStorage"]("types", false);
                 if(!empty($types)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
@@ -695,6 +701,11 @@ $app = array(// основной массив данных
             if(empty($status)){// если нет ошибок
                 $roles = $app["fun"]["getStorage"]("roles", false);
                 if(!empty($roles)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            if(empty($status)){// если нет ошибок
+                $names = $app["fun"]["getStorage"]("names", false);
+                if(!empty($names)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
             };
             if(empty($status)){// если нет ошибок
@@ -738,6 +749,21 @@ $app = array(// основной массив данных
                     $hasListPermission = ($permission & $app["val"]["discordListPermission"]) == $app["val"]["discordListPermission"];
                     $hasTalkPermission = ($permission & $app["val"]["discordTalkPermission"]) == $app["val"]["discordTalkPermission"];
                     $isConsolidated = ($hasListPermission and !$hasMainPermission);
+                    // изменяем контекстные переменные
+                    $delim = "\n";// разделитель значений в теме канала
+                    $list = explode($delim, $channel["topic"]);
+                    for($i = 0, $iLen = count($list); $i < $iLen; $i++){// пробигаемся по списку
+                        $value = trim($list[$i]);// получаем очередное значение
+                        // определяем язык канала
+                        $key = $names->key(0);// получаем значение первого ключа
+                        $data = $names->get($key);// получаем данные по ключу
+                        $key = mb_strtolower($value);// формируем новый ключ
+                        $flag = ($key != $names->primary and isset($data[$key]));
+                        if($flag) $language = $key;// изменяем переменную
+                        // определяем часовой пояс канала
+                        $flag = in_array($value, timezone_identifiers_list());
+                        if($flag) $timezone = $value;// изменяем переменную
+                    };
                 }else $status = 303;// переданные параметры не верны
             };
             // получаем информацию о сообщении
@@ -775,7 +801,7 @@ $app = array(// основной массив данных
                         $key = "action";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$index and !mb_strlen($value)){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, true, $actions);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, $actions);
                             if(mb_strlen($value)){// если найдено ключевое значение
                                 $command[$key] = $value;
                                 continue;
@@ -785,7 +811,7 @@ $app = array(// основной массив данных
                         $key = "role";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!mb_strlen($value)){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, $roles);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, $language, $roles);
                             if(mb_strlen($value)){// если найдено ключевое значение
                                 $command[$key] = $value;
                                 continue;
@@ -795,7 +821,7 @@ $app = array(// основной массив данных
                         $key = "index";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$value){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d+)$/", $list);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, "/^(\d+)$/", $list);
                             if(mb_strlen($value)){// если найдено ключевое значение
                                 $command[$key] = 1 * $value;
                                 continue;
@@ -805,10 +831,9 @@ $app = array(// основной массив данных
                         $key = "date";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$value){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, $dates);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, $language, $dates);
                             if(mb_strlen($value)){// если найдено ключевое значение
-                                $value = strtotime($value, $message["timestamp"]);
-                                if(false === $value) $value = -1;// приводим к единобразному написанию
+                                $value = $app["fun"]["dateCreate"]($value, $timezone);
                                 $command[$key] = $value;
                                 continue;
                             };
@@ -817,12 +842,11 @@ $app = array(// основной массив данных
                         $key = "date";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$value){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\.)(\d{2})$/", $list);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, "/^(\d{1,2}\.)(\d{2})$/", $list);
                             if(mb_strlen($value)){// если найдено ключевое значение
-                                $t1 = strtotime($value . "." . date("Y", $message["timestamp"]), $message["timestamp"]);
-                                $t2 = strtotime($value . "." . date("Y", strtotime("+1 year", $message["timestamp"])), $message["timestamp"]);
+                                $t1 = $app["fun"]["dateCreate"]($value . "." . $app["fun"]["dateFormat"]("Y", $message["timestamp"], $timezone), $timezone);
+                                $t2 = $app["fun"]["dateCreate"]($value . "." . $app["fun"]["dateFormat"]("Y", $app["fun"]["dateCreate"]("+1 year", $timezone), $timezone), $timezone);
                                 $value = (abs($t1 - $message["timestamp"]) < abs($t2 - $message["timestamp"]) ? $t1 : $t2);
-                                if(false === $value) $value = -1;// приводим к единобразному написанию
                                 $command[$key] = $value;
                                 continue;
                             };
@@ -831,11 +855,10 @@ $app = array(// основной массив данных
                         $key = "date";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$value){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\.)(\d{2}\.)(\d{2})$/", $list);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, "/^(\d{1,2}\.)(\d{2}\.)(\d{2})$/", $list);
                             if(mb_strlen($value)){// если найдено ключевое значение
-                                $value = $list[1] . $list[2] . mb_substr(date("Y", $message["timestamp"]), 0, 2) . $list[3];
-                                $value = strtotime($value, $message["timestamp"]);
-                                if(false === $value) $value = -1;// приводим к единобразному написанию
+                                $value = $list[1] . $list[2] . mb_substr($app["fun"]["dateFormat"]("Y", $message["timestamp"], $timezone), 0, 2) . $list[3];
+                                $value = $app["fun"]["dateCreate"]($value, $timezone);
                                 $command[$key] = $value;
                                 continue;
                             };
@@ -844,10 +867,9 @@ $app = array(// основной массив данных
                         $key = "date";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$value){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\.)(\d{2}\.)(\d{4})$/", $list);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, "/^(\d{1,2}\.)(\d{2}\.)(\d{4})$/", $list);
                             if(mb_strlen($value)){// если найдено ключевое значение
-                                $value = strtotime($value, $message["timestamp"]);
-                                if(false === $value) $value = -1;// приводим к единобразному написанию
+                                $value = $app["fun"]["dateCreate"]($value, $timezone);
                                 $command[$key] = $value;
                                 continue;
                             };
@@ -856,10 +878,9 @@ $app = array(// основной массив данных
                         $key = "time";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!$value){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^(\d{1,2}\:)(\d{2})$/", $list);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, "/^(\d{1,2}\:)(\d{2})$/", $list);
                             if(mb_strlen($value)){// если найдено ключевое значение
-                                $value = strtotime($value, $message["timestamp"]);
-                                if(false === $value) $value = -1;// приводим к единобразному написанию
+                                $value = $app["fun"]["dateCreate"]($value, $timezone);
                                 $command[$key] = $value;
                                 continue;
                             };
@@ -882,7 +903,7 @@ $app = array(// основной массив данных
                         $key = "user";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!mb_strlen($value)){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, "/^<@!?(\d+)>$|^(".$app["val"]["discordAllUser"].")$/", $list);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, null, "/^<@!?(\d+)>$|^(".$app["val"]["discordAllUser"].")$/", $list);
                             if(mb_strlen($value)){// если найдено ключевое значение
                                 $command[$key] = array_pop($list);
                                 continue;
@@ -892,7 +913,7 @@ $app = array(// основной массив данных
                         $key = "addition";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!mb_strlen($value)){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false, $additions);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim, $language, $additions);
                             if(mb_strlen($value)){// если найдено ключевое значение
                                 $command[$key] = $value;
                                 continue;
@@ -903,7 +924,7 @@ $app = array(// основной массив данных
                         $key = "comment";// текущий параметр команды
                         $value = $command[$key];// текущий значение параметра
                         if(!mb_strlen($value)){// если нужно выполнить
-                            $value = $app["fun"]["getCommandValue"]($content, $delim, false);
+                            $value = $app["fun"]["getCommandValue"]($content, $delim);
                             if(mb_strlen($value)){// если найдено ключевое значение
                                 $command[$key] = $value;
                             };
@@ -957,8 +978,8 @@ $app = array(// основной массив данных
                         // фильтруем запись
                         if(// множественное условие
                             (!empty($command["raid"]) ? $command["raid"] == $item["raid"] : true)
-                            and (!empty($command["time"]) ? date("H:i", $command["time"]) == date("H:i", $item["time"]) : true)
-                            and (!empty($command["date"]) ? date("d.m.Y", $command["date"]) == date("d.m.Y", $item["time"]) : true)
+                            and (!empty($command["time"]) ? $app["fun"]["dateFormat"]("H:i", $command["time"], $timezone) == $app["fun"]["dateFormat"]("H:i", $item["time"], $timezone) : true)
+                            and (!empty($command["date"]) ? $app["fun"]["dateFormat"]("d.m.Y", $command["date"], $timezone) == $app["fun"]["dateFormat"]("d.m.Y", $item["time"], $timezone) : true)
                         ){// если запись соответствует фильтру
                             if(is_null($current)) $current = $item;
                             else $current = false;
@@ -1018,17 +1039,18 @@ $app = array(// основной массив данных
                             // корректируем дату
                             if(empty($error)){// если нет проблем
                                 if(empty($command["date"]) and $command["time"] > 0){// если нужно выполнить
-                                    $value = !empty($current) ? $current["time"] : $command["time"];
-                                    if($value > 0) $value = date("d.m.Y", $value);// дата в строковом формате
-                                    if($value > 0) $command["date"] = strtotime($value, $message["timestamp"]);
+                                    $time = !empty($current) ? $current["time"] : $command["time"];
+                                    if($time > 0) $value = $app["fun"]["dateFormat"]("d.m.Y", $time, $timezone);
+                                    if($time > 0) $command["date"] = $app["fun"]["dateCreate"]($value, $timezone);
                                 };
                             };
                             // корректируем время
                             if(empty($error)){// если нет проблем
                                 if(!empty($command["date"]) and $command["time"] >= 0){// если нужно выполнить
-                                    $value = (!$command["time"] and !empty($current)) ? $current["time"] : $command["time"];
-                                    if($value > 0) $value = date("d.m.Y", $command["date"]) . " " . date("H:i", $value);
-                                    if($value > 0) $command["time"] = strtotime($value, $message["timestamp"]);
+                                    $time = (!$command["time"] and !empty($current)) ? $current["time"] : $command["time"];
+                                    if($time > 0) $value = $app["fun"]["dateFormat"]("d.m.Y", $command["date"], $timezone);
+                                    if($time > 0) $value .= " " . $app["fun"]["dateFormat"]("H:i", $time, $timezone);
+                                    if($time > 0) $command["time"] = $app["fun"]["dateCreate"]($value, $timezone);
                                 };
                             };
                             // проверяем что указана роль
@@ -1097,14 +1119,17 @@ $app = array(// основной массив данных
                                 if($limit > -1){// если проверка пройдена
                                 }else $error = 59;
                             };
-                            // проверяем ограничивающий фильтр в имени канала
+                            // проверяем ограничивающий фильтр в теме канала
                             if(empty($error)){// если нет проблем
                                 $count = array();// счётчик элиментов
                                 // считаем количество записей
                                 for($i = 0, $iLen = $types->length; $i < $iLen; $i++){
                                     $key = $types->key($i);// получаем ключевой идентификатор по индексу
                                     $type = $types->get($key);// получаем элимент по идентификатору
-                                    if(preg_match($type["filter"], $channel["name"], $list)){// если есть совподение
+                                    $flag = false;// найдено ли ограничение в теме канала
+                                    $flag = ($flag or false !== mb_stripos($channel["topic"], $type["key"]));
+                                    $flag = ($flag or false !== mb_stripos($channel["topic"], $type[$language]));
+                                    if($flag){// если есть совподение
                                         // выполняем подсчёт элиментов
                                         if(!isset($count["raid"])) $count["raid"] = 0;
                                         if(!isset($count["channel"])) $count["channel"] = 0;
@@ -1273,8 +1298,8 @@ $app = array(// основной массив данных
                                     $event = $events->get($id);// получаем элимент по идентификатору
                                     $item = array();// вспомогательный элимент при переносе рейда
                                     // дополняем список вспомогательных флагов
-                                    $flags["is-this-date"] = (empty($current) ? (empty($command["date"]) or date("d.m.Y", $event["time"]) == date("d.m.Y", $command["date"])) : $event["time"] == $current["time"]);
-                                    $flags["is-this-time"] = (empty($current) ? (empty($command["time"]) or date("H:i", $event["time"]) == date("H:i", $command["time"])) : $event["time"] == $current["time"]);
+                                    $flags["is-this-date"] = (empty($current) ? (empty($command["date"]) or $app["fun"]["dateFormat"]("d.m.Y", $event["time"], $timezone) == $app["fun"]["dateFormat"]("d.m.Y", $command["date"], $timezone)) : $event["time"] == $current["time"]);
+                                    $flags["is-this-time"] = (empty($current) ? (empty($command["time"]) or $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) == $app["fun"]["dateFormat"]("H:i", $command["time"], $timezone)) : $event["time"] == $current["time"]);
                                     $flags["is-this-raid"] = (empty($current) ? (empty($command["raid"]) or $event["raid"] == $command["raid"]) : $event["raid"] == $current["raid"]);
                                     $flags["is-this-member"] = (!$member or $event["user"] == $member["user"]["id"]);
                                     $flags["is-change-role"] = (!empty($command["role"]) and $event["role"] != $role["key"]);
@@ -1351,17 +1376,18 @@ $app = array(// основной массив данных
                             // корректируем дату
                             if(empty($error)){// если нет проблем
                                 if(empty($command["date"]) and $command["time"] > 0){// если нужно выполнить
-                                    $value = !empty($current) ? $current["time"] : $command["time"];
-                                    if($value > 0) $value = date("d.m.Y", $value);// дата в строковом формате
-                                    if($value > 0) $command["date"] = strtotime($value, $message["timestamp"]);
+                                    $time = !empty($current) ? $current["time"] : $command["time"];
+                                    if($time > 0) $value = $app["fun"]["dateFormat"]("d.m.Y", $time, $timezone);
+                                    if($time > 0) $command["date"] = $app["fun"]["dateCreate"]($value, $timezone);
                                 };
                             };
                             // корректируем время
                             if(empty($error)){// если нет проблем
                                 if(!empty($command["date"]) and $command["time"] >= 0){// если нужно выполнить
-                                    $value = (!$command["time"] and !empty($current)) ? $current["time"] : $command["time"];
-                                    if($value > 0) $value = date("d.m.Y", $command["date"]) . " " . date("H:i", $value);
-                                    if($value > 0) $command["time"] = strtotime($value, $message["timestamp"]);
+                                    $time = (!$command["time"] and !empty($current)) ? $current["time"] : $command["time"];
+                                    if($time > 0) $value = $app["fun"]["dateFormat"]("d.m.Y", $command["date"], $timezone);
+                                    if($time > 0) $value .= " " . $app["fun"]["dateFormat"]("H:i", $time, $timezone);
+                                    if($time > 0) $command["time"] = $app["fun"]["dateCreate"]($value, $timezone);
                                 };
                             };
                             // проверяем корректность указания времени
@@ -1422,8 +1448,8 @@ $app = array(// основной массив данных
                                     $id = $events->key($i);// получаем ключевой идентификатор по индексу
                                     $event = $events->get($id);// получаем элимент по идентификатору
                                     // дополняем список вспомогательных флагов
-                                    $flags["is-this-date"] = (empty($command["date"]) or date("d.m.Y", $event["time"]) == date("d.m.Y", $command["date"]));
-                                    $flags["is-this-time"] = (empty($command["time"]) or date("H:i", $event["time"]) == date("H:i", $command["time"]));
+                                    $flags["is-this-date"] = (empty($command["date"]) or $app["fun"]["dateFormat"]("d.m.Y", $event["time"], $timezone) == $app["fun"]["dateFormat"]("d.m.Y", $command["date"], $timezone));
+                                    $flags["is-this-time"] = (empty($command["time"]) or $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) == $app["fun"]["dateFormat"]("H:i", $command["time"], $timezone));
                                     $flags["is-this-raid"] = (empty($command["raid"]) or $event["raid"] == $command["raid"]);
                                     $flags["is-this-user"] = (!$user or $event["user"] == $user["id"]);
                                     // проверяем ограничения по времени записи
@@ -1607,8 +1633,8 @@ $app = array(// основной массив данных
                     if($item["repeat"]) $repeat[$any] = true;
                     if($item["repeat"]) $repeat[$group] = true;
                     // расширяем свойства элимента
-                    $item["title"] = date("d", $item["time"]) . " " . $months->get(date("n", $item["time"]), $language);
-                    $item["day"] = $dates->get(mb_strtolower(date("l", $item["time"])), $language);
+                    $item["title"] = $app["fun"]["dateFormat"]("d", $item["time"], $timezone) . " " . $months->get($app["fun"]["dateFormat"]("n", $item["time"], $timezone), $language);
+                    $item["day"] = mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $item["time"], $timezone)), $language)));
                     $item["group"] = $group;
                     // сохраняем элимент в массив
                     $items[$i] = $item;
@@ -1639,6 +1665,7 @@ $app = array(// основной массив данных
                         $raid = $raids->get($item["raid"]);
                         $role = $roles->get($item["role"]);
                         $type = $types->get($raid["type"]);
+                        $chapter = $chapters->get($raid["chapter"]);
                         $limit = $limits[$item["raid"]];
                         $group = $item["group"];
                         // определяем номер события
@@ -1682,7 +1709,11 @@ $app = array(// основной массив данных
                                 $lines = array();
                             };
                             // формируем строки данных
-                            $line = "**```" . $item["title"] . " - " . $item["day"] . "```**";
+                            $line = "**```";
+                            array_push($lines, $line);
+                            $line = json_decode('"\uD83D\uDCC5"') . " " . $item["title"] . " - " . $item["day"];
+                            array_push($lines, $line);
+                            $line = "```**";
                             array_push($lines, $line);
                         };
                         if(// множественное условие
@@ -1739,20 +1770,20 @@ $app = array(// основной массив данных
                             if($flag){// если это основная или другая полная группа
                                 $logotype = ($limit and $count[$all] < $limit) ? $type["processing"] : $type["complete"];
                                 $line = ((!empty($logotype) and !$isConsolidated) ? $logotype . " " : "");
-                                $line .= "**" . date("H:i", $item["time"]) . "**" . ($isConsolidated ? " —" . $type["icon"] : " - ") . "**" . $raid["key"] . "** " . $raid[$language];
+                                $line .= "**" . $app["fun"]["dateFormat"]("H:i", $item["time"], $timezone) . "**" . ($isConsolidated ? " —" . $type["icon"] : " - ") . "**" . $raid["key"] . "** " . $raid[$language];
                                 $line .= ($isConsolidated ? " (" . mb_strtolower($type[$language]) . ")" : "");
-                                $line .= (!empty($raid["chapter"]) ? " **DLC " . $raid["chapter"] . "**" : "");
-                                $line .= (($limit and !$isConsolidated) ? " (" . $count[$all] . " из " . $limit . ")" : "");
+                                $line .= (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
+                                $line .= (($limit and !$isConsolidated) ? " (" . $count[$all] . " " . $names->get("from", $language) . " " . $limit . ")" : "");
                                 $line .= ((1 == $group and $repeat[$any] and !$isConsolidated) ? "  " . $additions->get("daily", "icon") : "");
                                 $line .= ($isConsolidated ? " <#" . $item["channel"] . ">" : "");
                                 array_push($lines, $line);
                                 $position = 1;
                             }else if((2 == $group or $before["count"] == $limit) and !$isConsolidated){// если это не полная группа
-                                $line = "__Резерв:__";
+                                $line = "__" . $names->get("reserve", $language) . ":__";
                                 array_push($lines, $line);
                             };
                             if($flag and !empty($comment[$any]) and !$isConsolidated){// если есть комментарий
-                                $line = "__Комментарий__: " . $comment[$any];
+                                $line = "__" . $names->get("comment", $language) . "__: " . $comment[$any];
                                 array_push($lines, $line);
                             };
                             // формируем подсказку для записи
@@ -1778,12 +1809,12 @@ $app = array(// основной массив данных
                                 $line = "";// сбрасываем значение
                                 $j = 0;// порядковый номер роли в списке
                                 foreach($list as $key => $value){// пробигаемся по ролям
-                                    $key = $j ? ($j == $jLen - 1 ? " или " : ", ") : "";
+                                    $key = $j ? ($j == $jLen - 1 ? " " . $names->get("or", $language) . " " : ", ") : "";
                                     $line .= $key . $value;
                                     $j++;// увиличиваем значение
                                 };
                                 // добавляем отдельной строкой
-                                $line = "Записаться " . $line;
+                                $line = $names->get("entry", $language) . " " . $line;
                                 array_push($lines, $line);
                             };
                         };
@@ -1797,13 +1828,14 @@ $app = array(// основной массив данных
                             and $before["raid"] == $item["raid"]
                             and $before["group"] == $group
                         ){// если нужно отделить согласованных
-                            $line = "__Кандидаты:__";
+                            $line = "__" . $names->get("candidate", $language) . ":__";
                             array_push($lines, $line);
                         };
                         // формируем строки данных
                         if(!$isConsolidated){// если это не сводное расписание
                             $icon = $item["accept"] ? $additions->get("accept", "icon") : null;
-                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . $role["synonym"] . ": <@!" . $item["user"] . ">" . ($icon ? $icon : "");
+                            $value = $names->get($role["key"], $language);//  получаем альтернативное имя
+                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . mb_ucfirst(mb_strtolower(!empty($value) ? $value : $role[$language])) . ": <@!" . $item["user"] . ">" . ($icon ? $icon : "");
                             $key = mb_strtolower($additions->get("leader", $language));// идентификатор обозначающий лидера
                             $value = $item["comment"];// комментарий для обработки
                             for($j = -1, $jLen = mb_strlen($key); $j !== false; $j = mb_stripos($value, $key)){
@@ -1822,7 +1854,7 @@ $app = array(// основной массив данных
                         $before["count"] = $count[$all];
                     };
                 }else{// если нет не одной записи
-                    $line = "Ещё нет событий, но скоро будут.";
+                    $line = $names->get("empty", $language);
                     array_push($lines, $line);
                 };
                 // формируем блок и контент    
@@ -2332,6 +2364,11 @@ $app = array(// основной массив данных
                         };
                         // название
                         $key = "name";// задаём ключ
+                        if(isset($data[$key])){// если существует
+                            $unit[$key] = $data[$key];
+                        };
+                        // тема
+                        $key = "topic";// задаём ключ
                         if(isset($data[$key])){// если существует
                             $unit[$key] = $data[$key];
                         };
@@ -2970,6 +3007,39 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $cache;
         },
+        "dateCreate" => function($value, $timezone = null){// преобразует текст в метку времени с учётом временной зоны
+        //@param $value {string} - текст времени на английском языке
+        //@param $timezone {string} - временная зона
+        //@return {number} - метка времени или -1 при ошибке
+            
+            // выполняем обработку
+            $zone = null;// временная зона по умолчанию
+            if(!empty($timezone)) $zone = new DateTimeZone($timezone);
+            try{// пробуем распарсить время
+                $time = new DateTime($value, $zone);
+                $timestamp = 1 * $time->format("U");
+            }catch(Exception $e){// если возникли ошибки
+                $timestamp = -1;
+            };
+            // возвращаем результат
+            return $timestamp;
+        },
+        "dateFormat" => function($format, $timestamp = null, $timezone = null){// форматирует время с учётом временной зоны
+        //@param $format {string} - шаблон формата времени
+        //@param $timestamp {number} - временная метка
+        //@param $timezone {string} - временная зона
+        //@return {string} - отформатированная время
+        
+            // выполняем обработку
+            if(is_null($timestamp)) $timestamp = time();
+            $time = new DateTime();// создаём объект для работы со временем
+            $time->setTimestamp($timestamp);// задаём время
+            if(!empty($timezone)) $zone = new DateTimeZone($timezone);
+            if(!empty($timezone)) $time->setTimezone($zone);
+            $value = $time->format($format);
+            // возвращаем результат
+            return $value;
+        },
         "changeEvents" => function($time, &$status){// делаем регламентные операции с событиями
         //@param $time {float} - данные о времени для выполнения регламентных операций
         //@param $status {number} - целое число статуса выполнения
@@ -3065,18 +3135,30 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $list;
         },
-        "getCommandValue" => function(&$content, $delim, $begin = false, $filter = null, &$list = null){// получаем очередное значение
+        "getShortValue" => function($value){// получает только символы в верхнем регистре
+        //@param $value {string} - значение для получения символов
+        //@return {string} - только символы в верхнем регистре
+            
+            $short = "";// начальное значение
+            $value = strval($value);// приводим к строковому типу 
+            for($i = 0, $iLen = mb_strlen($value); $i < $iLen; $i++){
+                $char = mb_substr($value, $i, 1);// получаем очередной символ
+                if(mb_strtoupper($char) == $char) $short .= $char;
+            };
+            // возвращаем результат
+            return $short;
+        },
+        "getCommandValue" => function(&$content, $delim, $language = null, $filter = null, &$list = null){// получаем очередное значение
         //@param $content {string} - страка значений для обработки (сокращается на значение и разделители)
-        //@param $delim {string} - разделитель значенией в строке
-        //@param $begin {boolean} - совпадение с началом значения или полное совподение
+        //@param $delim {string} - разделитель значенией в строке (может состоять из нескольких символов)
+        //@param $language {string|null|false} - проверять так же данные в этом ключе (если null, то совподение с началом вода)
         //@param $filter {FileStorage|string} - база данных или регулярное выражение для поиска совподения
         //@param $list {array} - результаты поиска для регулярного выражения
         //@return {string} - очередное ключевое значение или пустая строка
             global $app;
             $result = "";
 
-            $flag = false;// найдено совпадение
-            $language = $app["val"]["discordLang"];// локализация
+            $flag = false;// найдено ли совпадение
             // получаем значение из строки по разделителю
             $index = mb_stripos($content, $delim);
             if(false === $index) $fragment = $content;
@@ -3086,20 +3168,43 @@ $app = array(// основной массив данных
                if(!is_string($filter)){// если передана база данных
                     // выполняем последовательную проверку с элиментами базы данных
                     for($i = 0, $iLen = $filter->length; $i < $iLen and !$flag; $i++){
-                        $id = $filter->key($i);// получаем ключевой идентификатор по индексу
-                        $item = $filter->get($id);// получаем элимент по идентификатору
-                        foreach(array("key", $language) as $key){// пробигаемся по свойствам
-                            if(isset($item[$key])){// если свойство существует
-                                $value = $item[$key];// получаем значение свойства
-                                $length = mb_strlen($value);// получаем длину значения
-                                $index = mb_stripos($fragment, $value);// позиция начала совпадения
-                                $flag = (0 === $index and ($begin or mb_strlen($fragment) == $length));
-                                if($flag){// если найдено совпадение со свойством элимента
-                                    $content = mb_substr($content, $length);
-                                    $result = $id;
-                                    break;
-                                };
+                        $key = $filter->key($i);// получаем ключевой идентификатор по индексу
+                        $item = $filter->get($key);// получаем элимент по идентификатору
+                        // проверяем совпадение с ключевым значением
+                        if(!$flag and isset($item["key"])){// если совподений ещё не было
+                            $value = $item["key"];// получаем значение свойства
+                            $length = mb_strlen($value);// получаем длину значения
+                            if($length){// если не пустое значение
+                                $index = mb_stripos($fragment, $value);// начало совпадения
+                                $flag = (is_null($language) or mb_strlen($fragment) == $length);
+                                $flag = ($flag and 0 === $index);// найдено ли совпадение
                             };
+                        };
+                        // проверяем совпадение в языковом ключе по полному значению
+                        if(!$flag and isset($item[$language])){// если совподений ещё не было
+                            $value = $item[$language];// получаем значение свойства
+                            $length = mb_strlen($value);// получаем длину значения
+                            if($length){// если не пустое значение
+                                $index = mb_stripos($fragment, $value);
+                                $flag = mb_strlen($fragment) == $length;
+                                $flag = ($flag and 0 === $index);
+                            };
+                        };
+                        // проверяем совпадение в языковом ключе по короткому значению
+                        if(!$flag and isset($item[$language])){// если совподений ещё не было
+                            $value = $item[$language];// получаем значение свойства
+                            $value = $app["fun"]["getShortValue"]($value);
+                            $length = mb_strlen($value);// получаем длину значения
+                            if($length){// если не пустое значение
+                                $index = mb_stripos($fragment, $value);
+                                $flag = mb_strlen($fragment) == $length;
+                                $flag = ($flag and 0 === $index);
+                            };
+                        };
+                        // сохраняем значение ключа и обрезаем исходную строку
+                        if($flag){// если найдено совпадение со свойством элимента
+                            $content = mb_substr($content, $length);
+                            $result = $key;
                         };
                     };
                 }else{// если передано регулярное выражение
@@ -3349,8 +3454,8 @@ $app = array(// основной массив данных
     )
 );
 
-// выставляем время по часам сервера
-date_default_timezone_set("Europe/Moscow");
+// выставляем время временную зону по умолчанию
+date_default_timezone_set($app["val"]["timeZone"]);
 // настраиваем крон на полное выполнение скрипта
 ini_set("max_input_time", 0);
 ini_set("ignore_user_abort", 1);
