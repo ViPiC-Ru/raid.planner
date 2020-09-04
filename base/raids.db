@@ -83,6 +83,8 @@ nMF	нор. Храм Лунной могилы	nor. Moongrave Fane	scalebreaker	
 nLoM	нор. Логово Марселока	nor. Lair of Maarselok	scalebreaker	dungeon	1	1	2
 nIR	нор. Ледяной предел	nor. Icereach	harrowstorm	dungeon	1	1	2
 nUG	нор. Нечестивая могила	nor. Unhallowed Grave	harrowstorm	dungeon	1	1	2
+nSG	нор. Каменный Сад	nor. Stone Garden	stonethorn	dungeon	1	1	2
+nCT	нор. Замок Шипов	nor. Castle Thorn	stonethorn	dungeon	1	1	2
 nRND	нор. Случайное подземелье	nor. Random dungeon		dungeon	1	1	2
 nDNG	нор. Подземелья	nor. Dungeons		dungeon	1	1	2
 vTBC1	вет. Темницы Изгнанников I	vet. The Banished Cells I		dungeon	1	1	2
@@ -125,6 +127,8 @@ vMF	вет. Храм Лунной могилы	vet. Moongrave Fane	scalebreaker	
 vLoM	вет. Логово Марселока	vet. Lair of Maarselok	scalebreaker	dungeon	1	1	2
 vIR	вет. Ледяной предел	vet. Icereach	harrowstorm	dungeon	1	1	2
 vUG	вет. Нечестивая могила	vet. Unhallowed Grave	harrowstorm	dungeon	1	1	2
+vSG	вет. Каменный Сад	vet. Stone Garden	stonethorn	dungeon	1	1	2
+vCT	вет. Замок Шипов	vet. Castle Thorn	stonethorn	dungeon	1	1	2
 vRND	вет. Случайное подземелье	vet. Random dungeon		dungeon	1	1	2
 vDNG	вет. Подземелья	vet. Dungeons		dungeon	1	1	2
 1key	Подземелье на 1 ключ	Dungeon for 1 key		undaunted	1	1	2
