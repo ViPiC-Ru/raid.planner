@@ -1,7 +1,7 @@
-key:string	ru:string	en:string	icon:string	complete:string	processing:string
-trial	Триал	Trial	<:trial:733924812304547911> 	:shield:	:hourglass:
-dungeon	Подземелье	Dungeon	<:dungeon:733924812539428904>	:shield:	:hourglass:
-undaunted	Неустрашимые	Undaunted	<:undaunted:733924812426051638>	:shield:	:hourglass:
-battle	Сражение	Battle	<:battle:733924812488966144>	:crossed_swords:	:hourglass:
-arena	Арена	Arena	<:arena:733924812539428944>	:shield:	:hourglass:
-activity	Мероприятие	Activity	 <:activity:733924812539428874> 	:notepad_spiral:	:hourglass:
+key:string	ru:string	en:string	icon:string	logotype:string
+trial	Триал	Trial	🛡️	<:trial:733924812304547911> 
+dungeon	Подземелье	Dungeon	🛡️	<:dungeon:733924812539428904>
+undaunted	Неустрашимые	Undaunted	🛡️	<:undaunted:733924812426051638>
+battle	Сражение	Battle	⚔️	<:battle:733924812488966144>
+arena	Арена	Arena	🛡️	<:arena:733924812539428944>
+activity	Мероприятие	Activity	🗒️	 <:activity:733924812539428874> 

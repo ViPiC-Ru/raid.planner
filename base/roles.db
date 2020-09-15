@@ -1,4 +1,4 @@
-key:string	ru:string	en:string
-tank	Танк	Tank
-heal	Хил	Heal
-dd	Дд	Dd
+key:string	ru:string	en:string	icon:string
+tank	Танк	Tank	<:tank:753976184907497572>
+heal	Хил	Heal	<:heal:753976184622153910>
+dd	Дд	Dd	<:dd:753976184894652599>
