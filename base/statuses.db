@@ -10,3 +10,4 @@ id:integer	ru:string	en:string
 308	Запрашиваемый метод не поддерживается	The requested method is not supported
 309	Не удалось записать данные в базу данных	Failed to write data to the database
 310	Не корректный внутренний запрос	Do not correct the inner query
+311	Не удалось записать данные в файловый кеш	Failed to write data to the file cache

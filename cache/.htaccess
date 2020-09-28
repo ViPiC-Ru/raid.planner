@@ -1,0 +1,3 @@
+# запрешаем доступ из браузера
+Order allow,deny
+Deny from all
