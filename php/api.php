@@ -11,6 +11,7 @@ $app = array(// основной массив данных
     "val" => array(// переменные и константы
         "baseUrl" => "../base|/%name%.db",                                  // шаблон url для базы данных
         "cacheUrl" => "../cache|/%group%|/%name%.json",                     // шаблон url для кеша данных
+        "debugUrl" => null,                                                 // шаблон url для включения режима отладки
         "statusUnknown" => "Server unknown status",                         // сообщение для неизвестного статуса
         "statusLang" => "en",                                               // язык для кодов расшифровок
         "format" => "json",                                                 // формат вывода поумолчанию
@@ -56,6 +57,7 @@ $app = array(// основной массив данных
             $isSessionUpdate = false;// были ли обновлены данные в базе данных
             $isEventsUpdate = false;// были ли обновлены данные в базе данных
             $start = microtime(true);// время начала работы приложения
+            $app["fun"]["setDebug"](1, "run");// отладочная информация
             // получаем очищенные значения параметров
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
             // проверяем корректность указанных параметров
@@ -86,6 +88,7 @@ $app = array(// основной массив данных
                 $heartbeatAcceptTime = 0;// время ответа на последнее серцебиение
                 $heartbeatInterval = 0;// интервал отправка серцебиения
                 $app["val"]["useFileCache"] = true;// включаем использование
+                $app["fun"]["setDebug"](1, "begin");// отладочная информация
                 do{// выполняем циклическую обработку
                     // получаем данные из подключения
                     if($websocket){// если создано подключение
@@ -96,6 +99,12 @@ $app = array(// основной массив данных
                     // обрабатываем код уведомления
                     switch(get_val($data, "op", null)){// поддерживаемые коды
                         case 0:// dispatch
+                            $app["fun"]["setDebug"](2, get_val($data, "t", null),
+                                isset($data["d"]["guild_id"]) ? $data["d"]["guild_id"] : null,
+                                isset($data["d"]["channel_id"]) ? $data["d"]["channel_id"] : null,
+                                isset($data["d"]["message_id"]) ? $data["d"]["message_id"] : null,
+                                isset($data["d"]["user_id"]) ? $data["d"]["user_id"] : null
+                            );// отладочная информация
                             // обрабатываем тип уведомления
                             switch(get_val($data, "t", null)){// поддерживаемые типы
                                 case "READY":// ready
@@ -587,6 +596,7 @@ $app = array(// основной массив данных
                 };
             };
             // возвращаем результат
+            $app["fun"]["setDebug"](1, "exit", $status);// отладочная информация
             $result = $isEventsUpdate;
             return $result;
         },
@@ -606,6 +616,7 @@ $app = array(// основной массив данных
             // получаем очищенные значения параметров
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
             $guild = $app["fun"]["getClearParam"]($params, "guild", "string");
+            $app["fun"]["setDebug"](3, "discord.guild", $guild);// отладочная информация
             // проверяем корректность указанных параметров
             if(empty($status)){// если нет ошибок
                 if((!is_null($token) and !is_null($guild)) or get_val($options, "nocontrol", false)){// если указаны обязательные поля
@@ -689,6 +700,7 @@ $app = array(// основной массив данных
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
             $guild = $app["fun"]["getClearParam"]($params, "guild", "string");
             $channel = $app["fun"]["getClearParam"]($params, "channel", "string");
+            $app["fun"]["setDebug"](4, "discord.channel", $guild, $channel);// отладочная информация
             // проверяем корректность указанных параметров
             if(empty($status)){// если нет ошибок
                 if((!is_null($token) and !is_null($guild) and !is_null($channel)) or get_val($options, "nocontrol", false)){// если указаны обязательные поля
@@ -795,6 +807,7 @@ $app = array(// основной массив данных
             $guild = $app["fun"]["getClearParam"]($params, "guild", "string");
             $channel = $app["fun"]["getClearParam"]($params, "channel", "string");
             $message = $app["fun"]["getClearParam"]($params, "message", "string");
+            $app["fun"]["setDebug"](5, "discord.message", $guild, $channel, $message);// отладочная информация
             // проверяем корректность указанных параметров
             if(empty($status)){// если нет ошибок
                 if((!is_null($token) and !is_null($guild) and !is_null($channel) and !is_null($message)) or get_val($options, "nocontrol", false)){// если указаны обязательные поля
@@ -2201,6 +2214,7 @@ $app = array(// основной массив данных
             $channel = $app["fun"]["getClearParam"]($params, "channel", "string");
             $message = $app["fun"]["getClearParam"]($params, "message", "string");
             $reaction = $app["fun"]["getClearParam"]($params, "reaction", "string");
+            $app["fun"]["setDebug"](6, "discord.reaction", $guild, $channel, $message, $reaction);// отладочная информация
             // проверяем корректность указанных параметров
             if(empty($status)){// если нет ошибок
                 if((!is_null($token) and !is_null($guild) and !is_null($channel) and !is_null($message) and !is_null($reaction)) or get_val($options, "nocontrol", false)){// если указаны обязательные поля
@@ -4176,6 +4190,58 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $permission;
         },
+        "setDebug" => function($level, $name){// записывает отладочную информацию в файл 
+        //@param $level {integer} - уровень отладочной информации
+        //@param $name {string} - идентификатор отладочной информации
+        //@return {boolean} - успешность выполнения
+            global $app;
+            static $times = array();
+            $error = 0;
+
+            if($app["val"]["debugUrl"]){// если включён режим отладки
+                $now = date_create();// текущее время
+                $time = isset($times[$level]) ? $times[$level] : $now;
+                $items = array();// массив отладочной информации
+                // текущая дата и время на момент вызова
+                $item = date_format($now, "d.m.y H:i:s.u");
+                $item = mb_substr($item, 0, 21);
+                array_push($items, $item);
+                // время с предыдущего запуска текущего уровня
+                $item = date_diff($time, $now);
+                if($item->f and $level){// если есть разница
+                    $item = $item->format("%R%I:%S.%F");
+                    $item = mb_substr($item, 0, 10);
+                }else $item = str_pad("", 10, " ", STR_PAD_RIGHT);
+                array_push($items, $item);
+                // объём использованной оперативной памяти
+                $item = memory_get_usage() / 1024 / 1024;
+                $item = number_format($item, 3, ".", " ") . " MB";
+                $item = str_pad($item, 10, " ", STR_PAD_LEFT);
+                array_push($items, $item);
+                // уровня вложенности информации
+                $item = $level;// уровня вложенности
+                array_push($items, $item);
+                // идентификатор
+                $item = "";// начальное смещение
+                for($i = 0, $iLen = $level; $i < $iLen; $i++) $item .= "  ";
+                $item = str_pad($item . $name, 31, " ", STR_PAD_RIGHT);
+                array_push($items, $item);
+                // добавляем оставшиеся значения
+                for($i = 2, $iLen = func_num_args(); $i < $iLen; $i++){
+                    $item = func_get_arg($i);// получаем очередное значение
+                    $item = !is_null($item) ? $item : "";
+                    array_push($items, $item);
+                };
+                // записываем в файл отладочную информацию
+                $times[$level] = $now;// сохраняем время
+                $line = implode("\t", $items) . "\n";
+                $path = template($app["val"]["debugUrl"], array("name" => $name));
+                if(@file_put_contents($path, $line, FILE_APPEND)){// если успешно
+                }else $error = 1;
+            };
+            // возвращаем результат
+            return !$error;
+        },
         "apiRequest" => function($method, $uri, $data = null, &$code = 0){// http запрос к api
         //@param $method {string} - методов http запроса в нижнем регистре
         //@param $uri {string} - конечная часть url адреса запроса
@@ -4187,6 +4253,7 @@ $app = array(// основной массив данных
             $response = null;
             
             // делаем запрос через api
+            $app["fun"]["setDebug"](7, "🌐 [apiRequest]", $method, $uri);// отладочная информация
             if(!empty($method) and !empty($uri)){// если не пустые значения
                 $method = mb_strtolower($method);
                 $now = microtime(true);// текущее время
