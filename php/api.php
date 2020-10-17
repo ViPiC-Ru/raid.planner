@@ -392,8 +392,9 @@ $app = array(// основной массив данных
                             break;
                         case 7:// reconnect
                             // инициализируем новое подключение
+                            $app["fun"]["setDebug"](1, "reconnect");// отладочная информация
                             if(websocket_check($websocket)) websocket_close($websocket);// закрываем старое подключение
-                            $websocket = websocket_open($app["val"]["discordWebSocketHost"], 443, null, $error, 10, true);
+                            $websocket = websocket_open($app["val"]["discordWebSocketHost"], 443, null, $error, 5, true);
                             if($websocket){// если удалось создать подключение к веб-сокету
                                 $heartbeatInterval = 0;// отключаем проверку соединения
                             }else $status = 305;// не удалось установить соединение с удалённым сервером
@@ -449,12 +450,14 @@ $app = array(// основной массив данных
                     // проверяем и поддерживаем серцебиение
                     if(empty($status)){// если нет ошибок
                         if($heartbeatInterval > 0){// если задан интервал серцебиения
-                            if($heartbeatSendTime - $heartbeatAcceptTime > $heartbeatInterval + 10){// если соединение зависло
+                            if($heartbeatSendTime - $heartbeatAcceptTime > $heartbeatInterval + 5){// если соединение зависло
                                 // разрываем соединение
+                                $app["fun"]["setDebug"](1, "close");// отладочная информация
                                 websocket_close($websocket);// закрываем старое подключение
                                 $websocket = false;// подключение закрыто
                             }else if($now - $heartbeatSendTime > $heartbeatInterval){// если нужно отправить серцебиение
                                 // отправляем серцебиение
+                                $app["fun"]["setDebug"](1, "heartbeat");// отладочная информация
                                 $data = array(// данные для отправки
                                     "op" => 1,// heartbeat
                                     "d" => 1 * $session->get("seq", "value")
@@ -1439,6 +1442,8 @@ $app = array(// основной массив данных
                                 if("-" == $command["comment"]) $command["comment"] = $unit["comment"] = "";
                                 else if(mb_strlen($command["comment"])) $unit["comment"] = $command["comment"];
                                 if(!isset($unit["comment"]) and !empty($unit["leader"]) and $flags["is-change-leader"] and $flags["is-current-comment"]) $unit["comment"] = $current["comment"];
+                                if(isset($unit["comment"]) and !empty($current["leader"]) and $member and $member["user"]["id"] == $current["user"]) $isConsolidatedChange = true;
+                                if(isset($unit["leader"]) and (!$unit["leader"] or empty($current["leader"]) or $current["comment"] != $unit["comment"])) $isConsolidatedChange = true;
                             };
                             // изменяем данные в базе данных
                             if(empty($error)){// если нет проблем
@@ -1713,7 +1718,7 @@ $app = array(// основной массив данных
                     $raid = $raids->get($item["raid"]);
                     // создаём структуру счётчика
                     $count = &$counts;// счётчик элементов
-                    foreach(array($item["time"], $item["raid"], $any) as $key){
+                    foreach(array($item["channel"], $item["time"], $item["raid"], $any) as $key){
                         if(!isset($count[$key])) $count[$key] = array();
                         $count = &$count[$key];// получаем ссылку
                     };
@@ -1738,7 +1743,7 @@ $app = array(// основной массив данных
                     $group = $limit ? ceil($count[$item["role"]] / $limit) : 1;
                     // создаём структуру счётчика
                     $count = &$counts;// счётчик элементов
-                    foreach(array($item["time"], $item["raid"], $group) as $key){
+                    foreach(array($item["channel"], $item["time"], $item["raid"], $group) as $key){
                         if(!isset($count[$key])) $count[$key] = array();
                         $count = &$count[$key];// получаем ссылку
                     };
@@ -1749,22 +1754,23 @@ $app = array(// основной массив данных
                     $count[$all]++;
                     // создаём структуру лидера
                     $leader = &$leaders;// лидер по группам
-                    foreach(array($item["time"], $item["raid"]) as $key){
+                    foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
                         if(!isset($leader[$key])) $leader[$key] = array();
                         $leader = &$leader[$key];// получаем ссылку
                     };
                     // определяем лидера группы
                     if(!isset($leader[$group])) $leader[$group] = $i;
                     $limit = $limits[$item["raid"]];// получаем значение лимита
-                    if($i != $leader[$group]){// если лидер не текущий элемент
-                        if(!$items[$leader[$group]]["leader"]){// если лидер выбран системой
+                    $index = $leader[$group];// порядковый номер лидера
+                    if($i != $index){// если лидер не текущий элемент
+                        if(!$items[$index]["leader"]){// если лидер выбран системой
                             if($item["leader"]) $leader[$group] = $i;
-                            else if($count[$all] == $limit) $items[$leader[$group]]["leader"] = true;
+                            else if($count[$all] == $limit) $items[$index]["leader"] = true;
                         }else if($item["leader"]) $item["leader"] = false;
                     }else if($count[$all] == $limit) $item["leader"] = true;
                     // создаём структуру комментария
                     $comment = &$comments;// комментарий по группам
-                    foreach(array($item["time"], $item["raid"]) as $key){
+                    foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
                         if(!isset($comment[$key])) $comment[$key] = array();
                         $comment = &$comment[$key];// получаем ссылку
                     };
@@ -1775,7 +1781,7 @@ $app = array(// основной массив данных
                     if(1 == $group) $comment[$any] = $comment[$group];
                     // создаём структуру повторения события
                     $repeat = &$repeats;// повторяемость по группам
-                    foreach(array($item["time"], $item["raid"]) as $key){
+                    foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
                         if(!isset($repeat[$key])) $repeat[$key] = array();
                         $repeat = &$repeat[$key];// получаем ссылку
                     };
@@ -1790,6 +1796,21 @@ $app = array(// основной массив данных
                     $item["group"] = $group;
                     // сохраняем элемент в массив
                     $items[$i] = $item;
+                };
+                // заменяем номер лидера на идентификатор пользователя
+                for($i = 0, $iLen = count($items); $i < $iLen; $i++){
+                    $item = $items[$i];// получаем очередной элемент
+                    $group = $item["group"];
+                    // получаем лидера из структуры
+                    $leader = &$leaders;// лидер по группам
+                    foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
+                        $leader = &$leader[$key];// получаем ссылку
+                    };
+                    // выполняем замену
+                    $index = $leader[$group];// порядковый номер лидера
+                    if($index == $i){// если лидет текущий элимент
+                       $leader[$group] = $item["leader"] ? $item["user"] : 0;
+                    };
                 };
                 // сортируем список записей для отображения
                 usort($items, function($a, $b){// сортировка
@@ -1880,18 +1901,23 @@ $app = array(// основной массив данных
                         ){// если нужно добавить информацию о времени
                             // получаем счётчик из структуру
                             $count = &$counts;// счётчик элементов
-                            foreach(array($item["time"], $item["raid"], $group) as $key){
+                            foreach(array($item["channel"], $item["time"], $item["raid"], $group) as $key){
                                 $count = &$count[$key];// получаем ссылку
                             };
                             // получаем комментарий из структуру
                             $comment = &$comments;// комментарий по группам
-                            foreach(array($item["time"], $item["raid"]) as $key){
+                            foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
                                 $comment = &$comment[$key];// получаем ссылку
                             };
                             // получаем повторяемость из структуру
                             $repeat = &$repeats;// повторяемость по группам
-                            foreach(array($item["time"], $item["raid"]) as $key){
+                            foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
                                 $repeat = &$repeat[$key];// получаем ссылку
+                            };
+                            // получаем лидера из структуры
+                            $leader = &$leaders;// лидер по группам
+                            foreach(array($item["channel"], $item["time"], $item["raid"]) as $key){
+                                $leader = &$leader[$key];// получаем ссылку
                             };
                             // формируем блок и контент    
                             $bLen = 0;// длина текущего блока
@@ -1926,10 +1952,11 @@ $app = array(// основной массив данных
                                     $line = $blank;// пустая строка
                                     array_push($lines, $line);
                                 };
+                                $value = mb_ucfirst($app["fun"]["strimStrMulti"]($comment[$any], "."));
                                 $line = (!$isConsolidated ? (($limit and $count[$all] < $limit) ? $additions->get("once", "icon") : $type["icon"]) . " " : "");
-                                $line .= "**" . $app["fun"]["dateFormat"]("H:i", $item["time"], $timezone) . "**" . ($isConsolidated ? " —" . $type["logotype"] : " - ") . "**" . $raid["key"] . "** " . $raid[$language];
-                                $line .= ($isConsolidated ? " (" . mb_strtolower($type[$language]) . ")" : "");
-                                $line .= (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
+                                $line .= "**" . $app["fun"]["dateFormat"]("H:i", $item["time"], $timezone) . "**" . ($isConsolidated ? " —" . $type["logotype"] : " - ") . "**" . $raid["key"] . "**";
+                                $line .= (($isConsolidated and !empty($leader[$group])) ? " " . $additions->get("leader", "icon") . "<@!" . $leader[$group] . ">"  : "");
+                                $line .= (" " . (($isConsolidated and mb_strlen($value)) ? $value : $raid[$language])) . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                                 $line .= (($limit and !$isConsolidated) ? " (" . $count[$all] . " " . $names->get("from", $language) . " " . $limit . ")" : "");
                                 $line .= ((1 == $group and $repeat[$any] and !$isConsolidated) ? "  " . $additions->get("weekly", "icon") : "");
                                 $line .= ($isConsolidated ? " <#" . $item["channel"] . ">" : "");
@@ -1940,7 +1967,8 @@ $app = array(// основной массив данных
                                 array_push($lines, $line);
                             };
                             if($flag and !empty($comment[$any]) and !$isConsolidated){// если есть комментарий
-                                $line = "__" . $names->get("comment", $language) . "__: " . $comment[$any];
+                                $value = mb_ucfirst($comment[$any]);// комментарий к рейду
+                                $line = "__" . $names->get("comment", $language) . "__: " . $value;
                                 array_push($lines, $line);
                             };
                             // формируем подсказку для записи
@@ -1988,17 +2016,18 @@ $app = array(// основной массив данных
                         };
                         // формируем строки данных
                         if(!$isConsolidated){// если это не сводное расписание
+                            $flag = (1 == $group or $limit and $count[$all] == $limit);
                             $icon = $item["accept"] ? $additions->get("accept", "icon") : null;
                             $value = $names->get($role["key"], $language);//  получаем альтернативное имя
-                            $line = "**" . str_pad($position, 2, "0", STR_PAD_LEFT) . "** - " . mb_ucfirst(mb_strtolower(!empty($value) ? $value : $role[$language])) . ": <@!" . $item["user"] . ">" . ($icon ? $icon : "");
+                            $line = "**`" . str_pad($position, 2, "0", STR_PAD_LEFT) . "`** - " . mb_ucfirst(mb_strtolower(!empty($value) ? $value : $role[$language]));
+                            $line .= ": " . (($item["leader"] and $flag) ? $additions->get("leader", "icon") : "") . "<@!" . $item["user"] . ">" . ($icon ? $icon : "");
                             $key = mb_strtolower($additions->get("leader", $language));// идентификатор обозначающий лидера
                             $value = $item["comment"];// комментарий для обработки
                             for($j = -1, $jLen = mb_strlen($key); $j !== false; $j = mb_stripos($value, $key)){
                                 if($j > -1) $value = mb_substr($value, 0,  $j) .  mb_substr($value, $j + $jLen);
                             };
-                            $value = mb_strtolower(mb_substr($value, 0, 1)) . mb_substr($value, 1);
                             $value = trim(mb_substr($value, 0, $app["val"]["eventNoteLength"]));
-                            $flag = (1 == $group or $limit and $count[$all] == $limit);
+                            if(mb_strtoupper($value) != $value) $value = mb_lcfirst($value);
                             if($item["leader"] and $flag) $line .= (!$icon ? " " : "") . "- " . $key;
                             else if($value) $line .= (!$icon ? " " : "") . "- " . $value;
                             array_push($lines, $line);
@@ -4190,6 +4219,23 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $permission;
         },
+        "strimStrMulti" => function($imput, $delim){// обрезает строку по мульти разделителю
+        //@param $imput {string} - исходная строка для обрезки
+        //@param $delim {string} - строка, где каждый символ разделитель
+        //@return {string} - обрезанная строка по первому разделителю или пустая строка
+            
+            $index = $length = mb_strlen($imput);
+            for($i = 0, $iLen = mb_strlen($delim); $i < $iLen; $i++){
+                $value = mb_strpos($imput, mb_substr($delim, $i, 1));
+                if(false !== $value) $index = min($value, $index);
+            };
+            
+            if($length > $index) $value = trim(mb_substr($imput, 0, $index));
+            else if(!$iLen) $value = $imput;
+            else $value = "";
+            // возвращаем результат
+            return $value;
+        },
         "setDebug" => function($level, $name){// записывает отладочную информацию в файл 
         //@param $level {integer} - уровень отладочной информации
         //@param $name {string} - идентификатор отладочной информации
@@ -4202,6 +4248,9 @@ $app = array(// основной массив данных
                 $now = date_create();// текущее время
                 $time = isset($times[$level]) ? $times[$level] : $now;
                 $items = array();// массив отладочной информации
+                // временная метка запуска скрипта
+                $item = $_SERVER["REQUEST_TIME"];
+                array_push($items, $item);
                 // текущая дата и время на момент вызова
                 $item = date_format($now, "d.m.y H:i:s.u");
                 $item = mb_substr($item, 0, 21);
