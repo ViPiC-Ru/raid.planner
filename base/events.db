@@ -1,1 +1,1 @@
-id:integer	guild:string	channel:string	user:string	time:date	repeat:date	raid:string	role:string	leader:boolean	accept:boolean	comment:string
+id:integer	guild:string	channel:string	user:string	time:date	repeat:date	raid:string	role:string	leader:boolean	accept:boolean	notice:boolean	comment:string

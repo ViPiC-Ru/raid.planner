@@ -1,31 +1,31 @@
-id:integer	ru:string	en:string
-11	Не удалось понять, что вы хотите сделать. Пожалуйста, начните сообщение с правильной команды.	I couldn't figure out what you want to do. Please start the message with the correct command.
-12	Не удалось найти событие. Необходимо указать номер события.	The event could not be found. You must specify the event number.
-13	Не удалось найти роль. Необходимо корректно указать роль.	The role could not be found. You must specify the role correctly.
-15	Не удалось найти дату события. Необходимо указать дату или день недели события.	The event date could not be found. You must specify the date or day of the week of the event.
-16	Не удалось найти время события. Необходимо указать время события.	The time of the event could not be found. You must specify the time of the event.
-17	Не удалось найти идентификатор события. Необходимо указать идентификатор события.	The event ID could not be found. You must specify the event ID.
-21	Не найдена ни одна подходящая запись в событиях.	Not found no suitable entry in the event.
-52	Не удалось найти событие. Проверьте, верно ли указан номер события.	The event could not be found. Check whether the event number is correct.
-53	Не удалось найти событие. Проверьте, верно ли указан номер события или другие фильтры.	The event could not be found. Check whether the event number or other filters are correct.
-54	Комментарий превышает допустимую длину. Пожалуйста, сократите комментарий.	The comment exceeds the allowed length. Please shorten the comment.
-55	Не удалось понять, какая указана дата. Проверьте, корректно ли указана дата.	I couldn't figure out what date was specified. Check whether the date is entered correctly.
-56	Не удалось понять, какое указано время. Проверьте, корректно ли указано время.	I couldn't figure out what time it was. Check if the time is correct.
-58	Дата и время выходят за ограничени. Пожалуйста, используйте события с более близким времемен.	The date and time are out of bounds. Please use events with a closer time frame.
-59	В этом событие нельзя использовать данную роль. Укажите разрешённую роль.	You cannot use this role in this event. Specify the allowed role.
-60	На данном канале есть ограничения, вы не можете записаться в указанное событие.	In this channel there are limitations, you cannot record in the specified event.
-61	Записыватся в события могут только участники этой гильдии.	Only members of this Guild can sign up for events.
-62	У вас нет разрешений на запись в событие других участников.	You don't have permissions to write other participants to the event.
-63	У вас нет разрешений на изменение записией других участников.	You do not have permissions to change the notes of other participants.
-64	Вы не можете создать событие в этом канале, но можете записаться в существующее.	You can't create an event in this channel, but you can write to an existing one.
-65	У вас нет разрешений на изменение идентификатора или времени проведения события.	You do not have permissions to change the event ID or time.
-66	Время уже занято другим событием. Пожалуйста, выберите другое время.	Time is already occupied by another event. Please choose a different time.
-67	Превышен лимит записи для пользователя на одинаковое время или в одино это же событие.	Exceeded the recording limit for the user for the same time or in the same event.
-68	Указанная опция не доступна в данном контексте. Укажите поддерживаемую опцию или не указывайте её.	The specified option is not available in this context. Specify the supported option or do not specify it.
-69	У вас нет разрешений на создание повторяющихся событий.	You don't have permissions to create recurring events.
-70	У вас нет разрешений на изменение лидера события.	You don't have permissions to change the event leader.
-71	Нельзя присвоить лидера всем участникам события. Пожалуйста, укажите одного участника.	You can't assign a leader to all event participants. Please specify one participant.
-72	У вас нет разрешений на подтверждение записей участников события.	You do not have permission to confirm the records of the participants of the event.
-74	Не удалось понять, какая указана дата или время. Проверьте, корректно ли введена дата и время или не указывайте их.	I couldn't figure out what date or time was specified. Make sure that the date and time are entered correctly or do not specify them.
-75	Событие, из которого вы пытаетесь выписаться, уже прошло. Вам доступны для изменения только будущие события.	The event you are trying to check out of has already passed. You can only change future events.
-76	У вас нет разрешений на удаление других участников из события.	You don't have permissions to remove other participants from the event.
+id:integer	ru:string	en:string	es:string
+11	Не удалось понять, что вы хотите сделать. Пожалуйста, начните сообщение с правильной команды.	I couldn't figure out what you want to do. Please start the message with the correct command.	No puedo determinar lo que querías hacer. Inicie el mensaje con el comando correcto.
+12	Не удалось найти событие. Необходимо указать номер события.	The event could not be found. You must specify the event number.	No se pudo encontrar el evento. Debe especificar el número de evento.
+13	Не удалось найти роль. Необходимо корректно указать роль.	The role could not be found. You must specify the role correctly.	No se pudo encontrar el rol. Debe especificar el rol correctamente.
+15	Не удалось найти дату события. Необходимо указать дату или день недели события.	The event date could not be found. You must specify the date or day of the week of the event.	No se pudo encontrar la fecha del evento. Debe especificar la fecha o el día de la semana del evento.
+16	Не удалось найти время события. Необходимо указать время события.	The time of the event could not be found. You must specify the time of the event.	No se pudo encontrar la hora del evento. Debe especificar la hora del evento.
+17	Не удалось найти идентификатор события. Необходимо указать идентификатор события.	The event ID could not be found. You must specify the event ID.	No se pudo encontrar el identificador de evento. Debe especificar el identificador del evento.
+21	Не найдена ни одна подходящая запись в событиях.	Not found no suitable entry in the event.	No se encontró ninguna entrada adecuada en el evento.
+52	Не удалось найти событие. Проверьте, верно ли указан номер события.	The event could not be found. Check whether the event number is correct.	No se pudo encontrar el evento. Compruebe si el número de evento es correcto.
+53	Не удалось найти событие. Проверьте, верно ли указан номер события или другие фильтры.	The event could not be found. Check whether the event number or other filters are correct.	No se pudo encontrar el evento. Compruebe si el número de evento u otros filtros son correctos.
+54	Комментарий превышает допустимую длину. Пожалуйста, сократите комментарий.	The comment exceeds the allowed length. Please shorten the comment.	El comentario supera la longitud permitida. Por favor, acorte el comentario.
+55	Не удалось понять, какая указана дата. Проверьте, корректно ли указана дата.	I couldn't figure out what date was specified. Check whether the date is entered correctly.	No pude determinar qué fecha se especificó. Compruebe si la fecha se ha introducido correctamente.
+56	Не удалось понять, какое указано время. Проверьте, корректно ли указано время.	I couldn't figure out what time it was. Check if the time is correct.	No pude determinar qué hora se especificó. Compruebe si la hora se ha introducido correctamente.
+58	Дата и время выходят за ограничени. Пожалуйста, используйте события с более близким времемен.	The date and time are out of bounds. Please use events with a closer time frame.	La fecha y la hora están fuera de los límites. Utilice los eventos con un marco de tiempo más cercano.
+59	В этом событие нельзя использовать данную роль. Укажите разрешённую роль.	You cannot use this role in this event. Specify the allowed role.	No puede usar este rol en el evento. Especifique el rol permitido.
+60	На данном канале есть ограничения, вы не можете записаться в указанное событие.	In this channel there are limitations, you cannot record in the specified event.	En este canal hay limitaciones, no se puede grabar en el evento especificado.
+61	Записыватся в события могут только участники этой гильдии.	Only members of this Guild can sign up for events.	Solo miembros de la Guild pueden inscribirse en los eventos.
+62	У вас нет разрешений на запись в событие других участников.	You don't have permissions to write other participants to the event.	No tiene permisos para inscribir otros participantes en el evento.
+63	У вас нет разрешений на изменение записией других участников.	You do not have permissions to change the notes of other participants.	No tiene permisos para cambiar las notas de otros participantes.
+64	Вы не можете создать событие в этом канале, но можете записаться в существующее.	You can't create an event in this channel, but you can write to an existing one.	No puede crear un evento en este canal, pero puede inscribirse en uno existente.
+65	У вас нет разрешений на изменение идентификатора или времени проведения события.	You do not have permissions to change the event ID or time.	No tiene permisos para cambiar el identificador de evento ni la hora.
+66	Время уже занято другим событием. Пожалуйста, выберите другое время.	Time is already occupied by another event. Please choose a different time.	El horario ya está ocupado por otro evento. Por favor, elija una hora diferente.
+67	Превышен лимит записи для пользователя на одинаковое время или в одино это же событие.	Exceeded the recording limit for the user for the same time or in the same event.	Se ha superado el límite de interacciones para el usuario durante el mismo tiempo o en el mismo evento.
+68	Указанная опция не доступна в данном контексте. Укажите поддерживаемую опцию или не указывайте её.	The specified option is not available in this context. Specify the supported option or do not specify it.	La opción especificada no está disponible en este contexto. Especifique la opción admitida o no la especifique.
+69	У вас нет разрешений на создание повторяющихся событий.	You don't have permissions to create recurring events.	No tiene permisos para crear eventos recurrentes.
+70	У вас нет разрешений на изменение лидера события.	You don't have permissions to change the event leader.	No tiene permisos para cambiar el líder del evento.
+71	Нельзя присвоить лидера всем участникам события. Пожалуйста, укажите одного участника.	You can't assign a leader to all event participants. Please specify one participant.	No se puede asignar ser líder a todos los participantes del evento. Especifique un participante.
+72	У вас нет разрешений на подтверждение записей участников события.	You do not have permission to confirm the records of the participants of the event.	No tiene permiso para confirmar los registros de los participantes del evento.
+74	Не удалось понять, какая указана дата или время. Проверьте, корректно ли введена дата и время или не указывайте их.	I couldn't figure out what date or time was specified. Make sure that the date and time are entered correctly or do not specify them.	No se puede determinar qué fecha u hora se especificó. Asegúrese de que la fecha y la hora se han introducido correctamente o no las especifique.
+75	Событие, из которого вы пытаетесь выписаться, уже прошло. Вам доступны для изменения только будущие события.	The event you are trying to check out of has already passed. You can only change future events.	El evento que está tratando de modificar ya ha pasado. Solo puede cambiar eventos futuros.
+76	У вас нет разрешений на удаление других участников из события.	You don't have permissions to remove other participants from the event.	No tiene permisos para quitar otros participantes del evento.

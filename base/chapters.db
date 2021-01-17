@@ -1,18 +1,18 @@
-key:string	ru:string	en:string
-thieves-guild	Гильдия воров	Thieves Guild
-greymoor	Греймур	Greymoor
-dragon-bones	Драконьи кости	Dragon Bones
-clockwork-city	Заводной город	Clockwork City
-imperial-city	Имперский город	Imperial City
-wrathstone	Камень ярости	Wrathstone
-morrowind	Морровинд	Morrowind
-harrowstorm	Мрачная буря	Harrowstorm
-murkmire	Муркмайр	Murkmire
-wolfhunter	Охотник на волков	Wolfhunter
-eso-plus	Подписка	Subscription
-horns-of-the-reach	Рога предела	Horns of the Reach
-summerset	Саммерсет	Summerset
-scalebreaker	Сокрушитель чешуи	Scalebreaker
-shadows-of-the-hist	Тени Хиста	Shadows of the Hist
-elsweyr	Эльсвейр	Elsweyr
-stonethorn	Камни и шипы	Stonethorn
+key:string	ru:string	en:string	es:string
+thieves-guild	Гильдия воров	Thieves Guild	Thieves Guild
+greymoor	Греймур	Greymoor	Greymoor
+dragon-bones	Драконьи кости	Dragon Bones	Dragon Bones
+clockwork-city	Заводной город	Clockwork City	Clockwork City
+imperial-city	Имперский город	Imperial City	Imperial City
+wrathstone	Камень ярости	Wrathstone	Wrathstone
+morrowind	Морровинд	Morrowind	Morrowind
+harrowstorm	Мрачная буря	Harrowstorm	Harrowstorm
+murkmire	Муркмайр	Murkmire	Murkmire
+wolfhunter	Охотник на волков	Wolfhunter	Wolfhunter
+eso-plus	Подписка	Subscription	Suscripción
+horns-of-the-reach	Рога предела	Horns of the Reach	Horns of the Reach
+summerset	Саммерсет	Summerset	Summerset
+scalebreaker	Сокрушитель чешуи	Scalebreaker	Scalebreaker
+shadows-of-the-hist	Тени Хиста	Shadows of the Hist	Shadows of the Hist
+elsweyr	Эльсвейр	Elsweyr	Elsweyr
+stonethorn	Камни и шипы	Stonethorn	Stonethorn
