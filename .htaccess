@@ -76,3 +76,22 @@ php_flag expose_php Off
 	Header always unset "X-Powered-By"
 	Header unset "X-Powered-By"
 </IfModule>
+
+# редиректим на https
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	RewriteCond %{HTTPS} off
+	RewriteCond %{HTTP:X-Forwarded-Protocol} !=https
+	RewriteRule .* https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+</IfModule>
+
+# включаем обработку ссылок на события
+<IfModule mod_rewrite.c>
+	RewriteEngine on
+	RewriteRule ^(\w+)\/(\d+)\/([\w\+]+)$ php/api.php?method=event.link&game=$1&event=$2&raid=$3&format=redirect
+</IfModule>
+
+# обработка ошибок
+ErrorDocument 403 "You aren't allowed to be here."
+ErrorDocument 404 "I can't find what you are looking for..."
+ErrorDocument 500 "I don't know what to do. This isn't your fault."

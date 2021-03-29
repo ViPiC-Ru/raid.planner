@@ -1,0 +1,4 @@
+key:string	ru:string	en:string	es:string	icon:string
+tank	Танк	Tank	Tanque	<:eso_tank:823962458317127721>
+heal	Хил	Heal	Curación	<:eso_heal:823962458183172146>
+dd	Дд	Dd	Daño	<:eso_dd:823962458191822879>

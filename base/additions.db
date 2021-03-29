@@ -1,8 +1,11 @@
 key:string	ru:string	en:string	es:string	icon:string
 leader	лидер	leader	líder	<:leader:757655213430669384>
-member	участник	member	miembro	🙂
-daily	ежедневно	daily	diario	📅
+member	участник	member	miembro	⌛
+daily	ежедневно	daily	diario	
 weekly	еженедельно	weekly	semanal	🔁
 once	однократно	once	unica	🕐
 accept	принят	accept	aceptar	<:accepted:733385887865503764>
 reject	нет	reject	rechazar	🔔
+reserve	резерв	reserve	reserva	
+group	группа	group	grupo	🔒
+empty	пусто	empty	vacío	

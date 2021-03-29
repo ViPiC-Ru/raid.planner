@@ -1,10 +1,13 @@
 key:string	ru:string	en:string	es:string	icon:string
-empty	Ещё нет событий, но скоро будут.	There are no events yet, but they will be soon.	Aún no hay eventos, pero los tendremos pronto.	
-dd	Боец	Fighter	Daño	
-reserve	Резерв	Reserve	Reserva	
-entry	Записаться	Registration	Registro	⌛
+empty	Ещё нет данных для построения.	There is no data to build yet.	Todavía no hay datos para construir.	
+candidate	Кандидаты	Candidates	Candidatura	
+record	Запись в события	Events signup	Escribir en eventos	📝
 or	или	or	o	
 from	из	of	de	
-notice	Более подробная информация о событии опубликована в следующем канале	More information about the event is published in the next channel	Más información sobre el evento se publica en el siguiente canal	
-copyright	eso-hub.com	eso-hub.com	eso-hub.com	🌐
-game	The Elder Scrolls Online	The Elder Scrolls Online	The Elder Scrolls Online	<:eso:782277479121158174>
+notice	Более подробная информация опубликована в следующем канале	More detailed information is published in the next channel	Más información se publica en el siguiente canal	
+instruction	инструкция	instruction	instrucciones	
+invite	J8smX6R	jVPEXNy	jVPEXNy	🌐
+schedule	Сводное расписание	Summary schedule	Calendario consolidado	📅
+leaderboard	Таблица лидеров	Leader board	Tabla de clasificación	🏆
+noflood	Не флудить	Do not flood	No fludit	
+rate	баллов|балл|балла	points|point|points	puntos|punto|puntos	
