@@ -1,4 +1,4 @@
-<?php # 0.3.0 api для бота в discord
+<?php # 0.3.0d api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -21,7 +21,7 @@ $app = array(// основной массив данных
         "timeZone" => "Europe/Moscow",                                      // временная зона по умолчанию для работы со временем
         "eventUrl" => "..|/%group%|/%id%|/%name%",                          // шаблон url для генерации ссылки на событие
         "eventTimeAdd" => 15*24*60*60,                                      // максимальное время для записи в событие
-        "eventTimeHide" => 4*60*60,                                         // максимальное время отображения записи события
+        "eventTimeHide" => 6*60*60,                                         // максимальное время отображения записи события
         "eventTimeDelete" => 30*24*60*60,                                   // максимальное время хранения записи события
         "eventTimeClose" => -15*60,                                         // время за которое закрывается событие для изменения
         "eventTimeNotice" => 15*60,                                         // время за которое начинается рассылка уведомлений
@@ -62,6 +62,7 @@ $app = array(// основной массив данных
                 "players" => 1 << 2
             );
             $isUpdate = 0;// битовая маска обновления баз
+            $isNeedProcessing = false;// требуется ли дальнейшая обработка
             $start = microtime(true);// время начала работы приложения
             $app["fun"]["setDebug"](1, "run");// отладочная информация
             // получаем очищенные значения параметров
@@ -121,6 +122,7 @@ $app = array(// основной массив данных
                             // обрабатываем тип уведомления
                             switch(get_val($data, "t", null)){// поддерживаемые типы
                                 case "READY":// ready
+                                    $isNeedProcessing = false;// требуется ли дальнейшая обработка
                                     // обрабатываем начало подключения
                                     if(isset($data["d"]["session_id"])){// если есть обязательное значение
                                         if($session->set("sid", "value", $data["d"]["session_id"])){// если данные успешно добавлены
@@ -151,6 +153,7 @@ $app = array(// основной массив данных
                                     };
                                     break;
                                 case "TYPING_START":// typing start
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем начало набора сообщения в канале гильдии
                                     if(isset($data["d"]["member"]["user"]["id"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         // проверяем права доступа
@@ -178,7 +181,20 @@ $app = array(// основной массив данных
                                                         if(!$flag) $config = $app["fun"]["getChannelConfig"]($channel, $guild, null);// конфигурация канала
                                                         if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $session->get("bot", "value"), $channel, $guild);
                                                         $flag = ($flag or $config["mode"] and $config["game"] == $game and ($permission & $app["val"]["discordMainPermission"]) == $app["val"]["discordMainPermission"]);
-                                                        if($flag) $app["fun"]["getCache"]("channel", $channel["id"], $guild["id"], null);
+                                                        if($flag){// если нужно обновить канал
+                                                            // обрабатываем канал
+                                                            $isUpdate |= $app["method"]["discord.channel"](
+                                                                array(// параметры для метода
+                                                                    "channel" => $channel["id"],
+                                                                    "guild" => $guild["id"],
+                                                                    "game" => $game
+                                                                ),
+                                                                array(// внутренние опции
+                                                                    "nocontrol" => true
+                                                                ),
+                                                                $sign, $status
+                                                            );
+                                                        };
                                                     };
                                                 };
                                             };
@@ -196,34 +212,39 @@ $app = array(// основной массив данных
                                         };
                                     };
                                     break;
-                                case "GUILD_CREATE":// guild create
                                 case "GUILD_UPDATE":// guild update
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
+                                case "GUILD_CREATE":// guild create
                                     // обрабатываем изменение гильдии
                                     if(isset($data["d"]["id"])){// если есть обязательное значение
                                         $guild = $app["fun"]["setCache"]("guild", $data["d"]);
                                         if($guild){// если удалось закешировать данные
-                                            // обрабатываем гильдию
-                                            $isUpdate |= $app["method"]["discord.guild"](
-                                                array(// параметры для метода
-                                                    "guild" => $data["d"]["id"],
-                                                    "game" => $game
-                                                ),
-                                                array(// внутренние опции
-                                                    "nocontrol" => true
-                                                ),
-                                                $sign, $status
-                                            );
+                                            if($isNeedProcessing){// если требуется обработка
+                                                // обрабатываем гильдию
+                                                $isUpdate |= $app["method"]["discord.guild"](
+                                                    array(// параметры для метода
+                                                        "guild" => $data["d"]["id"],
+                                                        "game" => $game
+                                                    ),
+                                                    array(// внутренние опции
+                                                        "nocontrol" => true
+                                                    ),
+                                                    $sign, $status
+                                                );
+                                            };
                                         }else $app["fun"]["delCache"]("guild", $data["d"]["id"]);
                                     };
                                     break;
                                 case "GUILD_DELETE":// guild delete
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем удаление гильдии
                                     if(isset($data["d"]["id"])){// если есть обязательное значение
                                         $app["fun"]["delCache"]("guild", $data["d"]["id"]);
                                     };
                                     break;
-                                case "GUILD_ROLE_CREATE":// guild role create
                                 case "GUILD_ROLE_UPDATE":// guild role update
+                                case "GUILD_ROLE_CREATE":// guild role create
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем изменение роли в гильдии
                                     if(isset($data["d"]["role"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $role = $app["fun"]["setCache"]("role", $data["d"]["role"], $data["d"]["guild_id"]);
@@ -246,6 +267,7 @@ $app = array(// основной массив данных
                                     };
                                     break;
                                 case "GUILD_ROLE_DELETE":// guild role delete
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем удаление роли в гильдии
                                     if(isset($data["d"]["role_id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $app["fun"]["delCache"]("role", $data["d"]["role_id"], $data["d"]["guild_id"]);
@@ -265,8 +287,9 @@ $app = array(// основной массив данных
                                         };
                                     };
                                     break;
-                                case "GUILD_MEMBER_ADD":// guild member add
                                 case "GUILD_MEMBER_UPDATE":// guild member update
+                                case "GUILD_MEMBER_ADD":// guild member add
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем изменение участника
                                     if(isset($data["d"]["user"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $member = $app["fun"]["setCache"]("member", $data["d"], $data["d"]["guild_id"]);
@@ -292,29 +315,33 @@ $app = array(// основной массив данных
                                     };
                                     break;
                                 case "GUILD_MEMBER_REMOVE":// guild member remove
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем удаление участника
                                     if(isset($data["d"]["user"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $app["fun"]["delCache"]("member", $data["d"]["user"]["id"], $data["d"]["guild_id"]);
                                     };
                                     break;
-                                case "CHANNEL_CREATE":// channel create
                                 case "CHANNEL_UPDATE":// channel update
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
+                                case "CHANNEL_CREATE":// channel create
                                     // обрабатываем изменение канала гильдии
                                     if(isset($data["d"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $channel = $app["fun"]["setCache"]("channel", $data["d"], $data["d"]["guild_id"], null);
                                         if($channel){// если удалось закешировать данные
-                                            // обрабатываем канал
-                                            $isUpdate |= $app["method"]["discord.channel"](
-                                                array(// параметры для метода
-                                                    "channel" => $data["d"]["id"],
-                                                    "guild" => $data["d"]["guild_id"],
-                                                    "game" => $game
-                                                ),
-                                                array(// внутренние опции
-                                                    "nocontrol" => true
-                                                ),
-                                                $sign, $status
-                                            );
+                                            if($isNeedProcessing){// если требуется обработка
+                                                // обрабатываем канал
+                                                $isUpdate |= $app["method"]["discord.channel"](
+                                                    array(// параметры для метода
+                                                        "channel" => $data["d"]["id"],
+                                                        "guild" => $data["d"]["guild_id"],
+                                                        "game" => $game
+                                                    ),
+                                                    array(// внутренние опции
+                                                        "nocontrol" => true
+                                                    ),
+                                                    $sign, $status
+                                                );
+                                            };
                                         }else $app["fun"]["delCache"]("channel", $data["d"]["id"], $data["d"]["guild_id"], null);
                                     };
                                     // обрабатываем изменение личного канала
@@ -328,12 +355,14 @@ $app = array(// основной массив данных
                                     };
                                     break;
                                 case "CHANNEL_DELETE":// channel delete
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем удаление канала гильдии
                                     if(isset($data["d"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $app["fun"]["delCache"]("channel", $data["d"]["id"], $data["d"]["guild_id"], null);
                                     };
                                     break;
                                 case "MESSAGE_CREATE":// message create
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем создание сообщения в личном канале
                                     if(isset($data["d"]["id"], $data["d"]["channel_id"], $data["d"]["author"]["id"]) and !isset($data["d"]["guild_id"])){// если есть обязательное значение
                                         $user = $app["fun"]["setCache"]("user", $data["d"]["author"]);
@@ -360,6 +389,7 @@ $app = array(// основной массив данных
                                         }else $app["fun"]["delCache"]("user", $data["d"]["author"]["id"]);
                                     };
                                 case "MESSAGE_UPDATE":// message update
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем изменение сообщения в канале гильдии
                                     if(isset($data["d"]["id"], $data["d"]["channel_id"], $data["d"]["author"]["id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $data["d"]["embed"] = get_val($data["d"]["embeds"], 0, false);// приводим к единому виду
@@ -400,6 +430,7 @@ $app = array(// основной массив данных
                                     // поправка на удаление одного сообщения
                                     if(isset($data["d"]["id"])) $data["d"]["ids"] = array($data["d"]["id"]);
                                 case "MESSAGE_DELETE_BULK":// message delete bulk
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем удаление сообщений в калале гильдии
                                     if(isset($data["d"]["ids"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         for($i = count($data["d"]["ids"]) - 1; $i > -1; $i--){// пробигаемся по идентификаторам сообщений
@@ -427,6 +458,7 @@ $app = array(// основной массив данных
                                     };
                                     break;
                                 case "MESSAGE_REACTION_ADD":// message reaction add
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем добавление реакции в калале гильдии
                                     if(isset($data["d"]["emoji"]["name"], $data["d"]["member"]["user"]["id"], $data["d"]["user_id"], $data["d"]["message_id"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $data["d"]["user"] = $data["d"]["member"]["user"];// приводим к единому виду
@@ -460,6 +492,7 @@ $app = array(// основной массив данных
                                 case "MESSAGE_REACTION_REMOVE":// message reaction remove
                                 case "MESSAGE_REACTION_REMOVE_ALL":// message reaction remove all
                                 case "MESSAGE_REACTION_REMOVE_EMOJI":// message reaction remove emoji
+                                    $isNeedProcessing = true;// требуется ли дальнейшая обработка
                                     // обрабатываем удаление реакций в калале гильдии
                                     if(isset($data["d"]["message_id"], $data["d"]["channel_id"], $data["d"]["guild_id"])){// если есть обязательное значение
                                         $message = $app["fun"]["getCache"]("message", $data["d"]["message_id"], $data["d"]["channel_id"], $data["d"]["guild_id"], null);
@@ -1068,6 +1101,11 @@ $app = array(// основной массив данных
                         };
                         break;
                     case "record":// запись в события
+                        // выполняем сортировку событий
+                        if(empty($status)){// если нет ошибок
+                            $items = $app["fun"]["sortEventsMessage"]($guild, $channel, $status);
+                            foreach($items as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
+                        };
                         // обрабатываем сообщения
                         if(empty($status)){// если нет ошибок
                             // формируем массив связей сообщений и событий
@@ -1304,7 +1342,7 @@ $app = array(// основной массив данных
                 empty($status) and $guild and "record" == $config["mode"]
                 and $message and $message["author"]["id"] == $session->get("bot", "value")
             ){// если нужно выполнить
-                $flag = !$config["flood"];// удалить ли элимент переданный на обработку
+                $flag = !$config["history"];// удалить ли элимент переданный на обработку
                 for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
                     $eid = $events->key($i);// получаем ключевой идентификатор по индексу
                     $unit = $events->get($eid);// получаем элемент по идентификатору
@@ -1313,7 +1351,7 @@ $app = array(// основной массив данных
                         and $unit["guild"] == $guild["id"]
                         and $unit["message"] == $message["id"]
                     ){// если нужно посчитать счётчик
-                        if($config["flood"] or !$unit["hide"]) $flag = false;
+                        if($config["history"] or !$unit["hide"]) $flag = false;
                         if(!$flag and !isset($counts[$eid])) $counts[$eid] = true;
                     };
                 };
@@ -2067,6 +2105,12 @@ $app = array(// основной массив данных
                     };
                 };
             };
+            // выполняем сортировку событий
+            if(empty($status) and $guild){// если нужно выполнить
+                $items = $app["fun"]["sortEventsMessage"]($guild, $channel, $status);
+                foreach($items["events"] as $eid => $item) if(!isset($counts[$eid])) $counts[$eid] = true;
+                foreach($items as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
+            };
             // выполняем удаление пустых событий
             if(empty($status) and $guild){// если нужно выполнить
                 foreach($counts as $eid => $count){
@@ -2076,12 +2120,14 @@ $app = array(// основной массив данных
                             if($events->set($eid)){// если данные успешно изменены
                                 $isUpdate |= $mask["events"];// отмечаем изменение базы
                                 $isScheduleChange = true;
-                                // удаляем сообщение
-                                $uri = "/channels/" . $channel["id"] . "/messages/" . $unit["message"];
-                                $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
-                                if(204 == $code or 404 == $code){// если запрос выполнен успешно
-                                    $app["fun"]["delCache"]("message", $unit["message"], $channel["id"], $guild["id"], null);
-                                }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                                if($unit["message"]){// если у события есть сообщение
+                                    // удаляем сообщение
+                                    $uri = "/channels/" . $channel["id"] . "/messages/" . $unit["message"];
+                                    $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                                    if(204 == $code or 404 == $code){// если запрос выполнен успешно
+                                        $app["fun"]["delCache"]("message", $unit["message"], $channel["id"], $guild["id"], null);
+                                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                                };
                             }else $status = 309;// не удалось записать данные в базу данных
                         };
                     }else break;
@@ -2523,12 +2569,14 @@ $app = array(// основной массив данных
                             if($events->set($eid)){// если данные успешно изменены
                                 $isUpdate |= $mask["events"];// отмечаем изменение базы
                                 $isScheduleChange = true;
-                                // удаляем сообщение
-                                $uri = "/channels/" . $channel["id"] . "/messages/" . $unit["message"];
-                                $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
-                                if(204 == $code or 404 == $code){// если запрос выполнен успешно
-                                    $app["fun"]["delCache"]("message", $unit["message"], $channel["id"], $guild["id"], null);
-                                }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                                if($unit["message"]){// если у события есть сообщение
+                                    // удаляем сообщение
+                                    $uri = "/channels/" . $channel["id"] . "/messages/" . $unit["message"];
+                                    $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
+                                    if(204 == $code or 404 == $code){// если запрос выполнен успешно
+                                        $app["fun"]["delCache"]("message", $unit["message"], $channel["id"], $guild["id"], null);
+                                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                                };
                             }else $status = 309;// не удалось записать данные в базу данных
                         };
                     }else break;
@@ -3044,6 +3092,14 @@ $app = array(// основной массив данных
                                 $unit = &$parent[$key][$i];
                             }else $error = 5;
                         };
+                        // формируем структуру
+                        if(!$error){// если нет ошибок
+                            foreach(array("roles", "members", "channels") as $key){
+                                if(isset($data[$key]) and !isset($unit[$key])){
+                                    $unit[$key] = array();
+                                };
+                            };
+                        };
                         // обрабатываем данные
                         if(!$error){// если нет ошибок
                             // идентификатор
@@ -3072,7 +3128,6 @@ $app = array(// основной массив данных
                             // список участников
                             $key = "members";// задаём ключ
                             if(isset($data[$key])){// если существует
-                                if(!isset($unit[$key])) $unit[$key] = array();
                                 for($i = 0, $iLen = count($data[$key]); $i < $iLen; $i++){
                                     $app["fun"]["setCache"]("member", $data[$key][$i], $gid);
                                 };
@@ -3126,6 +3181,14 @@ $app = array(// основной массив данных
                                 if(!isset($parent[$key][$i])) $parent[$key][$i] = array();
                                 $unit = &$parent[$key][$i];
                             }else $error = 5;
+                        };
+                        // формируем структуру
+                        if(!$error){// если нет ошибок
+                            foreach(array("channels") as $key){
+                                if(isset($data[$key]) and !isset($unit[$key])){
+                                    $unit[$key] = array();
+                                };
+                            };
                         };
                         // обрабатываем данные
                         if(!$error){// если нет ошибок
@@ -3374,6 +3437,14 @@ $app = array(// основной массив данных
                                 $unit = &$parent[$key][$i];
                             }else $error = 5;
                         };
+                        // формируем структуру
+                        if(!$error){// если нет ошибок
+                            foreach(array("messages") as $key){
+                                if(isset($data[$key]) and !isset($unit[$key])){
+                                    $unit[$key] = array();
+                                };
+                            };
+                        };
                         // обрабатываем данные
                         if(!$error){// если нет ошибок
                             // идентификатор
@@ -3404,7 +3475,6 @@ $app = array(// основной массив данных
                             // сообщения
                             $key = "messages";// задаём ключ
                             if(isset($data[$key])){// если существует
-                                if(!isset($unit[$key])) $unit[$key] = array();
                                 for($i = 0, $iLen = count($data[$key]); $i < $iLen; $i++){
                                     $data[$key][$i]["embed"] = get_val($data[$key][$i]["embeds"], 0, false);
                                     $app["fun"]["setCache"]("message", $data[$key][$i], $cid, $gid, $uid);
@@ -5008,6 +5078,162 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $list;
         },
+        "sortEventsMessage" => function($guild, $channel, &$status){// сортирует события с учётом сообщений
+        //@param $guild {string} - идентификатор гильдии для фильтрации событий
+        //@param $channel {string} - идентификатор канала для фильтрации событий
+        //@param $status {integer} - целое число статуса выполнения
+        //@return {array} - многоуровневый ассоциативный список изменений
+            global $app;
+            $error = 0;
+
+            $list = array(// начальное значение
+                "events" => array(),
+                "players" => array()
+            );
+            $game = $app["val"]["game"];
+            $items = array();// список событий
+            $units = array();// список идентификаторов сообщений
+            // получаем гильдию
+            if(!$error){// если нет ошибок
+                if(!is_array($guild) and !empty($guild)){// если нужно получить
+                    $guild = $app["fun"]["getCache"]("guild", $guild);
+                };
+                if(!empty($guild)){// если не пустое значение
+                }else $error = 1;
+            };
+            // получаем канал
+            if(!$error){// если нет ошибок
+                if(!is_array($channel) and !empty($channel)){// если нужно получить
+                    $channel = $app["fun"]["getCache"]("channel", $channel, $guild["id"], null);
+                };
+                if(!empty($channel)){// если не пустое значение
+                }else $error = 2;
+            };
+            // получаем конфигурацию канала
+            if(!$error){// если нет ошибок
+                $config = $app["fun"]["getChannelConfig"]($channel, $guild, null);
+                if($config){// если удалось получить данные
+                }else $error = 3;
+            };
+            // загружаем все необходимые базы данных
+            if(empty($status)){// если нет ошибок
+                $session = $app["fun"]["getStorage"]($game, "session", true);
+                if(!empty($session)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            if(empty($status) and !$error){// если нужно выполнить
+                $events = $app["fun"]["getStorage"]($game, "events", true);
+                if(!empty($events)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            // формируем вспомогательный объект проверки сообщений
+            if(empty($status) and !$error){// если нужно выполнить
+                $check = array();// вспомогательный объект проверки сообщений
+                for($i = count($channel["messages"]) - 1; $i > -1 ; $i--){
+                    $message = $channel["messages"][$i];// получаем очередной элимент
+                    $mid = $message["id"];// получаем идентификатор сообщения
+                    $flag = $message["author"]["id"] == $session->get("bot", "value");
+                    if($flag) $check[$mid] = true;
+                };
+            };
+            // формируем список событий и идентификаторов сообщений
+            if(empty($status) and !$error){// если нужно выполнить
+                for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
+                    $eid = $events->key($i);// получаем ключевой идентификатор по индексу
+                    $event = $events->get($eid);// получаем элемент по идентификатору
+                    if(// множественное условие
+                        $event["channel"] == $channel["id"]
+                        and $event["guild"] == $guild["id"]
+                        and !$event["hide"]
+                    ){// если нужно добавить в список
+                        $mid = $event["message"];
+                        if(!isset($check[$mid])) $mid = "";
+                        array_push($items, $event);
+                        array_push($units, $mid);
+                    };
+                };
+            };
+            // сортируем список событитй
+            if(empty($status) and !$error){// если нужно выполнить
+                switch($config["sort"]){// поддерживаемые режимы сортировки
+                    case "time":// по времени проведения
+                        usort($items, function($a, $b){// сортировка
+                            $value = 0;// начальное значение
+                            if(!$value and $a["time"] != $b["time"]) $value = $a["time"] > $b["time"] ? 1 : -1;
+                            if(!$value and $a["raid"] != $b["raid"]) $value = $a["raid"] > $b["raid"] ? 1 : -1;
+                            if(!$value and $a["id"] != $b["id"]) $value = $a["id"] < $b["id"] ? 1 : -1;
+                            // возвращаем результат
+                            return $value;
+                        });
+                        break;
+                    default:// не известный режим
+                        $error = 4;
+                };
+            };
+            // изменяем список идентификаторов сообщений
+            if(empty($status) and !$error){// если нужно выполнить
+                $flag = (!$config["flood"] and !$config["history"]);
+                if($flag){// если можно использовать старые сообщения
+                    $j = 0;// порядковый номер в списке идентификаторов сообщений
+                    $jLen = count($units);// длина списка идентификаторов сообщений
+                    $index = $jLen - count($check);// смешение в сообщениях
+                    // переносим идентификаторы из списка сообщений
+                    for($i = count($channel["messages"]) - 1; $i > -1 ; $i--){
+                        $message = $channel["messages"][$i];// получаем очередной элимент
+                        $mid = $message["id"];// получаем идентификатор сообщения
+                        $flag = $message["author"]["id"] == $session->get("bot", "value");
+                        if($flag){// если это сообщение текущего бота
+                            $index++;// увеличиваем смещение в сообщениях
+                            if($index > 0){// если нужно заменить
+                                $units[$j] = $mid;
+                                $j++;
+                            };
+                        };
+                    };
+                    // дополняем идентификаторы пустыми значениями
+                    while($j < $jLen){// пока не достигнут конец списка
+                        $mid = "";// сбрасываем значение
+                        $units[$j] = $mid;
+                        $j++;
+                    };
+                };
+            };
+            // сортируем список идентификаторов сообщений
+            if(empty($status) and !$error){// если нужно выполнить
+                usort($units, function($a, $b){// сортировка
+                    $value = 0;// начальное значение
+                    if(!$value and !$a and $b) $value = 1;
+                    if(!$value and $a and !$b) $value = -1;
+                    if(!$value and $a != $b) $value = $a > $b ? 1 : -1;
+                    // возвращаем результат
+                    return $value;
+                });
+            };
+            // распределяем идентификаторы сообщений по событиям
+            if(empty($status)){// если нужно выполнить
+                for($i = 0, $iLen = count($items); $i < $iLen and empty($status); $i++){
+                    $item = $items[$i];// получаем очередной элемент
+                    $mid = $units[$i];// получаем очередной идентификатор
+                    $eid = $item["id"];// получаем очередной идентификатор
+                    // работаем с базой данных событий
+                    $event = array();// сбрасываем значение
+                    $flag = false;// требуется обновить
+                    // проверяем изменение сообщения
+                    if($item["message"] != $mid){
+                        $event["message"] = $mid;
+                        $flag = true;
+                    };
+                    // выполняем обновление события
+                    if($flag){// если требуется обновление
+                        if($events->set($eid, null, $event)){// если данные успешно добавлены
+                            $list["events"][$eid] = $item;
+                        }else $status = 309;// не удалось записать данные в базу данных
+                    };
+                };
+            };
+            // возвращаем результат
+            return $list;
+        },
         "delEmoji" => function($value){// удаляем эмодзи из строки
         //@param $value {string} - строка для удаления эмодзи
         //@return {string} - строка без эмодзи
@@ -5838,7 +6064,7 @@ $app = array(// основной массив данных
                             $value = $value . $type["logotype"];
                             array_push($list, $value);
                         };
-                        $line .= " " . implode("  ", $list);
+                        $line .= " " . implode(" ", $list);
                         $line .= "= **" . number_format($rate[$uid], 2, ",", "") . "**";
                         $line .= " " . explode("|", $names->get("rate", $language))[$app["fun"]["numDeclin"]($rate[$uid], 0, 1, 2)];
                         array_push($lines, $line);
@@ -5963,6 +6189,18 @@ $app = array(// основной массив данных
                         continue;
                     };
                 };
+                // дата - DD.MM.YYYY
+                $key = "date";// текущий параметр команды
+                $value = $command[$key];// текущий значение параметра
+                if(!$value and $timezone){// если нужно выполнить
+                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\.(\d{2})\.(\d{4})$/", $list);
+                    if(mb_strlen($value)){// если найдено ключевое значение
+                        $value = implode(".", array($list[1], $list[2], $list[3]));
+                        $value = $app["fun"]["dateCreate"]($value, $timezone);
+                        $command[$key] = $value;
+                        continue;
+                    };
+                };
                 // дата - DD.MM.YY
                 $key = "date";// текущий параметр команды
                 $value = $command[$key];// текущий значение параметра
@@ -5975,13 +6213,26 @@ $app = array(// основной массив данных
                         continue;
                     };
                 };
-                // дата - DD.MM.YYYY
+                // дата - DD.MM
                 $key = "date";// текущий параметр команды
                 $value = $command[$key];// текущий значение параметра
                 if(!$value and $timezone){// если нужно выполнить
-                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\.(\d{2})\.(\d{4})$/", $list);
+                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\.(\d{2})$/", $list);
                     if(mb_strlen($value)){// если найдено ключевое значение
-                        $value = implode(".", array($list[1], $list[2], $list[3]));
+                        $t1 = $app["fun"]["dateCreate"](implode(".", array($list[1], $list[2], $app["fun"]["dateFormat"]("Y", $timestamp, $timezone))), $timezone);
+                        $t2 = $app["fun"]["dateCreate"](implode(".", array($list[1], $list[2], $app["fun"]["dateFormat"]("Y", $app["fun"]["dateCreate"]("+1 year", $timezone), $timezone))), $timezone);
+                        $value = (abs($t1 - $timestamp) < abs($t2 - $timestamp) ? $t1 : $t2);
+                        $command[$key] = $value;
+                        continue;
+                    };
+                };
+                // дата - MM/DD/YYYY
+                $key = "date";// текущий параметр команды
+                $value = $command[$key];// текущий значение параметра
+                if(!$value and $timezone){// если нужно выполнить
+                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\/(\d{2})\/(\d{4})$/", $list);
+                    if(mb_strlen($value)){// если найдено ключевое значение
+                        $value = implode(".", array($list[2], $list[1], $list[3]));
                         $value = $app["fun"]["dateCreate"]($value, $timezone);
                         $command[$key] = $value;
                         continue;
@@ -5999,14 +6250,15 @@ $app = array(// основной массив данных
                         continue;
                     };
                 };
-                // дата - MM/DD/YYYY
+                // дата - MM/DD
                 $key = "date";// текущий параметр команды
                 $value = $command[$key];// текущий значение параметра
                 if(!$value and $timezone){// если нужно выполнить
-                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\/(\d{2})\/(\d{4})$/", $list);
+                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\/(\d{2})$/", $list);
                     if(mb_strlen($value)){// если найдено ключевое значение
-                        $value = implode(".", array($list[2], $list[1], $list[3]));
-                        $value = $app["fun"]["dateCreate"]($value, $timezone);
+                        $t1 = $app["fun"]["dateCreate"](implode(".", array($list[2], $list[1], $app["fun"]["dateFormat"]("Y", $timestamp, $timezone))), $timezone);
+                        $t2 = $app["fun"]["dateCreate"](implode(".", array($list[2], $list[1], $app["fun"]["dateFormat"]("Y", $app["fun"]["dateCreate"]("+1 year", $timezone), $timezone))), $timezone);
+                        $value = (abs($t1 - $timestamp) < abs($t2 - $timestamp) ? $t1 : $t2);
                         $command[$key] = $value;
                         continue;
                     };
@@ -6016,18 +6268,6 @@ $app = array(// основной массив данных
                 $value = $command[$key];// текущий значение параметра
                 if(!$value and $timezone){// если нужно выполнить
                     $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\:(\d{2})$/", $list);
-                    if(mb_strlen($value)){// если найдено ключевое значение
-                        $value = implode(":", array($list[1], $list[2]));
-                        $value = $app["fun"]["dateCreate"]($value, $timezone);
-                        $command[$key] = $value;
-                        continue;
-                    };
-                };
-                // время - HH.MM
-                $key = "time";// текущий параметр команды
-                $value = $command[$key];// текущий значение параметра
-                if(!$value and $timezone){// если нужно выполнить
-                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{1,2})\.(\d{2})$/", $list);
                     if(mb_strlen($value)){// если найдено ключевое значение
                         $value = implode(":", array($list[1], $list[2]));
                         $value = $app["fun"]["dateCreate"]($value, $timezone);
@@ -6245,7 +6485,9 @@ $app = array(// основной массив данных
                     "timezone" => $guild ? $app["val"]["timeZone"] : null,
                     "mode" => $user ? "direct" : "",
                     "types" => array(),
+                    "history" => !$guild,
                     "flood" => true,
+                    "sort" => "",
                     "game" => ""
                 );
                 $delim = $app["val"]["lineDelim"];
@@ -6294,11 +6536,27 @@ $app = array(// основной массив данных
                         if($flag) $flag = !in_array($key, $config["types"]);
                         if($flag) array_push($config["types"], $key);
                     };
+                    // определяем режим сортировки
+                    $flag = false;// найдено ли подходящее значение
+                    $list = array("time");// поддерживаемые режимы
+                    for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
+                        $mode = $list[$j];// получаем очередной ключ
+                        $item = $names->get($mode);// получаем элемент по ключу
+                        $value = $item[$config["language"]];// получаем значение
+                        $flag = 0 === mb_stripos($line, $value);
+                        if($flag) $config["sort"] = $mode;
+                    };
                     // определяем запрет на флуд
                     $item = $names->get("noflood");// получаем элемент по ключу
                     $value = $item[$config["language"]];// получаем значение
                     $flag = 0 === mb_stripos($line, $value);
                     if($flag) $config["flood"] = false;
+                    // определяем сохранение истории
+                    $key = "history";// задаём ключевой идентификатор
+                    $item = $names->get($key);// получаем элемент по ключу
+                    $value = $item[$config["language"]];// получаем значение
+                    $flag = 0 === mb_stripos($line, $value);
+                    if($flag) $config[$key] = true;
                 };
             };
             // возвращаем результат
