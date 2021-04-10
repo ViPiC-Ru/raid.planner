@@ -6042,6 +6042,7 @@ $app = array(// основной массив данных
                 // формируем таблицу рейтинга
                 if(!$error){// если нет ошибок
                     $index = 0;// позиция в рейтинге
+                    $limit = 99;// количество участников рейтинга
                     arsort($rate);// упорядочиваем рейтинг
                     foreach($rate as $uid => $value) {
                         $item = $count[$uid];
@@ -6068,7 +6069,7 @@ $app = array(// основной массив данных
                         $line .= "= **" . number_format($rate[$uid], 2, ",", "") . "**";
                         $line .= " " . explode("|", $names->get("rate", $language))[$app["fun"]["numDeclin"]($rate[$uid], 0, 1, 2)];
                         array_push($lines, $line);
-                        if($index < 99) $index++;
+                        if($index < $limit - 1) $index++;
                         else break;
                     };
                 };
@@ -6519,7 +6520,7 @@ $app = array(// основной массив данных
                     $flag = in_array($line, timezone_identifiers_list());
                     if($flag) $config["timezone"] = $line;
                     // определяем совместимую игру канала
-                    $flag = true;// найдено ли совпадение
+                    $flag = !$i;// найдено ли совпадение в первой строке
                     $flag = ($flag and 0 === mb_stripos($line, $game));
                     $flag = ($flag and mb_strlen($line) == mb_strlen($game));
                     if($flag) $config["game"] = $game;
