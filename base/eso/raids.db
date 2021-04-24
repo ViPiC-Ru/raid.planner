@@ -15,6 +15,7 @@ nCR+2	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	78228491517702964
 nCR+3	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
 nSS	нор. Солнечный шпиль	nor. Sunspire	nor. Sunspire	782284915177029642/788689294251655188/SS	elsweyr	trial	1	2	9
 nKA	нор. Эгида Кин	nor. Kyne's Aegis	nor. Kyne's Aegis	782284915177029642/788689140610891786/KA	greymoor	trial	1	2	9
+nRG	нор. Каменная роща	nor. Rockgrove	nor. Rockgrove	782284915177029642/835444410153566249/RG	blackwood	trial	1	2	9
 nTRL	нор. Триалы	nor. Trials	nor. Trials	782284915177029642/788689334245130253/TRL		trial	1	2	9
 vAA	вет. Этерианский архив	vet. Aetherian Archive	vet. Aetherian Archive	782284915177029642/788688285735190598/AA		trial	1	2	9
 vHRC	вет. Цитадель Хель Ра	vet. Hel Ra Citadel	vet. Hel Ra Citadel	782284915177029642/788689089888649246/HRC		trial	1	2	9
@@ -32,6 +33,7 @@ vCR+2	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	78228491517702964
 vCR+3	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	3	2	7
 vSS	вет. Солнечный шпиль	vet. Sunspire	vet. Sunspire	782284915177029642/788689294251655188/SS	elsweyr	trial	2	2	8
 vKA	вет. Эгида Кин	vet. Kyne's Aegis	vet. Kyne's Aegis	782284915177029642/788689140610891786/KA	greymoor	trial	2	2	8
+vRG	вет. Каменная роща	vet. Rockgrove	vet. Rockgrove	782284915177029642/835444410153566249/RG	blackwood	trial	2	2	8
 vTRL	вет. Триалы	vet. Trials	vet. Trials	782284915177029642/788689334245130253/TRL		trial	2	2	8
 vAA+HM	хм. Этерианский архив	hm. Aetherian Archive	hm. Aetherian Archive	782284915177029642/788688285735190598/AA		trial	2	2	8
 vHRC+HM	хм. Цитадель Хель Ра	hm. Hel Ra Citadel	hm. Hel Ra Citadel	782284915177029642/788689089888649246/HRC		trial	2	2	8
@@ -42,6 +44,7 @@ vAS+HM	хм. Изоляционный санктуарий	hm. Asylum Sanctorium
 vCR+HM	хм. Клаудрест	hm. Cloudrest	hm. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	3	2	7
 vSS+HM	хм. Солнечный шпиль	hm. Sunspire	hm. Sunspire	782284915177029642/788689294251655188/SS	elsweyr	trial	2	2	8
 vKA+HM	хм. Эгида Кин	hm. Kyne's Aegis	hm. Kyne's Aegis	782284915177029642/788689140610891786/KA	greymoor	trial	2	2	8
+vRG+HM	хм. Каменная роща	hm. Rockgrove	hm. Rockgrove	782284915177029642/835444410153566249/RG	blackwood	trial	2	2	8
 vTRL+HM	хм. Триалы	hm. Trials	hm. Trials	782284915177029642/788689334245130253/TRL		trial	2	2	8
 nTBC1	нор. Темницы Изгнанников I	nor. The Banished Cells I	nor. The Banished Cells I	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
 nTBC2	нор. Темницы Изгнанников II	nor. The Banished Cells II	nor. The Banished Cells II	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
