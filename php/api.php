@@ -1737,6 +1737,7 @@ $app = array(// основной массив данных
                                     case "reserve":// резерв
                                         for($j = 0, $jLen = count($command["users"]); $j < $jLen and !$flag; $j++) if($command["users"][$j] != $message["author"]["id"]) $flag = true;
                                         $flag = (!$flag and !$isEveryOneUser);// проверяем касается ли это изменение всех пользователей или только автора сообщения
+                                        $flag = ($flag or $leader == $message["author"]["id"]);
                                         $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
                                         if($flag){// если проверка пройдена
                                             $flag = $time < $now + $app["val"]["eventTimeClose"];
@@ -5329,29 +5330,58 @@ $app = array(// основной массив данных
         //@param $delim {string} - разделитель строк при формировании сообщения
         //@param $limit {integer} - максимальная допустимая длина контента в сообщении
         //@return {array} - массив сообщений или пустой массив
-
-            $length = 0;// текущая длина сообщения
-            $content = "";// контент для сообщения
-            $messages = array();// массив сообщений
-            for($i = 0, $iLen = count($lines); $i <= $iLen and $iLen; $i++){
-                if($i != $iLen){// если очередная строка существует
-                    $line = isset($lines[$i]) ? $lines[$i] : "";
-                    $length += ($i ? mb_strlen($delim) : 0) + mb_strlen($line);
-                    $flag = ($limit and $length > $limit);
-                }else $flag = true;
-                if($flag){// если нужно добавить сообшение
+            
+            $messages = array();// список сообщений
+            $dLen = mb_strlen($delim);// длина разделителя
+            // формируем список блоков данных из строк
+            $blocks = array();// массив блоков данных
+            for($i = 0, $iLen = count($lines); $i < $iLen; $i++){
+                $block = "";// сбрасываем значение блока данных
+                $bLen = 0;// сбрасываем значение длины блока данных
+                $value = 0;// новая расчётная длина блока данных
+                for($j = 0, $jLen = count($lines[$i]); $j <= $jLen ; $j++){
+                    $line = "";// сбрасываем значение строки данных
+                    $lLen = 0;// сбрасываем значение длины строки данных
+                    if($j != $jLen){// если очередная строка существует
+                        $line = $lines[$i][$j];// получаем строку
+                        $lLen = mb_strlen($line);// длина строки
+                        $value = $bLen + ($bLen ? $dLen : 0) + $lLen;
+                        $flag = ($j and $limit and $value > $limit);
+                    }else $flag = true;// перейти к новому блоку
+                    if($flag){// если нужно создать блок
+                        array_push($blocks, $block);
+                        $block = $line;// блок данных
+                        $bLen = $lLen;// длина блока
+                    }else{// если не нужно создавать блок
+                        $block .= ($j ? $delim : "") . $line;
+                        $bLen = $value;// длина блока
+                    };
+                };
+            };
+            // формируем список сообщений из блоков
+            $content = "";// сбрасываем значение контента данных
+            $cLen = 0;// сбрасываем значение длины контента данных
+            for($i = 0, $iLen = count($blocks); $i <= $iLen; $i++){
+                $block = "";// сбрасываем значение блока данных
+                $bLen = 0;// сбрасываем значение длины блока данных
+                $value = 0;// новая расчётная длина контента данных
+                if($i != $iLen){// если очередной блок существует
+                    $block = $blocks[$i];// получаем блок
+                    $bLen = mb_strlen($block);// длина блокa
+                    $value = $cLen + ($cLen ? $dLen : 0) + $bLen;
+                    $flag = ($i and $limit and $value > $limit);
+                }else $flag = ($iLen or $embed);// перейти к новому сообщению
+                if($flag){// если нужно создать сообщение
                     $message = array();// сообщение
-                    $message["content"] = $content;
+                    if($iLen) $message["content"] = $content;
                     $message["embed"] = $i == $iLen ? $embed : null;
                     array_push($messages, $message);
-                    $length = mb_strlen($line);
-                    $content = $line;
-                }else $content .= ($i ? $delim : "") . $line;
-            };
-            if($embed and !$iLen){// если передан только встраиваемый контент
-                $message = array();// сообщение
-                $message["embed"] = $embed;
-                array_push($messages, $message);
+                    $content = $block;// контент данных
+                    $cLen = $bLen;// длина контента
+                }else{// если не нужно создавать сообщение
+                    $content .= ($cLen ? $delim : "") . $block;
+                    $cLen = $value;// длина контента
+                };
             };
             // возвращаем результат
             return $messages;
@@ -5526,7 +5556,8 @@ $app = array(// основной массив данных
             if(empty($status)){// если нет ошибок
                 $blank = "_ _";// не удаляемый пустой символ
                 $delim = $app["val"]["lineDelim"];
-                $lines = array();// список строк
+                $group = -1;// сбрасываем группу строк
+                $lines = array();// сгруппированный список строк
                 $event = null;// событие
                 // проверяем переданные идентификаторы
                 if(!$error){// если нет ошибок
@@ -5622,16 +5653,17 @@ $app = array(// основной массив данных
                 };
                 // формируем шапку
                 if(!$error){// если нет ошибок
+                    $lines[++$group] = array();// новая группа строк
                     $line = "**```";
-                    array_push($lines, $line);
+                    array_push($lines[$group], $line);
                     $line = $names->get("schedule", "icon") . " " . $app["fun"]["dateFormat"]("d", $event["time"], $timezone);
                     $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
                     $line .= " " . $additions->get("once", "icon") . " " . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone);
                     $line .= " " . $additions->get("reject", "icon") . " " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
                     if($index) $line .= " " . $names->get("record", "icon") . " " . str_pad($index, 3, "0", STR_PAD_LEFT);
-                    array_push($lines, $line);
+                    array_push($lines[$group], $line);
                     $line = "```**";
-                    array_push($lines, $line);
+                    array_push($lines[$group], $line);
                 };
                 // формируем заголовок
                 if(!$error){// если нет ошибок
@@ -5639,14 +5671,14 @@ $app = array(// основной массив данных
                     $line .= " **" . $raid["key"] . "** - " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                     $line .= $limit ? " (" . $count . " " . $names->get("from", $language) . " " . $limit . ")" : "";
                     $line .= ($event["repeat"] and !$event["hide"]) ? "  " . $additions->get("weekly", "icon") : "";
-                    array_push($lines, $line);
+                    array_push($lines[$group], $line);
                     $line = $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"])));
-                    array_push($lines, $line);
+                    array_push($lines[$group], $line);
                 };
                 // формируем комментарий
                 if(!$error and mb_strlen($event["description"])){// если нужно выполнить
                     $line = $app["fun"]["wrapUrl"](str_replace("<br>", $app["val"]["lineDelim"], $event["description"]));
-                    array_push($lines, $line);
+                    array_push($lines[$group], $line);
                 };
                 // формируем описание состава
                 if(!$error){// если нет ошибок
@@ -5670,10 +5702,10 @@ $app = array(// основной массив данных
                         if($value){// если есть данные
                             // отделяем заголовок группы
                             $line = $blank;// пустая строка
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                             // выводим заголовок группы
                             $line = "**" . mb_ucfirst(mb_strtolower($value)) . ":**";
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                         };
                         // добавляем запись игрока
                         $line = "**`" . str_pad($i + 1, 2, "0", STR_PAD_LEFT) . "`**";
@@ -5681,14 +5713,14 @@ $app = array(// основной массив данных
                         $line .= mb_strlen($role[$language]) > 2 ? $role[$language] : mb_strtoupper($role[$language]);
                         $line .= " " . ($event["leader"] == $player["user"] ? $additions->get("leader", "icon") : "");
                         $line .= "<@!" . $player["user"] . ">" . (mb_strlen($player["comment"]) ? " " . $app["fun"]["wrapUrl"]($player["comment"]) : "");
-                        array_push($lines, $line);
+                        array_push($lines[$group], $line);
                         // сохраняем состояние
                         $before = $player;
                     };
                     // отделяем картинку от играков
                     if($before){// если первый игрок
                         $line = $blank;// пустая строка
-                        array_push($lines, $line);
+                        array_push($lines[$group], $line);
                     };
                 };
                 // формируем встроенный объект
@@ -5885,7 +5917,8 @@ $app = array(// основной массив данных
             if(empty($status)){// если нет ошибок
                 $blank = "_ _";// не удаляемый пустой символ
                 $delim = $app["val"]["lineDelim"];
-                $lines = array();// список строк
+                $group = -1;// сбрасываем группу строк
+                $lines = array();// сгруппированный список строк
                 // проверяем переданный идентификатор
                 if(!$error){// если нет ошибок
                     if($gid){// если проверка пройдена
@@ -5919,26 +5952,30 @@ $app = array(// основной массив данных
                         $raid = $raids->get($event["raid"]);
                         $type = $types->get($raid["type"]);
                         $chapter = $chapters->get($raid["chapter"]);
+                        // отделяем каждое событие
+                        $lines[++$group] = array();// новая группа строк
+                        $line = $blank;// пустая строка
+                        if($before) array_push($lines[$group], $line);
                         // формируем шапку
                         if(!$before or $app["fun"]["dateFormat"]("d.m.Y", $before["time"], $timezone) != $app["fun"]["dateFormat"]("d.m.Y", $event["time"], $timezone)){// если нужно выполнить
-                            $line = $blank;// пустая строка
-                            if($before) array_push($lines, $line);
                             $line = "**```";
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                             $line = $names->get("schedule", "icon") . " " . $app["fun"]["dateFormat"]("d", $event["time"], $timezone);
                             $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
                             $line .= " - " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                             $line = "```**";
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                         };
                         // формируем заголовок
                         $value = mb_ucfirst(trim(str_replace("<br>", " ", $app["fun"]["strimStrMulti"]($event["description"], "."))));
-                        $line = "**" . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) . "** —" . $type["logotype"] . "**" . $raid["key"] . "**";
-                        $line .= $event["leader"] ? " " . $additions->get("leader", "icon") . "<@!" . $event["leader"] . ">"  : "";
-                        $line .= " " . (mb_strlen($value) ? $value : $raid[$language]) . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
-                        $line .= " <#" . $event["channel"] . ">";
-                        array_push($lines, $line);
+                        $line = "**" . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) . "** —" . $type["logotype"];
+                        $line .= "**" . $raid["key"] . "** " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
+                        array_push($lines[$group], $line);
+                        $line = $additions->get("reserve", "icon") . " " . $value;
+                        if(mb_strlen($value)) array_push($lines[$group], $line);
+                        $line = ($event["leader"] ? $additions->get("leader", "icon") . "<@!" . $event["leader"] . ">" . " " . mb_strtolower($names->get("enter", $language)) : $names->get("enter", $language) ) . " <#" . $event["channel"] . ">";
+                        array_push($lines[$group], $line);
                         // сохраняем состояние
                         $before = $event;
                     };
@@ -6001,7 +6038,8 @@ $app = array(// основной массив данных
             // выполняем формирование сообщения
             if(empty($status)){// если нет ошибок
                 $delim = $app["val"]["lineDelim"];
-                $lines = array();// список строк
+                $group = -1;// сбрасываем группу строк
+                $lines = array();// сгруппированный список строк
                 // проверяем переданный идентификатор
                 if(!$error){// если нет ошибок
                     if($gid){// если проверка пройдена
@@ -6048,12 +6086,13 @@ $app = array(// основной массив данных
                         $item = $count[$uid];
                         // формируем шапку
                         if(!$index){// если нужно выполнить
+                            $lines[++$group] = array();// новая группа строк
                             $line = "**```";
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                             $line = $names->get("leaderboard", "icon") . " " . $names->get("leaderboard", $language);
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                             $line = "```**";
-                            array_push($lines, $line);
+                            array_push($lines[$group], $line);
                         };
                         // формируем запись участника
                         arsort($item);// упорядочиваем счётчик
@@ -6068,7 +6107,7 @@ $app = array(// основной массив данных
                         $line .= " " . implode(" ", $list);
                         $line .= "= **" . number_format($rate[$uid], 2, ",", "") . "**";
                         $line .= " " . explode("|", $names->get("rate", $language))[$app["fun"]["numDeclin"]($rate[$uid], 0, 1, 2)];
-                        array_push($lines, $line);
+                        array_push($lines[$group], $line);
                         if($index < $limit - 1) $index++;
                         else break;
                     };
@@ -6695,6 +6734,7 @@ $app = array(// основной массив данных
             static $times = array();
             $error = 0;
 
+            $game = $app["val"]["game"];
             if($app["val"]["debugUrl"]){// если включён режим отладки
                 $now = date_create();// текущее время
                 $time = isset($times[$level]) ? $times[$level] : $now;
@@ -6736,7 +6776,7 @@ $app = array(// основной массив данных
                 // записываем в файл отладочную информацию
                 $times[$level] = $now;// сохраняем время
                 $line = implode("\t", $items) . $app["val"]["lineDelim"];
-                $path = template($app["val"]["debugUrl"], array("name" => $name));
+                $path = template($app["val"]["debugUrl"], array("group" => $game));
                 if(@file_put_contents($path, $line, FILE_APPEND)){// если успешно
                 }else $error = 1;
             };
@@ -6917,13 +6957,13 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $list ? $values : $value;
         },
-		"strim" => function($input, $before, $after, $include = false, $reverse = false){// возвращает часть строки заключённую между двумя строками
+        "strim" => function($input, $before, $after, $include = false, $reverse = false){// возвращает часть строки заключённую между двумя строками
         //@param $input {string} - строка в которой осуществляеться поиск 
         //@param $before {string} -  предшествующий участок строки (может быть пустым)
         //@param $after {string} - завершающий участок строки (может быть пустым) 
         //@param $include {boolean} - включить ограничивающие части в результат
         //@param $reverse {boolean} - выполнить поиск с конца строки
-        //@return {string} - часть строки либо пустая строка			
+        //@return {string} - часть строки либо пустая строка
             $value = "";
 
             $input = $input ? (string) $input : $value;
