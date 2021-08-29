@@ -90,6 +90,8 @@ nSG	нор. Каменный Сад	nor. Stone Garden	nor. Stone Garden	78228491
 nCT	нор. Замок Шипов	nor. Castle Thorn	nor. Castle Thorn	782284915177029642/788688927418613790/CT	stonethorn	dungeon	1	1	2
 nBDV	нор. Вилла Чёрного Змея	nor. Black Drake Villa	nor. Black Drake Villa	782284915177029642/827888025237061672/BDV	flames-of-ambition	dungeon	1	1	2
 nTC	нор. Котёл	nor. The Cauldron	nor. The Cauldron	782284915177029642/827887996144975883/TC	flames-of-ambition	dungeon	1	1	2
+nTDC	нор. Ужасный Подвал	nor. The Dread Cellar	nor. The Dread Cellar	782284915177029642/881598650223067146/TDC	waking-flame	dungeon	1	1	2
+nRPB	нор. Оплот Алый Лепесток	nor. Red Petal Bastion	nor. Red Petal Bastion	782284915177029642/881598611442503750/RPB	waking-flame	dungeon	1	1	2
 nRND	нор. Случайное подземелье	nor. Random dungeon	nor. Random dungeon	782284915177029642/788689216057769984/RND		dungeon	1	1	2
 nDNG	нор. Подземелья	nor. Dungeons	nor. Dungeons	782284915177029642/788688977125179402/DNG		dungeon	1	1	2
 vTBC1	вет. Темницы Изгнанников I	vet. The Banished Cells I	vet. The Banished Cells I	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
@@ -136,6 +138,8 @@ vSG	вет. Каменный Сад	vet. Stone Garden	vet. Stone Garden	78228491
 vCT	вет. Замок Шипов	vet. Castle Thorn	vet. Castle Thorn	782284915177029642/788688927418613790/CT	stonethorn	dungeon	1	1	2
 vBDV	вет. Вилла Чёрного Змея	vet. Black Drake Villa	vet. Black Drake Villa	782284915177029642/827888025237061672/BDV	flames-of-ambition	dungeon	1	1	2
 vTC	вет. Котёл	vet. The Cauldron	vet. The Cauldron	782284915177029642/827887996144975883/TC	flames-of-ambition	dungeon	1	1	2
+vTDC	вет. Ужасный Подвал	vet. The Dread Cellar	vet. The Dread Cellar	782284915177029642/881598650223067146/TDC	waking-flame	dungeon	1	1	2
+vRPB	вет. Оплот Алый Лепесток	vet. Red Petal Bastion	vet. Red Petal Bastion	782284915177029642/881598611442503750/RPB	waking-flame	dungeon	1	1	2
 vRND	вет. Случайное подземелье	vet. Random dungeon	vet. Random dungeon	782284915177029642/788689216057769984/RND		dungeon	1	1	2
 vDNG	вет. Подземелья	vet. Dungeons	vet. Dungeons	782284915177029642/788688977125179402/DNG		dungeon	1	1	2
 1key	Подземелье на 1 ключ	Dungeon for 1 key	Dungeon for 1 llave	782284915177029642/788689151205048320/KEY		undaunted	1	1	2
