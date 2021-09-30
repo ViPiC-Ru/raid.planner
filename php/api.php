@@ -18,6 +18,7 @@ $app = array(// основной массив данных
         "game" => null,                                                     // [изменяется в коде] идентификатор игры
         "useFileCache" => null,                                             // [изменяется в коде] использовать файловый кеш данных
         "lineDelim" => "\n",                                                // разделитель строк используемый в приложении
+        "valueDelim" => "|",                                                // разделитель значений на списки для внутреннего использования
         "timeZone" => "Europe/Moscow",                                      // временная зона по умолчанию для работы со временем
         "eventUrl" => "..|/%group%|/%id%|/%name%",                          // шаблон url для генерации ссылки на событие
         "eventTimeAdd" => 15*24*60*60,                                      // максимальное время для записи в событие
@@ -6020,7 +6021,7 @@ $app = array(// основной массив данных
                 if(!$error){// если нет ошибок
                     $line = !$event["close"] ? (($limit and $count < $limit) ? $additions->get("member", "icon") : $type["icon"]) : $additions->get("group", "icon");
                     $line .= " **" . $raid["key"] . "** - " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
-                    $line .= $limit ? " (" . $count . " " . $names->get("from", $language) . " " . $limit . ")" : "";
+                    $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . ">";
                     $line .= ($event["repeat"] and !$event["hide"]) ? "  " . $additions->get("weekly", "icon") : "";
                     array_push($lines[$group], $line);
                     $line = $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"])));
@@ -6037,25 +6038,34 @@ $app = array(// основной массив данных
                     for($i = 0, $iLen = count($items); $i < $iLen; $i++){
                         $player = $items[$i];// получаем очередной элимент
                         $role = $roles->get($player["role"]);
-                        // вычисляем заголовок группы
+                        // вспомогательные переменные
+                        $title = "";// заголовок группы
+                        $description = "";// описание группы
+                        // вычисляем заголовок и описание группы
                         if(!$before){// если первый игрок
-                            if($player["reserve"]){// если резерв
-                                $value = $additions->get("reserve", $language);
-                            }else $value = $additions->get("group", $language);
+                            if(!$player["reserve"]){// если не резерв
+                                $title = $additions->get("group", $language);
+                                if(!$limit) $j = $app["fun"]["numDeclin"]($count , 0, 1, 2);
+                                else if("ru" == $language) $j = $app["fun"]["numDeclin"]($limit , 0, 2, 0);
+                                else $j = $app["fun"]["numDeclin"]($limit , 0, 1, 2);// для остальных языков
+                                $description = $count . ($limit ? " " . $names->get("from", $language) . " " . $limit : "");
+                                $description .= " " . explode($app["val"]["valueDelim"], $names->get("player", $language))[$j];
+                            }else $title = $additions->get("reserve", $language);
                         }else if($before["reserve"] != $player["reserve"]){
-                            $value = $additions->get("reserve", $language);
+                            $title = $additions->get("reserve", $language);
                         }else if($before["accept"] != $player["accept"]){
                             if(!$player["reserve"]){// если не резерв
-                                $value = $names->get("candidate", $language);
-                            }else $value = "";// пустое значение
-                        }else $value = "";// пустое значение
-                        // добавляем заголовок группы
-                        if($value){// если есть данные
+                                $title = $names->get("candidate", $language);
+                            };
+                        };
+                        // добавляем заголовок и описание группы
+                        if($title){// если есть данные
                             // отделяем заголовок группы
                             $line = $blank;// пустая строка
                             array_push($lines[$group], $line);
                             // выводим заголовок группы
-                            $line = "**" . mb_ucfirst(mb_strtolower($value)) . ":**";
+                            $line = "**" . mb_ucfirst(mb_strtolower($title)) . ":**";
+                            if($description) $line .= " " . $description;
                             array_push($lines[$group], $line);
                         };
                         // добавляем запись игрока
@@ -6337,7 +6347,8 @@ $app = array(// основной массив данных
                         array_push($lines[$group], $line);
                         $line = $additions->get("reserve", "icon") . " " . $value;
                         if(mb_strlen($value)) array_push($lines[$group], $line);
-                        $line = ($event["leader"] ? $additions->get("leader", "icon") . "<@!" . $event["leader"] . ">" . " " . mb_strtolower($names->get("enter", $language)) : $names->get("enter", $language) ) . " <#" . $event["channel"] . ">";
+                        $line = $event["leader"] ? $additions->get("leader", "icon") . "<@!" . $event["leader"] . ">" : $names->get("begin", $language);
+                        $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . "> <#" . $event["channel"] . ">";
                         array_push($lines[$group], $line);
                         // сохраняем состояние
                         $before = $event;
@@ -6490,7 +6501,7 @@ $app = array(// основной массив данных
                         };
                         $line .= " " . implode(" ", $list);
                         $line .= "= **" . number_format($rate[$uid], 2, ",", "") . "**";
-                        $line .= " " . explode("|", $names->get("rate", $language))[$app["fun"]["numDeclin"]($rate[$uid], 0, 1, 2)];
+                        $line .= " " . explode($app["val"]["valueDelim"], $names->get("rate", $language))[$app["fun"]["numDeclin"]($rate[$uid], 0, 1, 2)];
                         array_push($lines[$group], $line);
                         if($index < $limit - 1) $index++;
                         else break;
