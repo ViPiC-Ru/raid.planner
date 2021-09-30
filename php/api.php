@@ -20,7 +20,7 @@ $app = array(// основной массив данных
         "lineDelim" => "\n",                                                // разделитель строк используемый в приложении
         "timeZone" => "Europe/Moscow",                                      // временная зона по умолчанию для работы со временем
         "eventUrl" => "..|/%group%|/%id%|/%name%",                          // шаблон url для генерации ссылки на событие
-        "eventTimeAdd" => 8*24*60*60,                                       // максимальное время для записи в событие
+        "eventTimeAdd" => 15*24*60*60,                                      // максимальное время для записи в событие
         "eventTimeHide" => 6*60*60,                                         // максимальное время отображения записи события
         "eventTimeDelete" => 30*24*60*60,                                   // максимальное время хранения записи события
         "eventTimeClose" => -15*60,                                         // время за которое закрывается событие для изменения
@@ -2884,7 +2884,8 @@ $app = array(// основной массив данных
                     case "discord":// Discord
                         // получаем информацию о рейде
                         if(empty($status)){// если нет ошибок
-                            $raid = $raids->get(urlencode($raid));
+                            $value = str_replace(" ", "+", $raid);
+                            $raid = $raids->get($value);
                             if($raid){// если удалось получить данные
                             }else $status = 303;// переданные параметры не верны
                         };
@@ -7572,7 +7573,10 @@ $app = array(// основной массив данных
             
             $obj = $app["fun"]["url2obj"]($link);
             // получаем объект адреса текущего запроса
-            $request = $app["fun"]["getClearParam"]($_SERVER, "HTTPS", "boolean") ? "https://" : "http://";
+            $flag = false;// используется ли https протокол
+            if($app["fun"]["getClearParam"]($_SERVER, "HTTPS", "boolean")) $flag = true;
+            if("https" == $app["fun"]["getClearParam"]($_SERVER, "HTTP_X_FORWARDED_PROTOCOL", "string")) $flag = true;
+            $request = ($flag ? "https" : $app["fun"]["getClearParam"]($_SERVER, "REQUEST_SCHEME", "string")) . "://";
             $value = $app["fun"]["getClearParam"]($_SERVER, "HTTP_HOST", "string"); if(!empty($value)) $request .= $value;
             $value = $app["fun"]["getClearParam"]($_SERVER, "REQUEST_URI", "string"); $request .= !empty($value) ? $value : $split;
             $request = $app["fun"]["url2obj"]($request);
@@ -7615,5 +7619,4 @@ $app = array(// основной массив данных
 
 // инициализируем приложение
 $app["init"]();
-
 ?>
