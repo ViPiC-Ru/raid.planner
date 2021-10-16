@@ -2861,6 +2861,7 @@ $app = array(// основной массив данных
                 // задаём данные для идентификации
                 $data = array(// данные для идентификации клиента
                     "discord" => array(// Робот формирования предпросмотра
+                        "Mozilla/5.0 (Macintosh; Intel Mac OS X 11.6; rv:92.0) Gecko/20100101 Firefox/92.0",
                         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:38.0) Gecko/20100101 Firefox/38.0",
                         "Discordbot"
                     ),
