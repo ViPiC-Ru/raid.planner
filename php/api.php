@@ -6342,15 +6342,15 @@ $app = array(// основной массив данных
                             array_push($lines[$group], $line);
                         };
                         // формируем заголовок
-                        $value = mb_ucfirst(trim(str_replace("<br>", " ", $app["fun"]["strimStrMulti"]($event["description"], "."))));
                         $line = "**" . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) . "** —" . $type["logotype"];
                         $line .= "**" . $raid["key"] . "** " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                         array_push($lines[$group], $line);
-                        $line = $additions->get("reserve", "icon") . " " . $value;
-                        if(mb_strlen($value)) array_push($lines[$group], $line);
                         $line = $event["leader"] ? $additions->get("leader", "icon") . "<@!" . $event["leader"] . ">" : $names->get("begin", $language);
                         $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . "> <#" . $event["channel"] . ">";
                         array_push($lines[$group], $line);
+                        $value = mb_ucfirst(trim(str_replace("<br>", " ", $app["fun"]["strimStrMulti"]($event["description"], "."))));
+                        $line = $additions->get("reserve", "icon") . " " . $value;
+                        if(mb_strlen($value)) array_push($lines[$group], $line);
                         // сохраняем состояние
                         $before = $event;
                     };
