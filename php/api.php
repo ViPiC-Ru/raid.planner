@@ -7254,24 +7254,27 @@ $app = array(// основной массив данных
                 };
                 // проверяем информацию об ограничениях любых видов запросов
                 $key = $app["fun"]["getCustomKey"]($uri, $delim, false, 0, 1, 2, 3);
-                $limit = get_val($limits, $key, false);// получаем лимит
-                $flag = ($limit and $key);// учесть ли эти ограничения
-                $flag = ($flag and $limit["remaining"] < 1);
-                if($flag) $reset = max($reset, $limit["reset"]);
+                if($key){// если удалось получить идентификатор для лимита
+                    $limit = get_val($limits, $key, false);// получаем лимит
+                    $flag = ($limit and $limit["remaining"] < 1);
+                    if($flag) $reset = max($reset, $limit["reset"]);
+                };
                 // проверяем информацию об ограничениях запросов на удаление
                 $key = $app["fun"]["getCustomKey"]($uri, $delim, true, 0, 1, 2);
-                $limit = get_val($limits, $key, false);// получаем лимит
-                $flag = ($limit and $key);// учесть ли эти ограничения
-                $flag = ($flag and $limit["remaining"] < 1);
-                $flag = ($flag and in_array($method, array("delete")));
-                if($flag) $reset = max($reset, $limit["reset"]);
+                if($key){// если удалось получить идентификатор для лимита
+                    $limit = get_val($limits, $key, false);// получаем лимит
+                    $flag = ($limit and $limit["remaining"] < 1);
+                    $flag = ($flag and in_array($method, array("delete")));
+                    if($flag) $reset = max($reset, $limit["reset"]);
+                };
                 // проверяем информацию об ограничениях запросов реакций
                 $key = $app["fun"]["getCustomKey"]($uri, $delim, true, 0, 1, 2, 3, 5);
-                $limit = get_val($limits, $key, false);// получаем лимит
-                $flag = ($limit and $key);// учесть ли эти ограничения
-                $flag = ($flag and $limit["remaining"] < 1);
-                $flag = ($flag and in_array($method, array("put", "delete")));
-                if($flag) $reset = max($reset, $limit["reset"]);
+                if($key){// если удалось получить идентификатор для лимита
+                    $limit = get_val($limits, $key, false);// получаем лимит
+                    $flag = ($limit and $limit["remaining"] < 1);
+                    $flag = ($flag and in_array($method, array("put", "delete")));
+                    if($flag) $reset = max($reset, $limit["reset"]);
+                };
                 // дожидаемся сброса ограничений
                 $wait = $reset - $now;// время ожидания
                 $flag = $wait > 0;// нужно ли подождать перед запросом
@@ -7287,37 +7290,43 @@ $app = array(// основной массив данных
                 if($flag) $data = json_encode($data, JSON_UNESCAPED_UNICODE);
                 $data = http($method, $app["val"]["discordUrl"] . "api" . $uri, $data, null, $headers, false);
                 $now = microtime(true);// текущее время
-                // добавляем информацию об ограничениях любых видов запросов
-                $key = $app["fun"]["getCustomKey"]($uri, $delim, false, 0, 1, 2, 3);
-                $limit = get_val($limits, $key, array());// получаем лимит
-                $value = (float)get_val($data["headers"], "x-ratelimit-reset-after", 0);
-                $flag = $value > 0;// требуется ли учесть эти ограничения
-                if($flag) $limit["reset"] = $now + $value;// время сброса ограничений
-                $value = (int)get_val($data["headers"], "x-ratelimit-remaining", -1);
-                $flag = $value > -1;// требуется ли учесть эти ограничения
-                if($flag) $limit["remaining"] = $value;// остаток доступных запросов
-                $flag = ($flag and !in_array($method, array("put", "delete")));
-                if($flag and $key) $limits[$key] = $limit;// сохраняем значение лимита
-                // добавляем информацию об ограничениях запросов на удаление
-                $key = $app["fun"]["getCustomKey"]($uri, $delim, true, 0, 1, 2);
-                $limit = get_val($limits, $key, array());// получаем лимит
-                $value = get_val($limit, "reset", 0);// получаем значение
-                $flag = $value > $now;// требуется ли учесть эти ограничения
-                $limit["reset"] = $flag ? $value : $now + 5;// время сброса ограничений
-                $value = get_val($limit, "remaining", -1);// получаем значение
-                $limit["remaining"] = $flag ? $value - 1 : 4;// остаток доступных запросов
-                $flag = in_array($method, array("delete"));// с учётом метода
-                if($flag and $key) $limits[$key] = $limit;// сохраняем значение лимита
+                $flag = false;// требуется ли учесть эти ограничения
                 // добавляем информацию об ограничениях запросов реакций
                 $key = $app["fun"]["getCustomKey"]($uri, $delim, true, 0, 1, 2, 3, 5);
-                $limit = get_val($limits, $key, array());// получаем лимит
-                $value = get_val($limit, "reset", 0);// получаем значение
-                $flag = $value > $now;// требуется ли учесть эти ограничения
-                $limit["reset"] = $flag ? $value : $now + 0.100;// время сброса ограничений
-                $value = get_val($limit, "remaining", -1);// получаем значение
-                $limit["remaining"] = $flag ? $value - 1 : 0;// остаток доступных запросов
-                $flag = in_array($method, array("put", "delete"));// с учётом метода
-                if($flag and $key) $limits[$key] = $limit;// сохраняем значение лимита
+                if($key){// если удалось получить идентификатор для лимита
+                    $limit = get_val($limits, $key, array());// получаем лимит
+                    $value = get_val($limit, "reset", 0);// получаем значение
+                    $flag = $value > $now;// требуется ли учесть эти ограничения
+                    $limit["reset"] = $flag ? $value : $now + 0.100;// время сброса ограничений
+                    $value = get_val($limit, "remaining", -1);// получаем значение
+                    $limit["remaining"] = $flag ? $value - 1 : 0;// остаток доступных запросов
+                    $flag = in_array($method, array("put", "delete"));// с учётом метода
+                    if($flag) $limits[$key] = $limit;// сохраняем значение лимита
+                };
+                // добавляем информацию об ограничениях любых видов запросов кроме уже проверенных
+                $key = $app["fun"]["getCustomKey"]($uri, $delim, false, 0, 1, 2, 3);
+                if($key and !$flag){// если удалось получить идентификатор для лимита
+                    $limit = get_val($limits, $key, array());// получаем лимит
+                    $value = (float)get_val($data["headers"], "x-ratelimit-reset-after", 0);
+                    $flag = $value > 0;// требуется ли учесть эти ограничения
+                    if($flag) $limit["reset"] = $now + $value;// время сброса ограничений
+                    $value = (int)get_val($data["headers"], "x-ratelimit-remaining", -1);
+                    $flag = $value > -1;// требуется ли учесть эти ограничения
+                    if($flag) $limit["remaining"] = $value;// остаток доступных запросов
+                    if($flag) $limits[$key] = $limit;// сохраняем значение лимита
+                };
+                // добавляем информацию об ограничениях запросов на удаление
+                $key = $app["fun"]["getCustomKey"]($uri, $delim, true, 0, 1, 2);
+                if($key){// если удалось получить идентификатор для лимита
+                    $limit = get_val($limits, $key, array());// получаем лимит
+                    $value = get_val($limit, "reset", 0);// получаем значение
+                    $flag = $value > $now;// требуется ли учесть эти ограничения
+                    $limit["reset"] = $flag ? $value : $now + 5;// время сброса ограничений
+                    $value = get_val($limit, "remaining", -1);// получаем значение
+                    $limit["remaining"] = $flag ? $value - 1 : 4;// остаток доступных запросов
+                    $flag = in_array($method, array("delete"));// с учётом метода
+                    if($flag) $limits[$key] = $limit;// сохраняем значение лимита
+                };
                 // обрабатываем полученный ответ
                 $app["fun"]["setDebug"](7, "📄 {response}",
                     ":" . $data["status"] . ":",
