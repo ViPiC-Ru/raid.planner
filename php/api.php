@@ -930,14 +930,15 @@ $app = array(// основной массив данных
                 $list = array();// список для дальнейшей обработки
                 for($i = count($guild["channels"]) - 1; $i > -1 ; $i--){
                     $channel = $guild["channels"][$i];// получаем очередной элимент
-                    $config = $app["fun"]["getChannelConfig"]($channel, $guild, null);
-                    $flag = get_val($options, $config["mode"], !$isFilterMode);
-                    if($flag) array_push($list, $channel);
+                    array_push($list, $channel);
                 };
                 // выполняем обработку сформированного списка
                 for($i = 0, $iLen = count($list); $i < $iLen and empty($status); $i++){
                     $channel = $list[$i];// получаем очередной элимент из списка
                     $flag = ($channel and !$app["fun"]["getCache"]("channel", $channel["id"], $guild["id"], null));
+                    if($flag) continue;// переходим к следующему элименту списка
+                    $config = $app["fun"]["getChannelConfig"]($channel, $guild, null);
+                    $flag = !get_val($options, $config["mode"], !$isFilterMode);
                     if($flag) continue;// переходим к следующему элименту списка
                     $isUpdate |= $app["method"]["discord.channel"](
                         array(// параметры для метода
@@ -1449,9 +1450,10 @@ $app = array(// основной массив данных
             if(empty($status) and $isNeedProcessing){// если нужно выполнить
                 if(!$message["type"] and in_array($config["mode"], array("record", "direct"))){// если это контентное сообщение
                     $command = $app["fun"]["getCommand"]($message["content"], $config["language"], $config["timezone"], $message["timestamp"], $status);
+                    if(!$command["action"] and !$config["flood"] or $command["action"]) $isNeedDelete = true;
+                    if(!$command["action"]) $isNeedProcessing = false;
                 }else{// если это не контентное сообщение
-                    $flag = ($message["type"] or !$config["flood"]);
-                    if($flag) $isNeedDelete = true;
+                    if($message["type"] or !$config["flood"]) $isNeedDelete = true;
                     $isNeedProcessing = false;
                 };
             };
@@ -2165,11 +2167,6 @@ $app = array(// основной массив данных
                             };
                         };
                         break;
-                    case "":// команда не указана
-                        if($config["flood"]){// если обсуждения разрешены
-                            $isNeedProcessing = false;// требуется ли дальнейшая обработка                                
-                            break;
-                        };
                     default:// не известная команда
                         $error = 11;
                 };
@@ -2195,7 +2192,7 @@ $app = array(// основной массив данных
                 };
             };
             // выполняем сортировку событий
-            if(empty($status) and $guild){// если нужно выполнить
+            if(empty($status) and $guild and count($counts)){// если нужно выполнить
                 $items = $app["fun"]["sortEventsMessage"]($guild, $channel, $status);
                 foreach($items["events"] as $eid => $item) if(!isset($counts[$eid])) $counts[$eid] = true;
                 foreach($items as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
@@ -2300,7 +2297,7 @@ $app = array(// основной массив данных
                 };
             };
             // удаляем сообщение переданное на обработку
-            if(empty($status) and ($isNeedProcessing or $isNeedDelete) and $guild){// если нужно выполнить
+            if(empty($status) and $isNeedDelete and $guild){// если нужно выполнить
                 // удаляем сообщение
                 $uri = "/channels/" . $channel["id"] . "/messages/" . $message["id"];
                 $data = $app["fun"]["apiRequest"]("delete", $uri, null, $code);
@@ -2375,6 +2372,7 @@ $app = array(// основной массив данных
             $isScheduleChange = false;// изменилось ли сводное расписание
             $isLeaderBoardChange = false;// изменилось ли таблица лидеров
             $isNeedProcessing = false;// требуется ли дальнейшая обработка
+            $isNeedDelete = false;// удалить ли элимент переданный на обработку
             $counts = get_val($options, "counts", array());// счётчик участников
             // получаем очищенные значения параметров
             $game = $app["fun"]["getClearParam"]($params, "game", "string");
@@ -2491,6 +2489,7 @@ $app = array(// основной массив данных
             };
             // обрабатываем команду
             if(empty($status) and $isNeedProcessing){// если нужно выполнить
+                $isNeedDelete = true;
                 // проверяем поддержку команды
                 if(empty($error)){// если нет проблем
                     if($guild){// если проверка пройдена
@@ -2521,7 +2520,7 @@ $app = array(// основной массив данных
                     $limit = $raid[$key];// получаем лимит для заданной роли
                     if($limit > -1){// если проверка пройдена
                         $flag = $reaction["user"]["id"] == $session->get("bot", "value");
-                        if($flag) $isNeedProcessing = false;
+                        if($flag) $isNeedDelete = false;
                     }else $error = -1;
                 };
                 // проверяем записываемого пользователя
@@ -2626,7 +2625,7 @@ $app = array(// основной массив данных
                 };
             };
             // удаляем реакцию переданное на обработку
-            if(empty($status) and $isNeedProcessing){// если нужно выполнить
+            if(empty($status) and $isNeedDelete){// если нужно выполнить
                 // удаляем реакцию
                 $rid = array("", $reaction["emoji"]["name"], $reaction["emoji"]["id"]);
                 $value = urlencode(!empty($rid[2]) ? implode(":", $rid) : $rid[1]);
@@ -2840,22 +2839,6 @@ $app = array(// основной массив данных
                     }else $status = 302;// один из обязательных параметров передан в неверном формате
                 }else $status = 301;// не передан один из обязательных параметров
             };
-            // загружаем все необходимые базы данных
-            if(empty($status)){// если нет ошибок
-                $session = $app["fun"]["getStorage"]($game, "session", false);
-                if(!empty($session)){// если удалось получить доступ к базе данных
-                }else $status = 304;// не удалось загрузить одну из многих баз данных
-            };
-            if(empty($status)){// если нет ошибок
-                $events = $app["fun"]["getStorage"]($game, "events", false);
-                if(!empty($events)){// если удалось получить доступ к базе данных
-                }else $status = 304;// не удалось загрузить одну из многих баз данных
-            };
-            if(empty($status)){// если нет ошибок
-                $raids = $app["fun"]["getStorage"]($game, "raids", false);
-                if(!empty($raids)){// если удалось получить доступ к базе данных
-                }else $status = 304;// не удалось загрузить одну из многих баз данных
-            };
             // определяем режим работы
             if(empty($status) and $agent){// если нужно выполнить
                 // задаём данные для идентификации
@@ -2884,6 +2867,17 @@ $app = array(// основной массив данных
                 $app["val"]["useFileCache"] = true;// включаем использование
                 switch($mode){// поддерживаемые режимы
                     case "discord":// Discord
+                        // загружаем все необходимые базы данных
+                        if(empty($status)){// если нет ошибок
+                            $session = $app["fun"]["getStorage"]($game, "session", false);
+                            if(!empty($session)){// если удалось получить доступ к базе данных
+                            }else $status = 304;// не удалось загрузить одну из многих баз данных
+                        };
+                        if(empty($status)){// если нет ошибок
+                            $raids = $app["fun"]["getStorage"]($game, "raids", false);
+                            if(!empty($raids)){// если удалось получить доступ к базе данных
+                            }else $status = 304;// не удалось загрузить одну из многих баз данных
+                        };
                         // получаем информацию о рейде
                         if(empty($status)){// если нет ошибок
                             $value = str_replace(" ", "+", $raid);
@@ -2897,6 +2891,22 @@ $app = array(// основной массив данных
                         };
                         break;
                     case "google":// Google
+                        // загружаем все необходимые базы данных
+                        if(empty($status)){// если нет ошибок
+                            $session = $app["fun"]["getStorage"]($game, "session", false);
+                            if(!empty($session)){// если удалось получить доступ к базе данных
+                            }else $status = 304;// не удалось загрузить одну из многих баз данных
+                        };
+                        if(empty($status)){// если нет ошибок
+                            $raids = $app["fun"]["getStorage"]($game, "raids", false);
+                            if(!empty($raids)){// если удалось получить доступ к базе данных
+                            }else $status = 304;// не удалось загрузить одну из многих баз данных
+                        };
+                        if(empty($status)){// если нет ошибок
+                            $events = $app["fun"]["getStorage"]($game, "events", false);
+                            if(!empty($events)){// если удалось получить доступ к базе данных
+                            }else $status = 304;// не удалось загрузить одну из многих баз данных
+                        };
                         // получаем информацию о событии
                         if(empty($status)){// если нет ошибок
                             $event = $events->get($event);
@@ -3687,11 +3697,11 @@ $app = array(// основной массив данных
                             $key = "messages";// задаём ключ
                             $parent = &$app["fun"]["getCache"]("channel", $cid, $gid, $uid);
                             if(!is_null($parent)){// если есть родительский элемент
-                                $flag = 1 == $parent["type"];// есть ли необходимые права для выполнения действия
+                                $flag = (isset($parent[$key]) or 1 == $parent["type"]);// есть ли необходимые права для выполнения действия
                                 if(!$flag) $config = $app["fun"]["getChannelConfig"]($parent, $gid, null);// конфигурация канала
                                 if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $session->get("bot", "value"), $parent, $gid);
                                 $flag = ($flag or $config["mode"] and $config["game"] == $game and ($permission & $app["val"]["discordMainPermission"]) == $app["val"]["discordMainPermission"]);
-                                if($flag or isset($parent[$key])){// если есть разрешения или учёт уже ведётся
+                                if($flag){// если есть разрешения или учёт уже ведётся
                                     if(!isset($parent[$key])) $parent[$key] = array();
                                     for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
                                         if($parent[$key][$i]["id"] == $mid) break;
@@ -3832,7 +3842,8 @@ $app = array(// основной массив данных
                             });
                             // выполняем удаление
                             $limit = $parent["type"] ? $app["val"]["eventNoticeLimit"] + 1 : $app["val"]["discordMessageLimit"];
-                            for($i = count($parent[$key]) - 1; $i >= $limit; $i--){
+                            for($i = count($parent[$key]) - 1; $i >= $limit; $i--){// пробигаемся по лишним элиментам
+                                if($unit and $unit["id"] == $parent[$key][$i]["id"]) $unit = null;
                                 array_splice($parent[$key], $i, 1);
                             };
                         };
@@ -4313,11 +4324,11 @@ $app = array(// основной массив данных
                             $key = "messages";// задаём ключ
                             $parent = &$app["fun"]["getCache"]("channel", $cid, $gid, $uid);
                             if(!is_null($parent)){// если есть родительский элемент
-                                $flag = 1 == $parent["type"];// есть ли необходимые права для выполнения действия
+                                $flag = (isset($parent[$key]) or 1 == $parent["type"]);// есть ли необходимые права для выполнения действия
                                 if(!$flag) $config = $app["fun"]["getChannelConfig"]($parent, $gid, null);// конфигурация канала
                                 if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $session->get("bot", "value"), $parent, $gid);
                                 $flag = ($flag or $config["mode"] and $config["game"] == $game and ($permission & $app["val"]["discordMainPermission"]) == $app["val"]["discordMainPermission"]);
-                                if($flag or isset($parent[$key])){// если есть разрешения или учёт уже ведётся
+                                if($flag){// если есть разрешения или учёт уже ведётся
                                     if(!isset($parent[$key])) $parent[$key] = array();
                                     for($i = 0, $iLen = count($parent[$key]); $i < $iLen; $i++){
                                         if($parent[$key][$i]["id"] == $mid) break;
@@ -5362,20 +5373,17 @@ $app = array(// основной массив данных
             };
             // исправляет упоминание кастомных эмодзи в описании событий
             if(empty($status) and $inDescription){// если нужно выполнить
-                for($i = 0, $iLen = $events->length; $i < $iLen and empty($status); $i++){
-                    $id = $events->key($i);// получаем ключевой идентификатор по индексу
-                    $event = $events->get($id);// получаем элемент по идентификатору
-                    if($event["id"] == $eid and mb_strlen($event["description"])){// если нужно выполнить
-                        $count = 0;// сбрасываем счётчик изменений
-                        $value = str_replace("<br>", $app["val"]["lineDelim"], $event["description"]);
-                        $value = $app["fun"]["clearDeletedEmoji"]($value, $event, $status, $count);
-                        $value = str_replace($app["val"]["lineDelim"], "<br>", $value);
-                        // вносим изменения в базу данных
-                        if(empty($status) and $count){// если нужно выполнить
-                            if($events->set($id, "description", $value)){// если данные успешно изменены
-                                $list["events"][$id] = $event;
-                            }else $status = 309;// не удалось записать данные в базу данных
-                        };
+                $event = $events->get($eid);// получаем элемент по идентификатору
+                if($event and mb_strlen($event["description"])){// если нужно выполнить
+                    $count = 0;// сбрасываем счётчик изменений
+                    $value = str_replace("<br>", $app["val"]["lineDelim"], $event["description"]);
+                    $value = $app["fun"]["clearDeletedEmoji"]($value, $event, $status, $count);
+                    $value = str_replace($app["val"]["lineDelim"], "<br>", $value);
+                    // вносим изменения в базу данных
+                    if(empty($status) and $count){// если нужно выполнить
+                        if($events->set($eid, "description", $value)){// если данные успешно изменены
+                            $list["events"][$eid] = $event;
+                        }else $status = 309;// не удалось записать данные в базу данных
                     };
                 };
             };
@@ -5915,16 +5923,8 @@ $app = array(// основной массив данных
                 // проверяем переданные идентификаторы
                 if(!$error){// если нет ошибок
                     if($eid){// если проверка пройдена
+                        $event = $events->get($eid);
                     }else $error = 1;
-                };
-                // пробуем получить событие по идентификатору события
-                if(!$error){// если нет ошибок
-                    for($i = 0, $iLen = $events->length; $i < $iLen and !$event; $i++){
-                        $id = $events->key($i);// получаем ключевой идентификатор по индексу
-                        $item = $events->get($id);// получаем элемент по идентификатору
-                        $flag = $item["id"] == $eid;
-                        if($flag) $event = $item;
-                    };
                 };
                 // проверяем успешность получения события
                 if(!$error){// если нет ошибок
@@ -6146,16 +6146,8 @@ $app = array(// основной массив данных
                 // проверяем переданные идентификаторы
                 if(!$error){// если нет ошибок
                     if($eid){// если проверка пройдена
+                        $event = $events->get($eid);
                     }else $error = 1;
-                };
-                // пробуем получить событие по идентификатору события
-                if(!$error){// если нет ошибок
-                    for($i = 0, $iLen = $events->length; $i < $iLen and !$event; $i++){
-                        $id = $events->key($i);// получаем ключевой идентификатор по индексу
-                        $item = $events->get($id);// получаем элемент по идентификатору
-                        $flag = $item["id"] == $eid;
-                        if($flag) $event = $item;
-                    };
                 };
                 // проверяем успешность получения события
                 if(!$error){// если нет ошибок
@@ -6593,7 +6585,7 @@ $app = array(// основной массив данных
                     if(mb_strlen($value)){// если найдено ключевое значение
                         $command[$key] = $value;
                         continue;
-                    };
+                    }else break;
                 };
                 // роли - KEY
                 $key = "roles";// текущий параметр команды
@@ -6865,10 +6857,15 @@ $app = array(// основной массив данных
         //@param $user {array|string} - пользователь или его идентификатор
         //@return {array|null} - конфигурационный массив или null при ошибки
             global $app;
+            static $timezones;
             $error = 0;
 
             $game = $app["val"]["game"];
             $config = null;// конфигурация
+            // кэшируем список временных зон
+            if(!isset($timezones)){// если список пуст
+                $timezones = timezone_identifiers_list();
+            };
             // проверяем переданные параметры
             if(!$error){// если нет ошибок
                 if($guild xor $user){// если удалось получить доступ к базе данных
@@ -6920,7 +6917,7 @@ $app = array(// основной массив данных
                 if(!empty($months)){// если удалось получить доступ к базе данных
                 }else $error = 8;
             };
-            // читаем конфигурацию
+            // формируем конфигурацию
             if(!$error){// если нет ошибок
                 $config = array(// по умолчанию
                     "language" => $guild ? $app["val"]["discordLang"] : null,
@@ -6935,82 +6932,103 @@ $app = array(// основной массив данных
                     "sort" => "",
                     "game" => ""
                 );
-                $delim = $app["val"]["lineDelim"];
-                $lines = explode($delim, $channel["topic"]);
-                // выполняем первый раз поиск параметров каналов гильдии
-                for($i = 0, $iLen = count($lines); $i < $iLen and $guild; $i++){// пробигаемся по строчкам
-                    $line = trim($lines[$i]);// получаем очередное значение
-                    // определяем режим и язык канала гильдии
-                    $flag = false;// найдено ли подходящее значение
-                    $id = $months->key(0);// получаем идентификатор по индексу
-                    $month = $months->get($id);// получаем элемент по ключу
-                    $list = array("record", "schedule", "leaderboard");// поддерживаемые режимы
-                    for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
-                        $mode = $list[$j];// получаем очередной ключ
-                        $item = $names->get($mode);// получаем элемент по ключу
-                        foreach($month as $key => $value){// пробигаемся по ключам
-                            if($key != $months->primary){// если не первичный ключ
-                                $value = $item[$key];// получаем очередное значение
-                                $flag = 0 === mb_stripos($line, $value);
-                                if($flag){// если найдено совпадение
-                                    $config["language"] = $key;
-                                    $config["mode"] = $mode;
-                                    break;
+                // заполняем конфигурацию для канала гильдии
+                if($guild){// если канал гильдии
+                    // разбиваем тему канала на строки
+                    if(mb_strlen($channel["topic"])){// если нужно выполнить
+                        $delim = $app["val"]["lineDelim"];// разделитель строк
+                        $lines = explode($delim, $channel["topic"]);
+                    }else $lines = array();
+                    // выполняем первый раз поиск параметров каналов
+                    if($config["game"] != $game){// если игра ещё не определена
+                        for($i = 0, $iLen = count($lines); $i < $iLen; $i++){// пробигаемся по строчкам
+                            $line = trim($lines[$i]);// получаем очередное значение
+                            // определяем совместимую игру канала
+                            $flag = !$i;// найдено ли совпадение в первой строке
+                            $flag = ($flag and 0 === mb_stripos($line, $game));
+                            $flag = ($flag and mb_strlen($line) == mb_strlen($game));
+                            if($flag) $config["game"] = $game;
+                            else if(!$i) break;// останавливаем поиск
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем режим и язык канала гильдии
+                            $flag = false;// найдено ли подходящее значение
+                            $id = $months->key(0);// получаем идентификатор по индексу
+                            $month = $months->get($id);// получаем элемент по ключу
+                            $list = array("record", "schedule", "leaderboard");// поддерживаемые режимы
+                            for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
+                                $mode = $list[$j];// получаем очередной ключ
+                                $item = $names->get($mode);// получаем элемент по ключу
+                                foreach($month as $key => $value){// пробигаемся по ключам
+                                    if($key != $months->primary){// если не первичный ключ
+                                        $value = $item[$key];// получаем очередное значение
+                                        $flag = 0 === mb_stripos($line, $value);
+                                        if($flag){// если найдено совпадение
+                                            $config["language"] = $key;
+                                            $config["mode"] = $mode;
+                                            break;
+                                        };
+                                    };
                                 };
                             };
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем часовой пояс канала
+                            $flag = in_array($line, $timezones);
+                            if($flag) $config["timezone"] = $line;
+                            if($flag) continue;// переходим к следующей строке
                         };
                     };
-                    // определяем часовой пояс канала
-                    $flag = in_array($line, timezone_identifiers_list());
-                    if($flag) $config["timezone"] = $line;
-                    // определяем совместимую игру канала
-                    $flag = !$i;// найдено ли совпадение в первой строке
-                    $flag = ($flag and 0 === mb_stripos($line, $game));
-                    $flag = ($flag and mb_strlen($line) == mb_strlen($game));
-                    if($flag) $config["game"] = $game;
-                };
-                // выполняем второй раз поиск параметров каналов гильдии
-                for($i = 0, $iLen = count($lines); $i < $iLen and $guild; $i++){// пробигаемся по строчкам
-                    $line = trim($lines[$i]);// получаем очередное значение
-                    // определяем ограничение по типам событий
-                    for($j = 0, $jLen = $types->length; $j < $jLen; $j++){// пробигаемся по списку
-                        $key = $types->key($j);// получаем ключевой идентификатор по индексу
-                        $item = $types->get($key);// получаем элемент по ключу
-                        $value = $item[$config["language"]];// получаем значение
-                        $flag = false !== mb_stripos($line, $value);
-                        if($flag) $flag = !in_array($key, $config["filters"]["types"]);
-                        if($flag) array_push($config["filters"]["types"], $key);
+                    // выполняем второй раз поиск параметров каналов гильдии
+                    if($config["game"] == $game){// если игра уже определена
+                        for($i = 0, $iLen = count($lines); $i < $iLen; $i++){// пробигаемся по строчкам
+                            $line = trim($lines[$i]);// получаем очередное значение
+                            // определяем ограничение по типам событий
+                            $flag = false;// найдено ли подходящее значение
+                            for($j = 0, $jLen = $types->length; $j < $jLen and !$flag; $j++){// пробигаемся по списку
+                                $key = $types->key($j);// получаем ключевой идентификатор по индексу
+                                $item = $types->get($key);// получаем элемент по ключу
+                                $value = $item[$config["language"]];// получаем значение
+                                $flag = false !== mb_stripos($line, $value);
+                                if($flag) $flag = !in_array($key, $config["filters"]["types"]);
+                                if($flag) array_push($config["filters"]["types"], $key);
+                            };
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем ограничение по роли игрока
+                            $flag = false;// найдено ли подходящее значение
+                            for($j = 0, $jLen = $roles->length; $j < $jLen and !$flag; $j++){// пробигаемся по списку
+                                $key = $roles->key($j);// получаем ключевой идентификатор по индексу
+                                $item = $roles->get($key);// получаем элемент по ключу
+                                $value = $item[$config["language"]];// получаем значение
+                                $flag = false !== mb_stripos($line, $value);
+                                if($flag) $flag = !in_array($key, $config["filters"]["roles"]);
+                                if($flag) array_push($config["filters"]["roles"], $key);
+                            };
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем режим сортировки
+                            $flag = false;// найдено ли подходящее значение
+                            $list = array("time");// поддерживаемые режимы
+                            for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
+                                $mode = $list[$j];// получаем очередной ключ
+                                $item = $names->get($mode);// получаем элемент по ключу
+                                $value = $item[$config["language"]];// получаем значение
+                                $flag = 0 === mb_stripos($line, $value);
+                                if($flag) $config["sort"] = $mode;
+                            };
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем запрет на флуд
+                            $item = $names->get("noflood");// получаем элемент по ключу
+                            $value = $item[$config["language"]];// получаем значение
+                            $flag = 0 === mb_stripos($line, $value);
+                            if($flag) $config["flood"] = false;
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем сохранение истории
+                            $key = "history";// задаём ключевой идентификатор
+                            $item = $names->get($key);// получаем элемент по ключу
+                            $value = $item[$config["language"]];// получаем значение
+                            $flag = 0 === mb_stripos($line, $value);
+                            if($flag) $config[$key] = true;
+                            if($flag) continue;// переходим к следующей строке
+                        };
                     };
-                    // определяем ограничение по роли игрока
-                    for($j = 0, $jLen = $roles->length; $j < $jLen; $j++){// пробигаемся по списку
-                        $key = $roles->key($j);// получаем ключевой идентификатор по индексу
-                        $item = $roles->get($key);// получаем элемент по ключу
-                        $value = $item[$config["language"]];// получаем значение
-                        $flag = false !== mb_stripos($line, $value);
-                        if($flag) $flag = !in_array($key, $config["filters"]["roles"]);
-                        if($flag) array_push($config["filters"]["roles"], $key);
-                    };
-                    // определяем режим сортировки
-                    $flag = false;// найдено ли подходящее значение
-                    $list = array("time");// поддерживаемые режимы
-                    for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
-                        $mode = $list[$j];// получаем очередной ключ
-                        $item = $names->get($mode);// получаем элемент по ключу
-                        $value = $item[$config["language"]];// получаем значение
-                        $flag = 0 === mb_stripos($line, $value);
-                        if($flag) $config["sort"] = $mode;
-                    };
-                    // определяем запрет на флуд
-                    $item = $names->get("noflood");// получаем элемент по ключу
-                    $value = $item[$config["language"]];// получаем значение
-                    $flag = 0 === mb_stripos($line, $value);
-                    if($flag) $config["flood"] = false;
-                    // определяем сохранение истории
-                    $key = "history";// задаём ключевой идентификатор
-                    $item = $names->get($key);// получаем элемент по ключу
-                    $value = $item[$config["language"]];// получаем значение
-                    $flag = 0 === mb_stripos($line, $value);
-                    if($flag) $config[$key] = true;
                 };
             };
             // возвращаем результат
