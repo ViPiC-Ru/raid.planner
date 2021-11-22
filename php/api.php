@@ -6981,39 +6981,6 @@ $app = array(// основной массив данных
                     if($config["game"] == $game){// если игра уже определена
                         for($i = 0, $iLen = count($lines); $i < $iLen; $i++){// пробигаемся по строчкам
                             $line = trim($lines[$i]);// получаем очередное значение
-                            // определяем ограничение по типам событий
-                            $flag = false;// найдено ли подходящее значение
-                            for($j = 0, $jLen = $types->length; $j < $jLen and !$flag; $j++){// пробигаемся по списку
-                                $key = $types->key($j);// получаем ключевой идентификатор по индексу
-                                $item = $types->get($key);// получаем элемент по ключу
-                                $value = $item[$config["language"]];// получаем значение
-                                $flag = false !== mb_stripos($line, $value);
-                                if($flag) $flag = !in_array($key, $config["filters"]["types"]);
-                                if($flag) array_push($config["filters"]["types"], $key);
-                            };
-                            if($flag) continue;// переходим к следующей строке
-                            // определяем ограничение по роли игрока
-                            $flag = false;// найдено ли подходящее значение
-                            for($j = 0, $jLen = $roles->length; $j < $jLen and !$flag; $j++){// пробигаемся по списку
-                                $key = $roles->key($j);// получаем ключевой идентификатор по индексу
-                                $item = $roles->get($key);// получаем элемент по ключу
-                                $value = $item[$config["language"]];// получаем значение
-                                $flag = false !== mb_stripos($line, $value);
-                                if($flag) $flag = !in_array($key, $config["filters"]["roles"]);
-                                if($flag) array_push($config["filters"]["roles"], $key);
-                            };
-                            if($flag) continue;// переходим к следующей строке
-                            // определяем режим сортировки
-                            $flag = false;// найдено ли подходящее значение
-                            $list = array("time");// поддерживаемые режимы
-                            for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
-                                $mode = $list[$j];// получаем очередной ключ
-                                $item = $names->get($mode);// получаем элемент по ключу
-                                $value = $item[$config["language"]];// получаем значение
-                                $flag = 0 === mb_stripos($line, $value);
-                                if($flag) $config["sort"] = $mode;
-                            };
-                            if($flag) continue;// переходим к следующей строке
                             // определяем запрет на флуд
                             $item = $names->get("noflood");// получаем элемент по ключу
                             $value = $item[$config["language"]];// получаем значение
@@ -7027,6 +6994,35 @@ $app = array(// основной массив данных
                             $flag = 0 === mb_stripos($line, $value);
                             if($flag) $config[$key] = true;
                             if($flag) continue;// переходим к следующей строке
+                            // определяем режим сортировки
+                            $flag = false;// найдено ли подходящее значение
+                            $list = array("time");// поддерживаемые режимы
+                            for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
+                                $mode = $list[$j];// получаем очередной ключ
+                                $item = $names->get($mode);// получаем элемент по ключу
+                                $value = $item[$config["language"]];// получаем значение
+                                $flag = 0 === mb_stripos($line, $value);
+                                if($flag) $config["sort"] = $mode;
+                            };
+                            if($flag) continue;// переходим к следующей строке
+                            // определяем ограничение по типам событий
+                            for($j = 0, $jLen = $types->length; $j < $jLen; $j++){// пробигаемся по списку
+                                $key = $types->key($j);// получаем ключевой идентификатор по индексу
+                                $item = $types->get($key);// получаем элемент по ключу
+                                $value = $item[$config["language"]];// получаем значение
+                                $flag = false !== mb_stripos($line, $value);
+                                if($flag) $flag = !in_array($key, $config["filters"]["types"]);
+                                if($flag) array_push($config["filters"]["types"], $key);
+                            };
+                            // определяем ограничение по роли игрока
+                            for($j = 0, $jLen = $roles->length; $j < $jLen; $j++){// пробигаемся по списку
+                                $key = $roles->key($j);// получаем ключевой идентификатор по индексу
+                                $item = $roles->get($key);// получаем элемент по ключу
+                                $value = $item[$config["language"]];// получаем значение
+                                $flag = false !== mb_stripos($line, $value);
+                                if($flag) $flag = !in_array($key, $config["filters"]["roles"]);
+                                if($flag) array_push($config["filters"]["roles"], $key);
+                            };
                         };
                     };
                 };
