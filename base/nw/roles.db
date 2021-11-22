@@ -1,0 +1,4 @@
+key:string	ru:string	en:string	es:string	icon:string
+tank	Танк	Tank	Tanque	<:nw_tank:911586692723527690>
+heal	Хил	Heal	Curación	<:nw_heal:911586692677390336>
+dd	Дд	Dd	Daño	<:nw_dd:911586692765483039>

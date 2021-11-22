@@ -1,0 +1,1 @@
+id:integer	event:integer	user:string	role:string	accept:boolean	reserve:boolean	notice:boolean	comment:string

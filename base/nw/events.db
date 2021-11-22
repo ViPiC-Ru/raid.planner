@@ -1,0 +1,1 @@
+id:integer	guild:string	channel:string	message:string	time:date	raid:string	leader:string	repeat:date	close:boolean	hide:boolean	description:string

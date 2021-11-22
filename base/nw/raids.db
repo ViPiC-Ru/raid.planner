@@ -1,0 +1,29 @@
+key:string	ru:string	en:string	es:string	image:string	chapter:string	type:string	tank:integer	heal:integer	dd:integer
+AE	Amrine Excavation	Amrine Excavation	Amrine Excavation	782284915177029642/912413805642911744/AE		expedition	1	1	3
+SB	Starstone Barrows	Starstone Barrows	Starstone Barrows	782284915177029642/911704608215285820/SB		expedition	1	1	3
+TD	The Depths	The Depths	The Depths	782284915177029642/911704751555612712/TD		expedition	1	1	3
+DS	Dynasty Shipyard	Dynasty Shipyard	Dynasty Shipyard	782284915177029642/911704078751498240/DS		expedition	1	1	3
+GG	Garden of Genesis	Garden of Genesis	Garden of Genesis	782284915177029642/912413849016221696/GG		expedition	1	1	3
+LI	Lazarus Instrumentality	Lazarus Instrumentality	Lazarus Instrumentality	782284915177029642/911704307227844648/LI		expedition	1	1	3
+EXP	Экспедиции	Expeditions	Expedición	782284915177029642/911917484171493446/EXP		expedition	1	1	3
+MG	Myrkgard	Myrkgard	Myrkgard	782284915177029642/911704378652626974/MG		location	0	0	0
+SM	Scorhed Mines	Scorhed Mines	Scorhed Mines	782284915177029642/911704634391920660/SM		location	0	0	0
+ML	Malevolence	Malevolence	Malevolence	782284915177029642/911704462396121148/ML		location	0	0	0
+nCP	нор. Оскверненный Портал	nor. Corrupted Portal	nor. Portal Corrupto	782284915177029642/911703942096883729/CP		corrupted	1	1	1
+nCM	нор. Оскверненный Монолит	nor. Corrupted Monolith	nor. Monolito Corrupto	782284915177029642/911703884228087838/CM		corrupted	1	1	1
+nCT	нор. Оскверненное Щупальце	nor. Corrupted Tentacle	nor. Tentáculo Corrompido	782284915177029642/911703984207696012/CT		corrupted	1	1	1
+nFH	нор. Гниющий Улей	nor. Festering Hive	nor. Colmena Supurante	782284915177029642/911704110913441904/FH		corrupted	1	1	1
+eCP	элт. Оскверненный Портал	elt. Corrupted Portal	elt. Portal Corrupto	782284915177029642/911703942096883729/CP		corrupted	1	1	3
+eCM	элт. Оскверненный Монолит	elt. Corrupted Monolith	elt. Monolito Corrupto	782284915177029642/911703884228087838/CM		corrupted	1	1	3
+PT	Protector’s	Protector’s	Protector’s	782284915177029642/911704543572668426/PT		arena	1	1	3
+SS	Siren Stand	Siren Stand	Siren Stand	782284915177029642/911704671507333170/SS		arena	1	1	3
+MC	Monoecious Cleft	Monoecious Cleft	Monoecious Cleft	782284915177029642/911704344309682186/MC		arena	1	1	3
+WAR	Война	War Battle	Guerra	782284915177029642/911704810678550609/WAR		battle	0	0	0
+QST	Квест	Quest	Búsqueda	782284915177029642/911704571154427914/QST		battle	0	0	0
+PST	Форпост	Outpost	Reducto	782284915177029642/911704499444404224/PST		battle	0	0	0
+INV	Вторжение	Invasion	Invasión	782284915177029642/911704264651456613/INV		activity	0	0	0
+DAY	Ежедневные задания	Daily quest	Misiones diarias	782284915177029642/911704030823186533/DAY		activity	0	0	0
+TRN	Обучение	Training	Entrenamiento	782284915177029642/911704780542464110/TRN		activity	0	0	0
+FSH	Рыбалка	Fishing	Pesca	782284915177029642/911704158011273266/FSH		activity	0	0	0
+MTG	Собрание	Meeting	Reunión	782284915177029642/911870649071464448/MTG		meetup	0	0	0
+CMP	Конкурс	Competition	Concurso	782284915177029642/911870688460177418/CMP		meetup	0	0	0
