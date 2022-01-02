@@ -6007,7 +6007,7 @@ $app = array(// основной массив данных
                 // формируем шапку
                 if(!$error){// если нет ошибок
                     $lines[++$group] = array();// новая группа строк
-                    $line = "**```";
+                    $line = "```";
                     array_push($lines[$group], $line);
                     $line = $names->get("schedule", "icon") . " " . $app["fun"]["dateFormat"]("d", $event["time"], $timezone);
                     $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
@@ -6015,7 +6015,7 @@ $app = array(// основной массив данных
                     $line .= " " . $additions->get("reject", "icon") . " " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
                     if($index) $line .= " " . $names->get("record", "icon") . " " . str_pad($index, 3, "0", STR_PAD_LEFT);
                     array_push($lines[$group], $line);
-                    $line = "```**";
+                    $line = "```";
                     array_push($lines[$group], $line);
                 };
                 // формируем заголовок
@@ -6324,13 +6324,13 @@ $app = array(// основной массив данных
                         if($before) array_push($lines[$group], $line);
                         // формируем шапку
                         if(!$before or $app["fun"]["dateFormat"]("d.m.Y", $before["time"], $timezone) != $app["fun"]["dateFormat"]("d.m.Y", $event["time"], $timezone)){// если нужно выполнить
-                            $line = "**```";
+                            $line = "```";
                             array_push($lines[$group], $line);
                             $line = $names->get("schedule", "icon") . " " . $app["fun"]["dateFormat"]("d", $event["time"], $timezone);
                             $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
                             $line .= " - " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
                             array_push($lines[$group], $line);
-                            $line = "```**";
+                            $line = "```";
                             array_push($lines[$group], $line);
                         };
                         // формируем заголовок
@@ -6475,11 +6475,11 @@ $app = array(// основной массив данных
                         // формируем шапку
                         if(!$index){// если нужно выполнить
                             $lines[++$group] = array();// новая группа строк
-                            $line = "**```";
+                            $line = "```";
                             array_push($lines[$group], $line);
                             $line = $names->get("leaderboard", "icon") . " " . $names->get("leaderboard", $language);
                             array_push($lines[$group], $line);
-                            $line = "```**";
+                            $line = "```";
                             array_push($lines[$group], $line);
                         };
                         // формируем запись участника
