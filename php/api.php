@@ -7430,7 +7430,7 @@ $app = array(// основной массив данных
                         case "float": $value = filter_var($value, FILTER_VALIDATE_FLOAT); if(false === $value) (float)$value; break;
                         case "boolean": $value = filter_var($value, FILTER_VALIDATE_BOOLEAN); if(false === $value) $value = 0; break;
                         case "email": $value = filter_var($value, FILTER_VALIDATE_EMAIL); break;
-                        case "string": $value = filter_var($value, FILTER_SANITIZE_STRING); if(empty($value)) $value = false; break;
+                        case "string": $value = htmlspecialchars($value); if(empty($value)) $value = false; break;
                         case "chars": $value = filter_var($value, FILTER_SANITIZE_FULL_SPECIAL_CHARS); if(empty($value)) $value = false; break;
                         // специализированные фильтры без регулярных вырожений
                         case "file": if(!(isset($value["name"], $value["type"], $value["tmp_name"], $value["error"], $value["size"]) and UPLOAD_ERR_OK == $value["error"] and $value["size"] > 0)) $value = false; break;
