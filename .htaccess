@@ -18,8 +18,7 @@ php_flag short_open_tag On
 
 # запрешаем доступ из браузера к временным файлам
 <FilesMatch "\.(tmp|bak)$">
-	Order allow,deny
-	Deny from all
+	Require all denied
 </FilesMatch>
 
 # компрессия данных для определённых типов
