@@ -99,6 +99,8 @@ nSR	нор. Горе Корабела	nor. Shipwright's Regret	nor. Shipwright's
 nCA	нор. Коралловое Гнездо	nor. Coral Aerie	nor. Coral Aerie	782284915177029642/964174448557174794/CA	ascending-tide	dungeon	1	1	2
 nERE	нор. Анклав Земного корня	nor. Earthen Root Enclave	nor. Earthen Root Enclave	782284915177029642/1013901520309325885/ERE	lost-depths	dungeon	1	1	2
 nGD	нор. Могильная пучина	nor. Graven Deep	nor. Graven Deep	782284915177029642/1013901550759972894/GD	lost-depths	dungeon	1	1	2
+nBS	нор. Бал-Суннар	nor. Bal Sunnar	nor. Bal Sunnar	782284915177029642/1086913878526525522/BS	scribes-of-fate	dungeon	1	1	2
+nSH	нор. Зал Книжников	nor. Scrivener's Hall	nor. Scrivener's Hall	782284915177029642/1086913844783366194/SH	scribes-of-fate	dungeon	1	1	2
 nRND	нор. Случайное подземелье	nor. Random dungeon	nor. Random dungeon	782284915177029642/788689216057769984/RND		dungeon	1	1	2
 nDNG	нор. Подземелья	nor. Dungeons	nor. Dungeons	782284915177029642/788688977125179402/DNG		dungeon	1	1	2
 vTBC1	вет. Темницы Изгнанников I	vet. The Banished Cells I	vet. The Banished Cells I	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
@@ -151,6 +153,8 @@ vSR	вет. Горе Корабела	vet. Shipwright's Regret	vet. Shipwright's
 vCA	вет. Коралловое Гнездо	vet. Coral Aerie	vet. Coral Aerie	782284915177029642/964174448557174794/CA	ascending-tide	dungeon	1	1	2
 vERE	вет. Анклав Земного корня	vet. Earthen Root Enclave	vet. Earthen Root Enclave	782284915177029642/1013901520309325885/ERE	lost-depths	dungeon	1	1	2
 vGD	вет. Могильная пучина	vet. Graven Deep	vet. Graven Deep	782284915177029642/1013901550759972894/GD	lost-depths	dungeon	1	1	2
+vBS	вет. Бал-Суннар	vet. Bal Sunnar	vet. Bal Sunnar	782284915177029642/1086913878526525522/BS	scribes-of-fate	dungeon	1	1	2
+vSH	вет. Зал Книжников	vet. Scrivener's Hall	vet. Scrivener's Hall	782284915177029642/1086913844783366194/SH	scribes-of-fate	dungeon	1	1	2
 vRND	вет. Случайное подземелье	vet. Random dungeon	vet. Random dungeon	782284915177029642/788689216057769984/RND		dungeon	1	1	2
 vDNG	вет. Подземелья	vet. Dungeons	vet. Dungeons	782284915177029642/788688977125179402/DNG		dungeon	1	1	2
 1key	Подземелье на 1 ключ	Dungeon for 1 key	Dungeon for 1 llave	782284915177029642/788689151205048320/KEY		undaunted	1	1	2
