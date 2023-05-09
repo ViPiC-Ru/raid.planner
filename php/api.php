@@ -1,4 +1,4 @@
-<?php # 0.3.2 api для бота в discord
+<?php # 0.3.3 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -2338,6 +2338,7 @@ $app = array(// основной массив данных
                                             $item = $app["fun"]["setCache"]("message", $data, $unit["channel"], $unit["guild"], null);
                                             $unit["message"] = $data["id"];// фиксируем идентификатор сообщенияя
                                             if($eid) $isUpdate |= $mask["events"];// отмечаем изменение базы
+                                            if($eid) $isScheduleChange = true;
                                         }else $status = 309;// не удалось записать данные в базу данных
                                     }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                                 }else if(// множественное условие
@@ -2790,6 +2791,7 @@ $app = array(// основной массив данных
                                             $item = $app["fun"]["setCache"]("message", $data, $unit["channel"], $unit["guild"], null);
                                             $unit["message"] = $data["id"];// фиксируем идентификатор сообщенияя
                                             if($eid) $isUpdate |= $mask["events"];// отмечаем изменение базы
+                                            if($eid) $isScheduleChange = true;
                                         }else $status = 309;// не удалось записать данные в базу данных
                                     }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                                 }else if(// множественное условие
@@ -3388,6 +3390,7 @@ $app = array(// основной массив данных
                                             $item = $app["fun"]["setCache"]("message", $data, $unit["channel"], $unit["guild"], null);
                                             $unit["message"] = $data["id"];// фиксируем идентификатор сообщенияя
                                             if($eid) $isUpdate |= $mask["events"];// отмечаем изменение базы
+                                            if($eid) $isScheduleChange = true;
                                         }else $status = 309;// не удалось записать данные в базу данных
                                     }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                                 }else if(// множественное условие
@@ -7041,7 +7044,8 @@ $app = array(// основной массив данных
                         $line .= "**" . $raid["key"] . "** " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                         array_push($lines[$group], $line);
                         $line = $event["leader"] ? $additions->get("leader", "icon") . "<@" . $event["leader"] . ">" : $names->get("begin", $language);
-                        $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . "> <#" . $event["channel"] . ">";
+                        $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . ">";
+                        $line .= " " . $app["val"]["discordUrl"] . implode("/", array("channels", $event["guild"], $event["channel"], $event["message"]));
                         array_push($lines[$group], $line);
                         $value = mb_ucfirst(trim(explode("<br>", $event["description"])[0]));
                         $line = $additions->get("reserve", "icon") . " " . $value;
