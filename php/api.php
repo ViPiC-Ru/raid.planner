@@ -6743,7 +6743,7 @@ $app = array(// основной массив данных
                         $line .= " -" . ($player["accept"] ? $additions->get("empty", "icon") : " ");
                         $line .= mb_strlen($role[$language]) > 2 ? $role[$language] : mb_strtoupper($role[$language]);
                         $line .= " " . ($event["leader"] == $player["user"] ? $additions->get("leader", "icon") : "");
-                        $line .= "<@!" . $player["user"] . ">" . (mb_strlen($player["comment"]) ? " " . $app["fun"]["wrapUrl"]($player["comment"]) : "");
+                        $line .= "<@" . $player["user"] . ">" . (mb_strlen($player["comment"]) ? " " . $app["fun"]["wrapUrl"]($player["comment"]) : "");
                         array_push($lines[$group], $line);
                         // сохраняем состояние
                         $before = $player;
@@ -7040,7 +7040,7 @@ $app = array(// основной массив данных
                         $line = "**" . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) . "** —" . $type["logotype"];
                         $line .= "**" . $raid["key"] . "** " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                         array_push($lines[$group], $line);
-                        $line = $event["leader"] ? $additions->get("leader", "icon") . "<@!" . $event["leader"] . ">" : $names->get("begin", $language);
+                        $line = $event["leader"] ? $additions->get("leader", "icon") . "<@" . $event["leader"] . ">" : $names->get("begin", $language);
                         $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . "> <#" . $event["channel"] . ">";
                         array_push($lines[$group], $line);
                         $value = mb_ucfirst(trim(explode("<br>", $event["description"])[0]));
@@ -7193,7 +7193,7 @@ $app = array(// основной массив данных
                         arsort($item);// упорядочиваем счётчик
                         $list = array();// список фразментов
                         $line = ($index ? "**`" . str_pad($index + 1, 2, "0", STR_PAD_LEFT) . "`**" : $additions->get("leader", "icon"));
-                        $line .= " <@!" . $uid . "> ";
+                        $line .= " <@" . $uid . "> ";
                         foreach($item as $key => $value) {
                             $type = $types->get($key);
                             $value = $value . $type["logotype"];
