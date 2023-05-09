@@ -7291,7 +7291,12 @@ $app = array(// основной массив данных
                     for($i = 1, $iLen = $limit; $i <= $iLen and !$isFound; $i++){
                         $eid = $last + $i;// новый идентификатор события
                         $record = $app["fun"]["getEventRecord"]($eid);
-                        if(!isset($check[$record])) $isFound = true;
+                        if(// множественное условие
+                            !isset($check[$record])
+                            and ($eid % pow(10, mb_strlen($record)))
+                        ){// если идентификатор удовлетворяеи требованиям
+                            $isFound = true;
+                        };
                     };
                     if($isFound){// если идентификатор найден
                         $id = $eid;// присваиваем идентификатор
