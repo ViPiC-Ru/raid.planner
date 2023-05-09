@@ -7414,7 +7414,7 @@ $app = array(// основной массив данных
                 $key = "record";// текущий параметр команды
                 $value = $command[$key];// текущий значение параметра
                 if(!$value){// если нужно выполнить
-                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(0\d{2})$/", $list);
+                    $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(\d{3})$/", $list);
                     if(mb_strlen($value)){// если найдено ключевое значение
                         $command[$key] = 1 * $value;
                         continue;
