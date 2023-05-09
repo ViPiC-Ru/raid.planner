@@ -1,4 +1,4 @@
-<?php # 0.3.1 api для бота в discord
+<?php # 0.3.2 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -189,7 +189,7 @@ $app = array(// основной массив данных
                                                         array_push($items, $event);
                                                     };
                                                 };
-                                                // сортируем список событитй
+                                                // сортируем список событий
                                                 usort($items, function($a, $b){// сортировка
                                                     $value = 0;// начальное значение
                                                     if(!$value and $a["time"] != $b["time"]) $value = $a["time"] > $b["time"] ? 1 : -1;
@@ -1275,11 +1275,6 @@ $app = array(// основной массив данных
                         };
                         break;
                     case "record":// запись в события
-                        // выполняем сортировку событий
-                        if(empty($status)){// если нет ошибок
-                            $items = $app["fun"]["sortEventsMessage"]($guild, $channel, $status);
-                            foreach($items as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
-                        };
                         // обрабатываем сообщения
                         if(empty($status)){// если нет ошибок
                             // формируем массив связей сообщений и событий
@@ -1601,15 +1596,17 @@ $app = array(// основной массив данных
                     };
                 };
                 // получаем подходящее событие
-                if(!empty($command["index"])){// если задан номер записи
-                    $i = $command["index"] - 1;// позиция записи в списке
-                    if(isset($items[$i])){// если элимент существует
+                if(!empty($command["record"])){// если задан номер записи
+                    $current = false;// сбрасываем подходящее событие
+                    for($i = 0, $iLen = count($items); $i < $iLen and !$current; $i++){
                         $unit = $items[$i];// получаем очередной элемент
-                        $current = $unit;// задаём подходящее событие
-                    }else $current = false;// сбрасываем подходящее событие
+                        $eid = $unit["id"];// получаемидентификатор события
+                        $record = $app["fun"]["getEventRecord"]($eid);
+                        if($command["record"] == $record) $current = $unit;
+                    };
                 };
                 // определяем дополнительные флаги
-                $isSelectNext = (empty($command["index"]) and empty($command["raid"]) and empty($command["date"]) and empty($command["time"]) and count($command["roles"]));
+                $isSelectNext = (empty($command["record"]) and empty($command["raid"]) and empty($command["date"]) and empty($command["time"]) and count($command["roles"]));
             };
             // обрабатываем команду
             if(empty($status) and $isNeedProcessing){// если нужно выполнить
@@ -1623,7 +1620,7 @@ $app = array(// основной массив данных
                         };
                         // корректируем подходящее событие
                         if(empty($error)){// если нет проблем
-                            $flag = empty($command["index"]);
+                            $flag = empty($command["record"]);
                             if($flag) $current = $next;// задаём подходящее событие
                         };
                         // проверяем что определено событие
@@ -1651,7 +1648,7 @@ $app = array(// основной массив данных
                         };
                         // проверяем наложение фильтрующих параметров
                         if(empty($error) and !$isEdit){// если нужно выполнить
-                            $flag = !empty($command["index"]);
+                            $flag = !empty($command["record"]);
                             if(false !== $current){// если проверка пройдена
                             }else $error = $flag ? 53 : $error;
                         };
@@ -1980,8 +1977,9 @@ $app = array(// основной массив данных
                         };
                         // добавляем данные в базу данных событий
                         if(empty($error) and !$isEdit and !$current){// если нужно выполнить
+                            $list = count($command["users"]) ? $command["users"] : array($message["author"]["id"]);
+                            // формируем данные нового события
                             if(empty($status)){// если нет ошибок
-                                $list = count($command["users"]) ? $command["users"] : array($message["author"]["id"]);
                                 $event = array_merge(array(// значения по умолчанию
                                     "guild" => $guild["id"],
                                     "channel" => $channel["id"],
@@ -1994,7 +1992,13 @@ $app = array(// основной массив данных
                                     "hide" => false,
                                     "description" => ""
                                 ), $event);
-                                $eid = $events->length ? $events->key($events->length - 1) + 1 : 1;
+                            };
+                            // генерируем идентификатор для события
+                            if(empty($status)){// если нет ошибок
+                                $eid = $app["fun"]["getNewEventId"]($guild["id"], $channel["id"], $status);
+                            };
+                            // добавляем событие в базу
+                            if(empty($status)){// если нет ошибок
                                 if($events->set($eid, null, $event)){// если данные успешно добавлены
                                     $event[$events->primary] = $eid;
                                     if(!isset($counts[$eid])) $counts[$eid] = true;
@@ -2014,23 +2018,32 @@ $app = array(// основной массив данных
                             $list = count($command["users"]) ? $command["users"] : array($message["author"]["id"]);
                             $count = count($command["roles"]);// вспомогательный счётчик ролей в команде для чередования
                             for($index = 0; $index < count($list) and empty($status); $index++){
-                                $player = array_merge(array(// значения по умолчанию
-                                    "event" => $event["id"],
-                                    "user" => "",
-                                    "role" => "",
-                                    "accept" => false,
-                                    "reserve" => false,
-                                    "notice" => $command["time"] < $message["timestamp"] + $app["val"]["eventTimeNotice"],
-                                    "comment" => ""
-                                ), $player);
-                                $player["user"] = $list[$index];// получаем идентификатор пользователя
-                                if($count) $player["role"] = $command["roles"][$index % $count];// выполняем чередование
-                                $eid = $event["id"];// получаем идентификатор события
-                                $pid = $players->length ? $players->key($players->length - 1) + 1 : 1;
-                                if($players->set($pid, null, $player)){// если данные успешно добавлены
-                                    if(!isset($counts[$eid])) $counts[$eid] = true;
-                                    $isUpdate |= $mask["players"];// отмечаем изменение базы
-                                }else $status = 309;// не удалось записать данные в базу данных
+                                // формируем данные нового игрока
+                                if(empty($status)){// если нет ошибок
+                                    $player = array_merge(array(// значения по умолчанию
+                                        "event" => $event["id"],
+                                        "user" => "",
+                                        "role" => "",
+                                        "accept" => false,
+                                        "reserve" => false,
+                                        "notice" => $command["time"] < $message["timestamp"] + $app["val"]["eventTimeNotice"],
+                                        "comment" => ""
+                                    ), $player);
+                                    $player["user"] = $list[$index];// получаем идентификатор пользователя
+                                    if($count) $player["role"] = $command["roles"][$index % $count];// выполняем чередование
+                                };
+                                // генерируем идентификатор для игрока
+                                if(empty($status)){// если нет ошибок
+                                    $pid = $app["fun"]["getNewPlayerId"]($status);
+                                };
+                                // добавляем игрока в базу
+                                if(empty($status)){// если нет ошибок
+                                    $eid = $event["id"];// получаем идентификатор события
+                                    if($players->set($pid, null, $player)){// если данные успешно добавлены
+                                        if(!isset($counts[$eid])) $counts[$eid] = true;
+                                        $isUpdate |= $mask["players"];// отмечаем изменение базы
+                                    }else $status = 309;// не удалось записать данные в базу данных
+                                };
                             };
                         };
                         break;
@@ -2054,7 +2067,7 @@ $app = array(// основной массив данных
                         };
                         // проверяем наложение фильтрующих параметров
                         if(empty($error)){// если нет проблем
-                            $flag = (!empty($command["index"]) or empty($command["date"]) and count($command["roles"]));
+                            $flag = (!empty($command["record"]) or empty($command["date"]) and count($command["roles"]));
                             if(false !== $current){// если проверка пройдена
                             }else $error = $flag ? 53 : $error;
                         };
@@ -2273,12 +2286,6 @@ $app = array(// основной массив данных
                         }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                     };
                 };
-            };
-            // выполняем сортировку событий
-            if(empty($status) and $guild and count($counts)){// если нужно выполнить
-                $items = $app["fun"]["sortEventsMessage"]($guild, $channel, $status);
-                foreach($items["events"] as $eid => $item) if(!isset($counts[$eid])) $counts[$eid] = true;
-                foreach($items as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
             };
             // выполняем удаление пустых событий
             if(empty($status) and $guild){// если нужно выполнить
@@ -2662,8 +2669,8 @@ $app = array(// основной массив данных
                 };
                 // добавляем данные в базу данных игроков
                 if(empty($error) and !$isEdit and !$unit){// если нужно выполнить
+                    // формируем данные нового игрока
                     if(empty($status)){// если нет ошибок
-                        $eid = $current["id"];// получаем идентификатор события
                         $player = array_merge(array(// значения по умолчанию
                             "event" => $current["id"],
                             "user" => $reaction["user"]["id"],
@@ -2673,7 +2680,14 @@ $app = array(// основной массив данных
                             "notice" => $current["time"] < $now + $app["val"]["eventTimeNotice"],
                             "comment" => ""
                         ), $player);
-                        $pid = $players->length ? $players->key($players->length - 1) + 1 : 1;
+                    };
+                    // генерируем идентификатор для игрока
+                    if(empty($status)){// если нет ошибок
+                        $pid = $app["fun"]["getNewPlayerId"]($status);
+                    };
+                    // добавляем игрока в базу
+                    if(empty($status)){// если нет ошибок
+                        $eid = $current["id"];// получаем идентификатор события
                         if($players->set($pid, null, $player)){// если данные успешно добавлены
                             if(!isset($counts[$eid])) $counts[$eid] = true;
                             $isUpdate |= $mask["players"];// отмечаем изменение базы
@@ -3140,8 +3154,12 @@ $app = array(// основной массив данных
                 };
                 // формируем данные для добавления в базы данных событий
                 if(empty($error) and !$context["eid"]){// если нужно выполнить
+                    // генерируем идентификатор для события
+                    if(empty($status)){// если нет ошибок
+                        $eid = $app["fun"]["getNewEventId"]($guild["id"], $channel["id"], $status);
+                    };
+                    // формируем данные нового события
                     if(empty($status)){// если нету ошибок
-                        $eid = $events->length ? $events->key($events->length - 1) + 1 : 1;
                         $context["eid"] = $eid;// присваеваем контекст
                         $change["event"] = array_merge(array(// значения по умолчанию
                             "guild" => $guild["id"],        
@@ -3159,8 +3177,12 @@ $app = array(// основной массив данных
                 };
                 // формируем данные для добавления в базу данных игроков
                 if(empty($error) and !count($context["pids"])){// если нужно выполнить
+                    // генерируем идентификатор для игрока
+                    if(empty($status)){// если нет ошибок
+                        $pid = $app["fun"]["getNewPlayerId"]($status);
+                    };
+                    // формируем данные нового игрока
                     if(empty($status)){// если нету ошибок
-                        $pid = $players->length ? $players->key($players->length - 1) + 1 : 1;
                         array_push($context["pids"], $pid);
                         $change["player"] = array_merge(array(// значения по умолчанию
                             "event" => $context["eid"],
@@ -5986,12 +6008,18 @@ $app = array(// основной массив данных
                             );
                             $unit = array_merge($event, $unit);// обединяем с данными из события
                             unset($unit[$events->primary]);// удаляем ключевой идентификатор
-                            $id = $events->length ? $events->key($events->length - 1) + 1 : 1;
-                            if($events->set($id, null, $unit)){// если данные успешно изменены
-                                $unit[$events->primary] = $id;
-                                $list["events"][$id] = $unit;
-                                $new[$eid] = $id;// добавляем информацию о связе
-                            }else $status = 309;// не удалось записать данные в базу данных
+                            // генерируем идентификатор для события
+                            if(empty($status)){// если нет ошибок
+                                $id = $app["fun"]["getNewEventId"]($unit["guild"], $unit["channel"], $status);
+                            };
+                            // добавляем событие в базу
+                            if(empty($status)){// если нет ошибок
+                                if($events->set($id, null, $unit)){// если данные успешно изменены
+                                    $unit[$events->primary] = $id;
+                                    $list["events"][$id] = $unit;
+                                    $new[$eid] = $id;// добавляем информацию о связе
+                                }else $status = 309;// не удалось записать данные в базу данных
+                            };
                         };
                     };
                 };
@@ -6021,11 +6049,17 @@ $app = array(// основной массив данных
                             );
                             $unit = array_merge($player, $unit);// обединяем с данными из события
                             unset($unit[$players->primary]);// удаляем ключевой идентификатор
-                            $id = $players->length ? $players->key($players->length - 1) + 1 : 1;
-                            if($players->set($id, null, $unit)){// если данные успешно изменены
-                                $unit[$players->primary] = $id;
-                                $list["players"][$id] = $unit;
-                            }else $status = 309;// не удалось записать данные в базу данных
+                            // генерируем идентификатор для игрока
+                            if(empty($status)){// если нет ошибок
+                                $id = $app["fun"]["getNewPlayerId"]($status);
+                            };
+                            // добавляем игрока в базу
+                            if(empty($status)){// если нет ошибок
+                                if($players->set($id, null, $unit)){// если данные успешно изменены
+                                    $unit[$players->primary] = $id;
+                                    $list["players"][$id] = $unit;
+                                }else $status = 309;// не удалось записать данные в базу данных
+                            };
                         };
                     };
                 };
@@ -6269,162 +6303,6 @@ $app = array(// основной массив данных
             }, $imput);
             // возвращаем результат
             return $value;
-        },
-        "sortEventsMessage" => function($guild, $channel, &$status){// сортирует события с учётом сообщений
-        //@param $guild {string} - идентификатор гильдии для фильтрации событий
-        //@param $channel {string} - идентификатор канала для фильтрации событий
-        //@param $status {integer} - целое число статуса выполнения
-        //@return {array} - многоуровневый ассоциативный список изменений
-            global $app;
-            $error = 0;
-
-            $list = array(// начальное значение
-                "events" => array(),
-                "players" => array()
-            );
-            $game = $app["val"]["game"];
-            $items = array();// список событий
-            $units = array();// список идентификаторов сообщений
-            // получаем гильдию
-            if(!$error){// если нет ошибок
-                if(!is_array($guild) and !empty($guild)){// если нужно получить
-                    $guild = $app["fun"]["getCache"]("guild", $guild);
-                };
-                if(!empty($guild)){// если не пустое значение
-                }else $error = 1;
-            };
-            // получаем канал
-            if(!$error){// если нет ошибок
-                if(!is_array($channel) and !empty($channel)){// если нужно получить
-                    $channel = $app["fun"]["getCache"]("channel", $channel, $guild["id"], null);
-                };
-                if(!empty($channel)){// если не пустое значение
-                }else $error = 2;
-            };
-            // получаем конфигурацию канала
-            if(!$error){// если нет ошибок
-                $config = $app["fun"]["getChannelConfig"]($channel, $guild, null);
-                if($config){// если удалось получить данные
-                }else $error = 3;
-            };
-            // загружаем все необходимые базы данных
-            if(empty($status)){// если нет ошибок
-                $session = $app["fun"]["getStorage"]($game, "session", true);
-                if(!empty($session)){// если удалось получить доступ к базе данных
-                }else $status = 304;// не удалось загрузить одну из многих баз данных
-            };
-            if(empty($status) and !$error){// если нужно выполнить
-                $events = $app["fun"]["getStorage"]($game, "events", true);
-                if(!empty($events)){// если удалось получить доступ к базе данных
-                }else $status = 304;// не удалось загрузить одну из многих баз данных
-            };
-            // формируем вспомогательный объект проверки сообщений
-            if(empty($status) and !$error){// если нужно выполнить
-                $check = array();// вспомогательный объект проверки сообщений
-                for($i = count($channel["messages"]) - 1; $i > -1 ; $i--){
-                    $message = $channel["messages"][$i];// получаем очередной элимент
-                    $mid = $message["id"];// получаем идентификатор сообщения
-                    $flag = $message["author"]["id"] == $session->get("bot", "value");
-                    if($flag) $check[$mid] = true;
-                };
-            };
-            // формируем список событий и идентификаторов сообщений
-            if(empty($status) and !$error){// если нужно выполнить
-                for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
-                    $eid = $events->key($i);// получаем ключевой идентификатор по индексу
-                    $event = $events->get($eid);// получаем элемент по идентификатору
-                    if(// множественное условие
-                        $event["channel"] == $channel["id"]
-                        and $event["guild"] == $guild["id"]
-                        and !$event["hide"]
-                    ){// если нужно добавить в список
-                        $mid = $event["message"];
-                        if(!isset($check[$mid])) $mid = "";
-                        array_push($items, $event);
-                        array_push($units, $mid);
-                    };
-                };
-            };
-            // сортируем список событитй
-            if(empty($status) and !$error){// если нужно выполнить
-                switch($config["sort"]){// поддерживаемые режимы сортировки
-                    case "time":// по времени проведения
-                        usort($items, function($a, $b){// сортировка
-                            $value = 0;// начальное значение
-                            if(!$value and $a["time"] != $b["time"]) $value = $a["time"] > $b["time"] ? 1 : -1;
-                            if(!$value and $a["raid"] != $b["raid"]) $value = $a["raid"] > $b["raid"] ? 1 : -1;
-                            if(!$value and $a["id"] != $b["id"]) $value = $a["id"] < $b["id"] ? 1 : -1;
-                            // возвращаем результат
-                            return $value;
-                        });
-                        break;
-                    default:// не известный режим
-                        $error = 4;
-                };
-            };
-            // изменяем список идентификаторов сообщений
-            if(empty($status) and !$error){// если нужно выполнить
-                $flag = (!$config["flood"] and !$config["history"]);
-                if($flag){// если можно использовать старые сообщения
-                    $j = 0;// порядковый номер в списке идентификаторов сообщений
-                    $jLen = count($units);// длина списка идентификаторов сообщений
-                    $index = $jLen - count($check);// смешение в сообщениях
-                    // переносим идентификаторы из списка сообщений
-                    for($i = count($channel["messages"]) - 1; $i > -1 ; $i--){
-                        $message = $channel["messages"][$i];// получаем очередной элимент
-                        $mid = $message["id"];// получаем идентификатор сообщения
-                        $flag = $message["author"]["id"] == $session->get("bot", "value");
-                        if($flag){// если это сообщение текущего бота
-                            $index++;// увеличиваем смещение в сообщениях
-                            if($index > 0){// если нужно заменить
-                                $units[$j] = $mid;
-                                $j++;
-                            };
-                        };
-                    };
-                    // дополняем идентификаторы пустыми значениями
-                    while($j < $jLen){// пока не достигнут конец списка
-                        $mid = "";// сбрасываем значение
-                        $units[$j] = $mid;
-                        $j++;
-                    };
-                };
-            };
-            // сортируем список идентификаторов сообщений
-            if(empty($status) and !$error){// если нужно выполнить
-                usort($units, function($a, $b){// сортировка
-                    $value = 0;// начальное значение
-                    if(!$value and !$a and $b) $value = 1;
-                    if(!$value and $a and !$b) $value = -1;
-                    if(!$value and $a != $b) $value = $a > $b ? 1 : -1;
-                    // возвращаем результат
-                    return $value;
-                });
-            };
-            // распределяем идентификаторы сообщений по событиям
-            if(empty($status)){// если нужно выполнить
-                for($i = 0, $iLen = count($items); $i < $iLen and empty($status); $i++){
-                    $item = $items[$i];// получаем очередной элемент
-                    $mid = $units[$i];// получаем очередной идентификатор
-                    $eid = $item["id"];// получаем очередной идентификатор
-                    // работаем с базой данных событий
-                    $event = array();// сбрасываем значение
-                    $flag = false;// требуется обновить
-                    // проверяем изменение сообщения
-                    if($item["message"] != $mid){
-                        $event["message"] = $mid;
-                        $flag = true;
-                    };
-                    // выполняем обновление события
-                    if($flag){// если требуется обновление
-                        if($events->set($eid, null, $event)){// если данные успешно добавлены
-                            $list["events"][$eid] = $item;
-                        }else $status = 309;// не удалось записать данные в базу данных
-                    };
-                };
-            };
-            // возвращаем результат
-            return $list;
         },
         "delEmoji" => function($value){// удаляем эмодзи из строки
         //@param $value {string} - строка для удаления эмодзи
@@ -6780,49 +6658,6 @@ $app = array(// основной массив данных
                     if($channel){// если удалось получить данные
                     }else $error = 4;
                 };
-                // определяем номер события
-                if(!$error){// если нет ошибок
-                    $index = 0;// сбрасываем значение
-                    $items = array();// список событий
-                    $check = array();// ассоциативный массив проверки сообщений
-                    // формируем вспомогательный объект проверки сообщений
-                    for($i = count($channel["messages"]) - 1; $i > -1 ; $i--){
-                        $item = $channel["messages"][$i];// получаем очередной элимент
-                        $mid = $item["id"];// получаем идентификатор
-                        $check[$mid] = true;
-                    };
-                    // формируем список событий
-                    for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
-                        $id = $events->key($i);// получаем ключевой идентификатор по индексу
-                        $item = $events->get($id);// получаем элемент по идентификатору
-                        if(// множественное условие
-                            $item["channel"] == $event["channel"]
-                            and $item["guild"] == $event["guild"]
-                            and !$item["hide"]
-                        ){// если нужно добавить в список
-                            $mid = $item["message"];
-                            $flag = ($mid and !isset($check[$mid]));
-                            if($flag) $item["message"] = "";
-                            array_push($items, $item);
-                        };
-                    };
-                    // сортируем список событий
-                    usort($items, function($a, $b){// сортировка
-                        $value = 0;// начальное значение
-                        if(!$value and !$a["message"] and $b["message"]) $value = 1;
-                        if(!$value and $a["message"] and !$b["message"]) $value = -1;
-                        if(!$value and $a["message"] != $b["message"]) $value = $a["message"] > $b["message"] ? 1 : -1;
-                        if(!$value and $a["id"] != $b["id"]) $value = $a["id"] > $b["id"] ? 1 : -1;
-                        // возвращаем результат
-                        return $value;
-                    });
-                    // определяем позицию в списке событий
-                    for($i = 0, $iLen = count($items); $i < $iLen and !$index; $i++){
-                        $item = $items[$i];// получаем очередной элемент
-                        $flag = $item["id"] == $event["id"];
-                        if($flag) $index = $i + 1;
-                    };
-                };
                 // формируем список игроков
                 if(!$error){// если нет ошибок
                     $items = array();// список игроков
@@ -6847,7 +6682,7 @@ $app = array(// основной массив данных
                     $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
                     $line .= " " . $additions->get("once", "icon") . " " . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone);
                     $line .= " " . $additions->get("reject", "icon") . " " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
-                    if($index) $line .= " " . $names->get("record", "icon") . " " . str_pad($index, 3, "0", STR_PAD_LEFT);
+                    if(!$event["hide"]) $line .= " " . $names->get("record", "icon") . " " . $app["fun"]["getEventRecord"]($event["id"]);
                     array_push($lines[$group], $line);
                     $line = "```";
                     array_push($lines[$group], $line);
@@ -7389,6 +7224,105 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $messages;
         },
+        "getEventRecord" => function($eid){// формирует краткое представление идентификатора события
+        //@param $eid {integer} - идентификатор события
+        //@return {string} - краткий идентификатор события
+            
+            if($eid){// если задан идентификатор события
+                $record = str_pad($eid, 3, "0", STR_PAD_LEFT);
+                $record = mb_substr($record, mb_strlen($record) - 3);
+            }else $record = "";
+            // возвращаем результат
+            return $record;
+        },
+        "getNewEventId" => function($gid, $cid, &$status){// создаёт идентификатор для нового события с учётом записей в канале гильдии
+        //@param $gid {string} - идентификатор гильдии события
+        //@param $cid {string} - идентификатор канала события
+        //@param $status {integer} - целое число статуса выполнения
+        //@return {integer|null} - идентификатор для нового события или null
+            global $app;
+            $error = 0;
+
+            $id = null;// новый идентификатор
+            $limit = 99;// количество попыток сгерировать идентификатор
+            $game = $app["val"]["game"];
+            // загружаем все необходимые базы данных
+            if(empty($status)){// если нет ошибок
+                $events = $app["fun"]["getStorage"]($game, "events", true);
+                if(!empty($events)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            // вычисляем новый идентификатор
+            if(empty($status)){// если нет ошибок
+                $check = array();// ассоциативный массив проверки записей событий
+                // проверяем переданный идентификатор гильдии
+                if(!$error){// если нет ошибок
+                    if($gid){// если проверка пройдена
+                    }else $error = 1;
+                };
+                // проверяем переданный идентификатор канала
+                if(!$error){// если нет ошибок
+                    if($cid){// если проверка пройдена
+                    }else $error = 2;
+                };
+                // формируем вспомогательные объекты
+                if(!$error){// если нет ошибок
+                    for($i = 0, $iLen = $events->length; $i < $iLen; $i++){
+                        $eid = $events->key($i);// получаем ключевой идентификатор по индексу
+                        $event = $events->get($eid);// получаем элемент по идентификатору
+                        if(// множественное условие
+                            $event["channel"] == $cid
+                            and $event["guild"] == $gid
+                            and !$event["hide"]
+                        ){// если нужно посчитать счётчик
+                            $record = $app["fun"]["getEventRecord"]($eid);
+                            $check[$record] = true;
+                        };
+                    };
+                };
+                // генерируем идентификатор
+                if(!$error){// если нет ошибок
+                    $isFound = false;// найден ли подходящий идентификатор
+                    $last = $events->length ? $events->key($events->length - 1) : 0;
+                    for($i = 1, $iLen = $limit; $i <= $iLen and !$isFound; $i++){
+                        $eid = $last + $i;// новый идентификатор события
+                        $record = $app["fun"]["getEventRecord"]($eid);
+                        if(!isset($check[$record])) $isFound = true;
+                    };
+                    if($isFound){// если идентификатор найден
+                        $id = $eid;// присваиваем идентификатор
+                    }else $error = 3;
+                };
+            };
+            // возвращаем результат
+            return $id;
+        },
+        "getNewPlayerId" => function(&$status){// создаёт идентификатор для нового игрока
+        //@param $status {integer} - целое число статуса выполнения
+        //@return {integer|null} - идентификатор для нового игрока или null
+            global $app;
+            $error = 0;
+
+            $id = null;// новый идентификатор
+            $game = $app["val"]["game"];
+            // загружаем все необходимые базы данных
+            if(empty($status)){// если нет ошибок
+                $players = $app["fun"]["getStorage"]($game, "players", true);
+                if(!empty($players)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            // вычисляем новый идентификатор
+            if(empty($status)){// если нет ошибок
+                // генерируем идентификатор
+                if(!$error){// если нет ошибок
+                    $last = $players->length ? $players->key($players->length - 1) : 0;
+                    $pid = $last + 1;// новый идентификатор игрока
+                    $id = $pid;// присваиваем идентификатор
+                };
+            };
+            // возвращаем результат
+            return $id;
+        },
         "getCommand" => function($content, $language, $timezone, $timestamp, &$status){// получает команду из контента
         //@param $content {string} - строка с данными для формирования команды
         //@param $language {string|null} - язык используемый для формирования команды
@@ -7401,7 +7335,7 @@ $app = array(// основной массив данных
             $command = array(// пустая команда
                 "action" => "",         // действие
                 "roles" => array(),     // роли
-                "index" => 0,           // номер
+                "record" => 0,           // номер
                 "date" => 0,            // дата
                 "time" => 0,            // дата и время
                 "raid" => "",           // рейд
@@ -7472,8 +7406,8 @@ $app = array(// основной массив данных
                         continue;
                     };
                 };
-                // номер - ID
-                $key = "index";// текущий параметр команды
+                // запись - ID
+                $key = "record";// текущий параметр команды
                 $value = $command[$key];// текущий значение параметра
                 if(!$value){// если нужно выполнить
                     $value = $app["fun"]["getCommandValue"]($line, $delim, null, "/^(0\d{2})$/", $list);
@@ -7805,7 +7739,6 @@ $app = array(// основной массив данных
                     ),
                     "history" => !$guild,
                     "flood" => true,
-                    "sort" => "",
                     "game" => ""
                 );
                 // заполняем конфигурацию для канала гильдии
@@ -7869,17 +7802,6 @@ $app = array(// основной массив данных
                             $value = $item[$config["language"]];// получаем значение
                             $flag = 0 === mb_stripos($line, $value);
                             if($flag) $config[$key] = true;
-                            if($flag) continue;// переходим к следующей строке
-                            // определяем режим сортировки
-                            $flag = false;// найдено ли подходящее значение
-                            $list = array("time");// поддерживаемые режимы
-                            for($j = 0, $jLen = count($list); $j < $jLen and !$flag; $j++){// пробигаемся по списку
-                                $mode = $list[$j];// получаем очередной ключ
-                                $item = $names->get($mode);// получаем элемент по ключу
-                                $value = $item[$config["language"]];// получаем значение
-                                $flag = 0 === mb_stripos($line, $value);
-                                if($flag) $config["sort"] = $mode;
-                            };
                             if($flag) continue;// переходим к следующей строке
                             // определяем ограничение по типам событий
                             for($j = 0, $jLen = $types->length; $j < $jLen; $j++){// пробигаемся по списку
