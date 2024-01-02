@@ -1,4 +1,4 @@
-<?php # 0.3.4 api для бота в discord
+<?php # 0.3.5 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -2472,6 +2472,7 @@ $app = array(// основной массив данных
             $current = array("event" => null, "player" => null);// текущий элимент
             $change = array("event" => array(), "player" => array());// изменение элиментов
             $context = array("uid" => null, "eid" => null, "pids" => array());// контекст изменений элиментов
+            $response = array("type" => 6);// ответ на интерактивное действие
             // получаем очищенные значения параметров
             $game = $app["fun"]["getClearParam"]($params, "game", "string");
             $token = $app["fun"]["getClearParam"]($params, "token", "string");
@@ -2516,6 +2517,11 @@ $app = array(// основной массив данных
             if(empty($status)){// если нет ошибок
                 $roles = $app["fun"]["getStorage"]($game, "roles", false);
                 if(!empty($roles)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            if(empty($status)){// если нет ошибок
+                $names = $app["fun"]["getStorage"](null, "names", false);
+                if(!empty($names)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
             };
             // получаем информацию о гильдии
@@ -2691,86 +2697,320 @@ $app = array(// основной массив данных
                         array_push($context["pids"], $current["player"]["id"]);
                     };
                 };
-                // работаем с видами взаимодействия
+                // работаем с взаимодействием
                 if(empty($error) and $interaction){// если нужно выполнить
-                    switch(true){// поддерживаемые виды взаимодействия с ботом в канале
-                        case 2 == get_val($interaction["data"], "component_type", 0):// кнопка в сообщении
-                            $list = explode($app["val"]["actionDelim"], $interaction["data"]["custom_id"]);
-                            $button = array(// данные полученные из кнопки
-                                "target" => get_val($list, 0, null),
-                                "option" => get_val($list, 1, null),
-                                "value" => get_val($list, 2, null)
-                            );
-                            // проверяем поддержку команды
-                            if(empty($error)){// если нет проблем
-                                if($guild){// если проверка пройдена
-                                }else $error = 18;
-                            };
-                            // проверяем что определено событие
-                            if(empty($error)){// если нет проблем
-                                $flag = "record" == $config["mode"];
-                                if($current["event"]){// если проверка пройдена
-                                    $raid = $raids->get($current["event"]["raid"]);
-                                }else $error = $flag ? 52 : -1;
-                            };
-                            // проверяем ограничения по времени записи
-                            if(empty($error)){// если нет проблем
-                                $flag = false;// есть ли необходимые права для выполнения действия
-                                if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
-                                $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
-                                // выполняем проверки
-                                if($current["event"]["hide"]) $error = 86;
-                                else if($current["event"]["close"] and !$flag) $error = 24;
-                            };
-                            // работаем с целями кнопки в сообщении
-                            switch($button["target"]){// поддерживаемые виды целей кнопки
-                                case "player":// изменение состояния игрока
-                                    // работаем с опциями кнопки в сообщении
-                                    switch($button["option"]){// поддерживаемые виды опций кнопки
-                                        case "role":// изменение состояния роли игрока
-                                            // проверяем указание роли
-                                            if(empty($error)){// если нет проблем
-                                                $flag = false;// найден подходящий элимент
-                                                for($i = 0, $iLen = $roles->length; $i < $iLen and !$flag; $i++){
-                                                    $role = $roles->get($roles->key($i));// получаем очередную роль
-                                                    $flag = $role["key"] == $button["value"];
-                                                };
-                                                if($flag){// если проверка пройдена
-                                                }else $error = 13;
-                                            };
-                                            // проверяем возможность использовать ролей в рейде
-                                            if(empty($error)){// если нет проблем
-                                                $key = $role["key"];// получаем очередное ключевое значение
-                                                $limit = $raid[$key];// получаем лимит для заданной роли
-                                                if($limit > -1){// если проверка пройдена
-                                                }else $error = 59;
-                                            };
-                                            // переносим параметры команды
-                                            if(empty($error)){// если нет проблем
-                                                // задаём необходимые флаги
-                                                $flag = ($current["player"] and $app["fun"]["checkRaidPlayers"]($items, $raid, $roles, $current["player"], false));// находится ли пользователь в основном составе
-                                                if(!$current["player"]) $isAdd = true;// выполняется команда добавления
-                                                if($current["player"] and $current["player"]["role"] != $role["key"] or $flag) $isEdit = true;// выполняется команда редактирования
-                                                // задаём необходимые значения
-                                                $key = "leader"; $value = ""; if(!$isAdd and !$isEdit and $current["event"]["leader"] == $current["player"]["user"]){ $change["event"][$key] = $value; $isScheduleChange = true; };
-                                                $key = "repeat"; $value = 0; if(!$isAdd and !$isEdit and $current["event"]["leader"] == $current["player"]["user"] and $current["event"]["repeat"]){ $change["event"][$key] = $value; };
-                                                $key = "reserve"; $value = true; if($isEdit and $current["player"]["role"] == $role["key"] and $flag){ $change["player"][$key] = $value; };
-                                                $key = "role"; $value = $role["key"]; if($isAdd or $isEdit and $current["player"]["role"] != $role["key"]){ $change["player"][$key] = $value; };
-                                                if($current["event"]["close"] and ($isAdd or $flag)) $isLeaderBoardChange = true;
-                                                // задаём контекст
-                                                $context["eid"] = $current["event"]["id"];
-                                                if($current["player"]) array_push($context["pids"], $current["player"]["id"]);
-                                            };
-                                            break;
-                                        default:// не известный вид опции
-                                            if(!$error) $error = 11;
+                    // определяем параметры взаимодействия
+                    $list = explode($app["val"]["actionDelim"], $interaction["data"]["custom_id"]);
+                    $custom = array(// данные полученные из идентификатора
+                        "target" => get_val($list, 0, null),
+                        "option" => get_val($list, 1, null),
+                        "value" => get_val($list, 2, null)
+                    );
+                    // работаем с целями взаимодействия
+                    switch($custom["target"]){// поддерживаемые виды целей
+                        case "player":// изменение состояния игрока
+                            // работаем с опциями взаимодействия
+                            switch($custom["option"]){// поддерживаемые виды опций
+                                case "role":// изменение состояния роли игрока
+                                    // проверяем поддержку команды
+                                    if(empty($error)){// если нет проблем
+                                        if($guild){// если проверка пройдена
+                                        }else $error = 18;
+                                    };
+                                    // проверяем что определено событие
+                                    if(empty($error)){// если нет проблем
+                                        $flag = "record" == $config["mode"];
+                                        if($current["event"]){// если проверка пройдена
+                                            $raid = $raids->get($current["event"]["raid"]);
+                                        }else $error = $flag ? 52 : -1;
+                                    };
+                                    // проверяем ограничения по времени записи
+                                    if(empty($error)){// если нет проблем
+                                        $flag = false;// есть ли необходимые права для выполнения действия
+                                        if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
+                                        $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                        // выполняем проверки
+                                        if($current["event"]["hide"]) $error = 86;
+                                        else if($current["event"]["close"] and !$flag) $error = 24;
+                                    };
+                                    // проверяем указание роли
+                                    if(empty($error)){// если нет проблем
+                                        $flag = false;// найден подходящий элимент
+                                        for($i = 0, $iLen = $roles->length; $i < $iLen and !$flag; $i++){
+                                            $role = $roles->get($roles->key($i));// получаем очередную роль
+                                            $flag = $role["key"] == $custom["value"];
+                                        };
+                                        if($flag){// если проверка пройдена
+                                        }else $error = 13;
+                                    };
+                                    // проверяем возможность использовать ролей в рейде
+                                    if(empty($error)){// если нет проблем
+                                        $key = $role["key"];// получаем очередное ключевое значение
+                                        $limit = $raid[$key];// получаем лимит для заданной роли
+                                        if($limit > -1){// если проверка пройдена
+                                        }else $error = 59;
+                                    };
+                                    // переносим параметры команды
+                                    if(empty($error)){// если нет проблем
+                                        // задаём необходимые флаги
+                                        $flag = ($current["player"] and $app["fun"]["checkRaidPlayers"]($items, $raid, $roles, $current["player"], false));// находится ли пользователь в основном составе
+                                        if(!$current["player"]) $isAdd = true;// выполняется команда добавления
+                                        if($current["player"] and $current["player"]["role"] != $role["key"] or $flag) $isEdit = true;// выполняется команда редактирования
+                                        // задаём необходимые значения
+                                        $key = "leader"; $value = ""; if(!$isAdd and !$isEdit and $current["event"]["leader"] == $current["player"]["user"]){ $change["event"][$key] = $value; $isScheduleChange = true; };
+                                        $key = "repeat"; $value = 0; if(!$isAdd and !$isEdit and $current["event"]["leader"] == $current["player"]["user"] and $current["event"]["repeat"]){ $change["event"][$key] = $value; };
+                                        $key = "reserve"; $value = true; if($isEdit and $current["player"]["role"] == $role["key"] and $flag){ $change["player"][$key] = $value; };
+                                        $key = "role"; $value = $role["key"]; if($isAdd or $isEdit and $current["player"]["role"] != $role["key"]){ $change["player"][$key] = $value; };
+                                        if($current["event"]["close"] and ($isAdd or $flag)) $isLeaderBoardChange = true;
+                                        // задаём контекст
+                                        $context["eid"] = $current["event"]["id"];
+                                        if($current["player"]) array_push($context["pids"], $current["player"]["id"]);
                                     };
                                     break;
-                                default:// не известный вид цели
+                                default:// не известный вид опции
                                     if(!$error) $error = 11;
                             };
                             break;
-                        default:// не известный вид взаимодействия
+                        case "event":// изменение состояния события
+                            // работаем с опциями взаимодействия
+                            switch($custom["option"]){// поддерживаемые виды опций
+                                case "modal":// модальное окно редактирования
+                                    // проверяем поддержку команды
+                                    if(empty($error)){// если нет проблем
+                                        if($guild){// если проверка пройдена
+                                        }else $error = 18;
+                                    };
+                                    // проверяем что определено событие
+                                    if(empty($error)){// если нет проблем
+                                        $flag = "record" == $config["mode"];
+                                        if($current["event"]){// если проверка пройдена
+                                            $raid = $raids->get($current["event"]["raid"]);
+                                        }else $error = $flag ? 52 : -1;
+                                    };
+                                    // проверяем ограничения по времени записи
+                                    if(empty($error)){// если нет проблем
+                                        $flag = false;// есть ли необходимые права для выполнения действия
+                                        if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
+                                        $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                        // выполняем проверки
+                                        if($current["event"]["hide"]) $error = 86;
+                                        else if($current["event"]["close"] and !$flag) $error = 24;
+                                    };
+                                    // проверяем права на редактирование события и игрока
+                                    if(empty($error)){// если нет проблем
+                                        $flag = false;// есть ли необходимые права для выполнения действия
+                                        $flag = ($flag or $current["event"] and $current["event"]["leader"] == $context["uid"]);
+                                        if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
+                                        $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                        // создаём дополнительные объекты
+                                        $components = array();
+                                        // поля для редактирования события
+                                        if($flag){// если есть права на редактирование события
+                                            // комбинированное поле
+                                            $key = "identity";
+                                            $component = array(
+                                                "type" => 1,
+                                                "components" => array(array(
+                                                    "type"=> 4,
+                                                    "style"=> 1,
+                                                    "custom_id"=> $key,
+                                                    "label"=> $names->get($key, $config["language"]),
+                                                    "min_length" => 18,
+                                                    "max_length" => 30,
+                                                    "placeholder" => "DD.MM.YYYY HH:MM xXX",
+                                                    "value" => implode(" ", array(
+                                                        $app["fun"]["dateFormat"]("d.m.Y", $current["event"]["time"], $config["timezone"]),
+                                                        $app["fun"]["dateFormat"]("H:i", $current["event"]["time"], $config["timezone"]),
+                                                        $raid["key"]
+                                                    )),
+                                                    "required" => true
+                                                ))
+                                            );
+                                            array_push($components, $component);
+                                            // описание
+                                            $key = "description";
+                                            $component = array(
+                                                "type" => 1,
+                                                "components" => array(array(
+                                                    "type"=> 4,
+                                                    "style"=> 2,
+                                                    "custom_id"=> $key,
+                                                    "label"=> $names->get($key, $config["language"]),
+                                                    "max_length"=> $app["val"]["eventDescriptionLength"],
+                                                    "value" => str_replace("<br>", $app["val"]["lineDelim"], $current["event"][$key]),
+                                                    "required" => false
+                                                ))
+                                            );
+                                            array_push($components, $component);
+                                        };
+                                        // поля для редактирования игрока
+                                        if($current["player"]){// если пользователь уже записан в событие
+                                            // комментарий
+                                            $key = "comment";
+                                            $component = array(
+                                                "type" => 1,
+                                                "components" => array(array(
+                                                    "type"=> 4,
+                                                    "style"=> 1,
+                                                    "custom_id"=> $key,
+                                                    "label"=> $names->get($key, $config["language"]),
+                                                    "max_length"=> $app["val"]["eventCommentLength"],
+                                                    "value" => $current["player"][$key],
+                                                    "required" => false
+                                                ))
+                                            );
+                                            array_push($components, $component);
+                                            // изменяем флаг
+                                            $flag = true;
+                                        };
+                                        // окончательная проверка
+                                        if($flag){// если проверка пройдена
+                                        }else $error = 63;
+                                    };
+                                    // готовим в ответ модальное окно
+                                    if(empty($error)){// если нет проблем
+                                        $response = array(
+                                            "type" => 9,
+                                            "data" => array(
+                                                "title" => $names->get("modal", $config["language"]),
+                                                "custom_id" => implode($app["val"]["actionDelim"], array("event", "edit", $current["event"]["id"])),
+                                                "components" => $components
+                                            )
+                                        );
+                                    };
+                                    break;
+                                case "edit":// редактирование события
+                                    // проверяем поддержку команды
+                                    if(empty($error)){// если нет проблем
+                                        if($guild){// если проверка пройдена
+                                        }else $error = 18;
+                                    };
+                                    // проверяем что определено событие
+                                    if(empty($error)){// если нет проблем
+                                        $flag = "record" == $config["mode"];
+                                        if($current["event"]){// если проверка пройдена
+                                            $raid = $raids->get($current["event"]["raid"]);
+                                        }else $error = $flag ? 52 : -1;
+                                    };
+                                    // проверяем ограничения по времени записи
+                                    if(empty($error)){// если нет проблем
+                                        $flag = false;// есть ли необходимые права для выполнения действия
+                                        if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
+                                        $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                        // выполняем проверки
+                                        if($current["event"]["hide"]) $error = 86;
+                                        else if($current["event"]["close"] and !$flag) $error = 24;
+                                    };
+                                    // получаем данные из взаимодействия
+                                    if(empty($error)){// если нет проблем
+                                        $data = $app["fun"]["getInteractionData"]($interaction);
+                                        if(isset($data["identity"])){// если задано комбинированное поле
+                                            $list = explode(" ", $data["identity"], 3);
+                                            $data["raid"] = array_pop($list);
+                                            $data["date"] = $app["fun"]["dateCreate"](get_val($list, 0, ""), $config["timezone"]);
+                                            $data["time"] = $app["fun"]["dateCreate"](implode(" ", $list), $config["timezone"]);
+                                            unset($data["identity"]);
+                                        };
+                                    };
+                                    // работаем с данными события
+                                    if(empty($error) and isset($data["date"], $data["time"], $data["raid"], $data["description"])){// если нужно выполнить
+                                        // проверяем корректность указания даты
+                                        if(empty($error)){// если нет проблем
+                                            if($data["date"] > 0){// если проверка пройдена
+                                            }else $error = 55;
+                                        };
+                                        // проверяем корректность указания времени
+                                        if(empty($error)){// если нет проблем
+                                            if($data["time"] > 0){// если проверка пройдена
+                                            }else $error = 56;
+                                        };
+                                        // проверяем корректность указания рейда
+                                        if(empty($error)){// если нет проблем
+                                            $raid = $raids->get($data["raid"]);
+                                            if($raid){// если проверка пройдена
+                                            }else $error = 17;
+                                        };
+                                        // проверяем ограничения по времени записи
+                                        if(empty($error)){// если нет проблем
+                                            $flag = false;// есть ли необходимые права для выполнения действия
+                                            if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
+                                            $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                            // выполняем проверки
+                                            if($data["time"] < $now - $app["val"]["eventTimeHide"]) $error = 22;
+                                            else if($data["time"] > $now + $app["val"]["eventTimeAdd"]) $error = 23;
+                                            else if($data["time"] < $now + $app["val"]["eventTimeClose"] and !$flag) $error = 24;
+                                        };
+                                        // проверяем ограничивающий фильтр по типу события
+                                        if(empty($error) and count($config["filters"]["types"])){// если нужно выполнить
+                                            if(in_array($raid["type"], $config["filters"]["types"])){// если проверка пройдена
+                                            }else $error = 60;
+                                        };
+                                        // проверяем права на редактирование события
+                                        if(empty($error)){// если нет проблем
+                                            $flag = false;// есть ли необходимые права для выполнения действия
+                                            $flag = ($flag or $current["event"] and $current["event"]["leader"] == $context["uid"]);
+                                            if(!$flag) $permission = $app["fun"]["getPermission"]("guild", $context["uid"], $channel, $guild);
+                                            $flag = ($flag or ($permission & $app["val"]["discordUserPermission"]) == $app["val"]["discordUserPermission"]);
+                                            if($flag){// если проверка пройдена
+                                            }else $error = 63;
+                                        };
+                                        // проверяем возможность переноса события
+                                        if(empty($error)){// если нет проблем
+                                            $flag = false;// найдено ли конкурирующее событие
+                                            for($i = 0, $iLen = $events->length; $i < $iLen and !$flag; $i++){
+                                                $eid = $events->key($i);// получаем ключевой идентификатор по индексу
+                                                $unit = $events->get($eid);// получаем элемент по идентификатору
+                                                if(// множественное условие
+                                                    $unit["channel"] == $channel["id"]
+                                                    and $unit["guild"] == $guild["id"]
+                                                    and $unit["raid"] == $raid["key"]
+                                                    and $unit["id"] != $current["event"]["id"]
+                                                    and $unit["time"] == $data["time"]
+                                                ){// если есть конкурирующее событие
+                                                    $flag = true;
+                                                };
+                                            };
+                                            if(!$flag){// если проверка пройдена
+                                            }else $error = 66;
+                                        };
+                                        // переносим параметры команды
+                                        if(empty($error)){// если нет проблем
+                                            // задаём необходимые флаги
+                                            $isEdit = true;// выполняется команда редактирования
+                                            // задаём необходимые значения
+                                            $key = "time"; $value = $data[$key]; if($current["event"][$key] != $value){ $change["event"][$key] = $value; $isScheduleChange = true; };
+                                            $key = "hide"; $value = $data["time"] < $now - $app["val"]["eventTimeHide"]; if($current["event"][$key] != $value){ $event[$key] = $value; };
+                                            $key = "close"; $value = $data["time"] < $now + $app["val"]["eventTimeClose"]; if($current["event"][$key] != $value){ $event[$key] = $value; $isLeaderBoardChange = true; };
+                                            $key = "raid"; $value = $data[$key]; if($current["event"][$key] != $value){ $change["event"][$key] = $value; $isScheduleChange = true; if($current["event"]["close"]) $isLeaderBoardChange = true; };
+                                            $key = "description"; $value = mb_ucfirst(str_replace($app["val"]["lineDelim"], "<br>", $data[$key])); if($current["event"][$key] != $value){ $change["event"][$key] = $value; $isScheduleChange = true; };
+                                            // задаём контекст
+                                            $context["eid"] = $current["event"]["id"];
+                                        };
+                                    };
+                                    // работаем с данными игрока
+                                    if(empty($error) and isset($data["comment"])){// если нужно выполнить
+                                        // проверяем что определен игрок
+                                        if(empty($error)){// если нет проблем
+                                            if($current["player"]){// если проверка пройдена
+                                            }else $error = -1;
+                                        };
+                                        // переносим параметры команды
+                                        if(empty($error)){// если нет проблем
+                                            // задаём необходимые флаги
+                                            $isEdit = true;// выполняется команда редактирования
+                                            // задаём необходимые значения
+                                            $key = "comment"; $value = $data[$key]; if($current["player"][$key] != $value){ $change["player"][$key] = $value; };
+                                            // задаём контекст
+                                            $context["eid"] = $current["event"]["id"];
+                                            array_push($context["pids"], $current["player"]["id"]);
+                                        };
+                                    };
+                                    break;
+                                default:// не известный вид опции
+                                    if(!$error) $error = 11;
+                            };
+                            break;
+                        default:// не известный вид цели
                             if(!$error) $error = 11;
                     };
                 };
@@ -2891,6 +3131,11 @@ $app = array(// основной массив данных
             ){// если нужно выполнить
                 if($guild and $reaction["user"]["id"] != $session->get("bot", "value")){// если реакция пользователя в гильдии
                     if($error > -2) $error = 0;// сбрасываем значение
+                    // проверяем тип канала
+                    if(empty($error)){// если нет проблем
+                        if("record" == $config["mode"]){// если проверка пройдена
+                        }else $error = -1;
+                    };
                     // проверяем наличее аналогичной реакции бота
                     if(empty($error)){// если нет проблем
                         $isFound = false;// найдена ли аналогичная реакция бота
@@ -2969,55 +3214,50 @@ $app = array(// основной массив данных
             if(// множественное условие
                 empty($status) and $interaction
             ){// если нужно выполнить
-                // работаем с видами взаимодействия
-                switch(true){// поддерживаемые виды взаимодействия с ботом в канале
-                    case 2 == get_val($interaction["data"], "component_type", 0):// кнопка в сообщении
-                        $eid = $context["eid"];// получаем ключевой идентификатор
-                        // обновляем сообщение события через ответ на взаимодействие
-                        if($eid and isset($counts[$eid])){// если требуется обработка события
-                            if($counts[$eid]){// если требуется проверка изменений
-                                $unit = $events->get($eid);// получаем информацию о событии
-                                $item = $message;// сообщение связанное с взаимодействием
-                                // проверяем и исправляем эмодзи гильдии в событие
-                                if(empty($status)){// если нет ошибок
-                                    $units = $app["fun"]["fixCustomEmoji"]($eid, true, true, $status);// получаем списки изменений
-                                    foreach($units as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
-                                };
-                                // получаем контент для сообщения
-                                if(empty($status)){// если нет ошибок
-                                    $data = $app["fun"]["getRecordMessage"]($eid, $config["language"], $config["timezone"], $status);
-                                };
-                                // отправляем ответ на взаимодействие
-                                if(empty($status)){// если нет ошибок
-                                    if(// множественное условие
-                                        $item["content"] != $data["content"]
-                                        or $item["embeds"] != $data["embeds"]
-                                        or $item["components"] != $data["components"]
-                                    ){// если нужно изменить
-                                        // изменяем старое сообщение через ответ на взаимодействие
-                                        $uri = "/interactions/" . $interaction["id"] . "/" . $interaction["token"] . "/callback";
-                                        $data = $app["fun"]["apiRequest"]("post", $uri, array("type" => 7, "data" => $data), $code);
-                                        if(204 == $code){// если запрос выполнен успешно
-                                            $item = $app["fun"]["setCache"]("message", $data, $unit["channel"], $unit["guild"], null);
-                                            unset($counts[$eid]);// удаляем событие из последующей обработки
-                                        }else if(403 == $code or 404 == $code){// если не удалос уложится по времени
-                                        }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
-                                    }else{// если не требуются изменения
-                                        unset($counts[$eid]);// удаляем событие из последующей обработки
-                                        $eid = null;// сбрасываем идентификатор
-                                    };
-                                };
-                            };
-                        }else $eid = null;// сбрасываем идентификатор
-                        // обрабатываем остальные случаи требующие ответа
-                        if(!$eid){// если требуется ответ
-                            // убераем индикатор загрузки через ответ на взаимодействие
-                            $uri = "/interactions/" . $interaction["id"] . "/" . $interaction["token"] . "/callback";
-                            $data = $app["fun"]["apiRequest"]("post", $uri, array("type" => 6), $code);
-                            if(204 == $code or 403 == $code or 404 == $code){// если запрос выполнен успешно
-                            }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                $eid = $context["eid"];// получаем ключевой идентификатор
+                // обновляем сообщение события через ответ на взаимодействие
+                if($eid and isset($counts[$eid])){// если требуется обработка события
+                    if($counts[$eid]){// если требуется проверка изменений
+                        $unit = $events->get($eid);// получаем информацию о событии
+                        $item = $message;// сообщение связанное с взаимодействием
+                        // проверяем и исправляем эмодзи гильдии в событие
+                        if(empty($status)){// если нет ошибок
+                            $units = $app["fun"]["fixCustomEmoji"]($eid, true, true, $status);// получаем списки изменений
+                            foreach($units as $name => $list) if(count($list)) $isUpdate |= $mask[$name];
                         };
-                        break;
+                        // получаем контент для сообщения
+                        if(empty($status)){// если нет ошибок
+                            $data = $app["fun"]["getRecordMessage"]($eid, $config["language"], $config["timezone"], $status);
+                        };
+                        // отправляем ответ на взаимодействие
+                        if(empty($status)){// если нет ошибок
+                            if(// множественное условие
+                                $item["content"] != $data["content"]
+                                or $item["embeds"] != $data["embeds"]
+                                or $item["components"] != $data["components"]
+                            ){// если нужно изменить
+                                // изменяем старое сообщение через ответ на взаимодействие
+                                $uri = "/interactions/" . $interaction["id"] . "/" . $interaction["token"] . "/callback";
+                                $data = $app["fun"]["apiRequest"]("post", $uri, array("type" => 7, "data" => $data), $code);
+                                if(204 == $code){// если запрос выполнен успешно
+                                    $item = $app["fun"]["setCache"]("message", $data, $unit["channel"], $unit["guild"], null);
+                                    unset($counts[$eid]);// удаляем событие из последующей обработки
+                                }else if(403 == $code or 404 == $code){// если не удалос уложится по времени
+                                }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
+                            }else{// если не требуются изменения
+                                unset($counts[$eid]);// удаляем событие из последующей обработки
+                                $eid = null;// сбрасываем идентификатор
+                            };
+                        };
+                    };
+                }else $eid = null;// сбрасываем идентификатор
+                // обрабатываем остальные случаи требующие ответа
+                if(!$eid){// если требуется ответ
+                    // убераем индикатор загрузки через ответ на взаимодействие
+                    $uri = "/interactions/" . $interaction["id"] . "/" . $interaction["token"] . "/callback";
+                    $data = $app["fun"]["apiRequest"]("post", $uri, $response, $code);
+                    if(204 == $code or 403 == $code or 404 == $code){// если запрос выполнен успешно
+                    }else $status = 306;// не удалось получить корректный ответ от удаленного сервера
                 };
             };
             // выполняем удаление пустых событий
@@ -6428,7 +6668,7 @@ $app = array(// основной массив данных
                         };
                         // добавляем запись игрока
                         $line = "**`" . str_pad($i + 1, 2, "0", STR_PAD_LEFT) . "`**";
-                        $line .= " -" . ($player["accept"] ? $additions->get("empty", "icon") : " ");
+                        $line .= " -" . ($player["accept"] ? $additions->get("accept", "icon") : " ");
                         $line .= mb_strlen($role[$language]) > 2 ? $role[$language] : mb_strtoupper($role[$language]);
                         $line .= " " . ($event["leader"] == $player["user"] ? $additions->get("leader", "icon") : "");
                         $line .= "<@" . $player["user"] . ">" . (mb_strlen($player["comment"]) ? " " . $app["fun"]["wrapUrl"]($player["comment"]) : "");
@@ -6465,8 +6705,8 @@ $app = array(// основной массив данных
                             array_push($components, $component);
                         };
                     };
-                    // добавляем кнопку согласования игроков
-                    $key = "edit";// идентификато действия
+                    // добавляем кнопку модального редактирования
+                    $key = "modal";// идентификато действия
                     $component = array(
                         "type" => 2,
                         "style" => 2,
@@ -7521,6 +7761,40 @@ $app = array(// основной массив данных
             };
             // возвращаем результат
             return $config;
+        },
+        "getInteractionData" => function($interaction){// получаем данные из взаимодействия
+        //@param $interaction {array} - объект взаимодействия
+        //@return {array} - ассоциативный массив с данными
+            $data = array();
+
+            switch(get_val($interaction, "type", null)){// поддерживаемые типы ызаимодействия
+                case 5:// модальное окно с формой
+                    if(isset($interaction["data"]["components"])){// если есть компоненты
+                        for($i = 0, $iLen = count($interaction["data"]["components"]); $i < $iLen; $i++){
+                            $item = $interaction["data"]["components"][$i];// получаем очередной элимент
+                            $flag = true;// продолжить ли выполнение итерации
+                            // получаем инфоррмацию о ключе
+                            if($flag){// если нужно продолжить
+                                if(isset($item["components"][0]["custom_id"])){
+                                    $key = $item["components"][0]["custom_id"];
+                                }else $flag = false;
+                            };
+                            // получаем инфоррмацию о значении
+                            if($flag){// если нужно продолжить
+                                if(isset($item["components"][0]["value"])){
+                                    $value = $item["components"][0]["value"];
+                                }else $flag = false;
+                            };
+                            // сохраняем полученные данные
+                            if($flag){// если нужно продолжить
+                                $data[$key] = $value;
+                            };
+                        };
+                    };
+                    break;
+            };
+            // возвращаем результат
+            return $data;
         },
         "getPermission" => function($level, $member, $channel, $guild){// получаем разрешения
         //@param $level {string} - уровень проверки разрешений
