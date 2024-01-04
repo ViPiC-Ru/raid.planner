@@ -1,4 +1,4 @@
-<?php # 0.3.5 api для бота в discord
+<?php # 0.3.6 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -2691,7 +2691,7 @@ $app = array(// основной массив данных
                         // задаём необходимые значения
                         $rid = array("", $reaction["emoji"]["name"], $reaction["emoji"]["id"]);
                         $value = !empty($rid[2]) ? "<" . implode(":", $rid) . ">" : $rid[1];
-                        $key = "comment"; $value = $current["player"][$key] != $value ? $value : ""; if($current["player"][$key] != $value){ $change["player"][$key] = $value; };
+                        $key = "icon"; $value = $current["player"][$key] != $value ? $value : ""; if($current["player"][$key] != $value){ $change["player"][$key] = $value; };
                         // задаём контекст
                         $context["eid"] = $current["event"]["id"];
                         array_push($context["pids"], $current["player"]["id"]);
@@ -6138,10 +6138,10 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $list;
         },
-        "fixCustomEmoji" => function($eid, $inDescription, $inComment, &$status){// исправляет упоминание пользовательских эмодзи
+        "fixCustomEmoji" => function($eid, $inEvent, $inPlayer, &$status){// исправляет упоминание пользовательских эмодзи
         //@param $eid {integer} - идентификатор события для поиска
-        //@param $inDescription {boolean} - исправить в описании события
-        //@param $inComment {boolean} - исправить в комментарии игрока
+        //@param $inEvent {boolean} - исправить в свойствах события
+        //@param $inPlayer {boolean} - исправить в свойствах игрока
         //@param $status {integer} - целое число статуса выполнения
         //@return {array} - многоуровневый ассоциативный список изменений
             global $app;
@@ -6153,47 +6153,54 @@ $app = array(// основной массив данных
             );
             $game = $app["val"]["game"];
             // загружаем все необходимые базы данных
-            if(empty($status) and $inDescription){// если нужно выполнить
+            if(empty($status) and $inEvent){// если нужно выполнить
                 $events = $app["fun"]["getStorage"]($game, "events", true);
                 if(!empty($events)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
             };
-            if(empty($status) and $inComment){// если нужно выполнить
+            if(empty($status) and $inPlayer){// если нужно выполнить
                 $players = $app["fun"]["getStorage"]($game, "players", true);
                 if(!empty($players)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
             };
-            // исправляет упоминание кастомных эмодзи в описании событий
-            if(empty($status) and $inDescription){// если нужно выполнить
+            // исправляет упоминание кастомных эмодзи в событии
+            if(empty($status) and $inEvent){// если нужно выполнить
                 $event = $events->get($eid);// получаем элемент по идентификатору
-                if($event and mb_strlen($event["description"])){// если нужно выполнить
+                // работаем с описанием события
+                $key = "description";// описание события
+                if($event and mb_strlen($event[$key])){// если нужно выполнить
                     $count = 0;// сбрасываем счётчик изменений
-                    $value = str_replace("<br>", $app["val"]["lineDelim"], $event["description"]);
+                    $value = str_replace("<br>", $app["val"]["lineDelim"], $event[$key]);
                     $value = $app["fun"]["clearDeletedEmoji"]($value, $event, $status, $count);
                     $value = str_replace($app["val"]["lineDelim"], "<br>", $value);
                     // вносим изменения в базу данных
                     if(empty($status) and $count){// если нужно выполнить
-                        if($events->set($eid, "description", $value)){// если данные успешно изменены
+                        if($events->set($eid, $key, $value)){// если данные успешно изменены
                             $list["events"][$eid] = $event;
                         }else $status = 309;// не удалось записать данные в базу данных
                     };
                 };
             };
-            // исправляет упоминание кастомных эмодзи в комментарии игрока
-            if(empty($status) and $inComment){// если нужно выполнить
+            // исправляет упоминание кастомных эмодзи в игроке
+            if(empty($status) and $inPlayer){// если нужно выполнить
                 for($i = 0, $iLen = $players->length; $i < $iLen and empty($status); $i++){
                     $id = $players->key($i);// получаем ключевой идентификатор по индексу
                     $player = $players->get($id);// получаем элемент по идентификатору
-                    if($player["event"] == $eid and mb_strlen($player["comment"])){// если нужно выполнить
+                    if($player["event"] == $eid){// если игрок этого мобытия
                         $event = $events->get($eid);// получаем элемент по идентификатору
-                        $count = 0;// сбрасываем счётчик изменений
-                        $value = $player["comment"];// получаем значение для обработки
-                        $value = $app["fun"]["clearDeletedEmoji"]($value, $event, $status, $count);
-                        // вносим изменения в базу данных
-                        if(empty($status) and $count){// если нужно выполнить
-                            if($players->set($id, "comment", $value)){// если данные успешно изменены
-                                $list["players"][$id] = $player;
-                            }else $status = 309;// не удалось записать данные в базу данных
+                        // работаем со свойствами игрока
+                        foreach(array("icon", "comment") as $key){// пробигаемся свойствам
+                            if(empty($status) and mb_strlen($player[$key])){// если нужно выполнить
+                                $count = 0;// сбрасываем счётчик изменений
+                                $value = $player[$key];// получаем значение для обработки
+                                $value = $app["fun"]["clearDeletedEmoji"]($value, $event, $status, $count);
+                                // вносим изменения в базу данных
+                                if(empty($status) and $count){// если нужно выполнить
+                                    if($players->set($id, $key, $value)){// если данные успешно изменены
+                                        $list["players"][$id] = $player;
+                                    }else $status = 309;// не удалось записать данные в базу данных
+                                };
+                            };
                         };
                     };
                 };
@@ -6661,7 +6668,8 @@ $app = array(// основной массив данных
                         $line .= " -" . ($player["accept"] ? $additions->get("accept", "icon") : " ");
                         $line .= mb_strlen($role[$language]) > 2 ? $role[$language] : mb_strtoupper($role[$language]);
                         $line .= " " . ($event["leader"] == $player["user"] ? $additions->get("leader", "icon") : "");
-                        $line .= "<@" . $player["user"] . ">" . (mb_strlen($player["comment"]) ? " " . $app["fun"]["wrapUrl"]($player["comment"]) : "");
+                        $line .= "<@" . $player["user"] . ">" . (mb_strlen($player["icon"]) ? " " . $player["icon"] : "");
+                        $line .= (mb_strlen($player["comment"]) ? " " . $app["fun"]["wrapUrl"]($player["comment"]) : "");
                         array_push($lines[$group], $line);
                         // сохраняем состояние
                         $before = $player;
@@ -6945,7 +6953,7 @@ $app = array(// основной массив данных
                             array_push($lines[$group], $line);
                         };
                         // формируем заголовок
-                        $line = "### <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "D")) . ">";
+                        $line = "### * <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "D")) . ">";
                         $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "t")) . ">";
                         $line .= " [#" . $app["fun"]["getEventRecord"]($event["id"]) ."](<" . $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"]))) . ">)";
                         array_push($lines[$group], $line);
