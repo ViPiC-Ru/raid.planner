@@ -1,8 +1,8 @@
 key:string	ru:string	en:string	es:string	rate:float	icon:string	logotype:string
 expedition	Экспедиция	Expedition	Expedición	1.0	🧭	<:nw_expedition:911898765399556106>
-location	Локация	Location	Ubicación	0.5	📄	 <:nw_location:911898765353431111> 
-corrupted	Разлом	Corrupted	Dañado	0.8	🛡️	 <:nw_corrupted:911898765378609162> 
-arena	Арена	Arena	Arena	1.0	🛡️	 <:nw_arena:911898765395394590> 
-battle	Сражение	Battle	Batalla	1.0	⚔️	 <:nw_battle:911898765328273428> 
+location	Локация	Location	Ubicación	0.5	📄	<:nw_location:911898765353431111> 
+corrupted	Разлом	Corrupted	Dañado	0.8	🛡️	<:nw_corrupted:911898765378609162> 
+arena	Арена	Arena	Arena	1.0	🛡️	<:nw_arena:911898765395394590> 
+battle	Сражение	Battle	Batalla	1.0	⚔️	<:nw_battle:911898765328273428> 
 activity	Активность	Activity	Actividad	0.5	🗒️	<:nw_activity:911898765282148373>
 meetup	Мероприятие	Meetup	Medida	1.0	📄	<:nw_meetup:911898764954972181>

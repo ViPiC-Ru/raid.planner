@@ -6604,28 +6604,21 @@ $app = array(// основной массив данных
                 // формируем шапку
                 if(!$error){// если нет ошибок
                     $lines[++$group] = array();// новая группа строк
-                    $line = "```";
-                    array_push($lines[$group], $line);
-                    $line = $names->get("schedule", "icon") . " " . $app["fun"]["dateFormat"]("d", $event["time"], $timezone);
-                    $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
-                    $line .= " " . $additions->get("once", "icon") . " " . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone);
-                    $line .= " " . $additions->get("reject", "icon") . " " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
-                    if(!$event["hide"]) $line .= " " . $names->get("record", "icon") . " " . $app["fun"]["getEventRecord"]($event["id"]);
-                    array_push($lines[$group], $line);
-                    $line = "```";
+                    $line = "## " . (!$event["close"] ? (($limit and $count < $limit) ? $additions->get("member", "icon") : $type["icon"]) : $additions->get("group", "icon"));
+                    $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "D")) . ">";
+                    $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "t")) . ">";
+                    if(!$event["hide"]) $line .= " [#" . $app["fun"]["getEventRecord"]($event["id"]) ."](" . $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"]))) . ")";
                     array_push($lines[$group], $line);
                 };
                 // формируем заголовок
                 if(!$error){// если нет ошибок
-                    $line = !$event["close"] ? (($limit and $count < $limit) ? $additions->get("member", "icon") : $type["icon"]) : $additions->get("group", "icon");
-                    $line .= " **" . $raid["key"] . "** - " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
+                    // формируем заголовок
+                    $line = $type["logotype"] . "**" . $raid["key"] . "** - " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                     $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . ">";
                     $line .= ($event["repeat"] and !$event["hide"]) ? "  " . $additions->get("weekly", "icon") : "";
                     array_push($lines[$group], $line);
-                    $line = $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"])));
-                    array_push($lines[$group], $line);
                 };
-                // формируем комментарий
+                // формируем описание
                 if(!$error and mb_strlen($event["description"])){// если нужно выполнить
                     $line = $app["fun"]["wrapUrl"](str_replace("<br>", $app["val"]["lineDelim"], $event["description"]));
                     array_push($lines[$group], $line);
@@ -6658,12 +6651,9 @@ $app = array(// основной массив данных
                         };
                         // добавляем заголовок и описание группы
                         if($title){// если есть данные
-                            // отделяем заголовок группы
-                            $line = $blank;// пустая строка
-                            array_push($lines[$group], $line);
                             // выводим заголовок группы
-                            $line = "**" . mb_ucfirst(mb_strtolower($title)) . ":**";
-                            if($description) $line .= " " . $description;
+                            $line = "### " . mb_ucfirst(mb_strtolower($title)) . ":";
+                            if($description) $line .= " [" . $description . "](" . $app["val"]["discordUrl"] . implode("/", array("channels", $event["guild"], $event["channel"])) . ")";
                             array_push($lines[$group], $line);
                         };
                         // добавляем запись игрока
@@ -6901,7 +6891,6 @@ $app = array(// основной массив данных
             };
             // выполняем формирование сообщения
             if(empty($status)){// если нет ошибок
-                $blank = "_ _";// не удаляемый пустой символ
                 $delim = $app["val"]["lineDelim"];
                 $group = -1;// сбрасываем группу строк
                 $lines = array();// сгруппированный список строк
@@ -6943,7 +6932,6 @@ $app = array(// основной массив данных
                 };
                 // формируем сводное расписание
                 if(!$error){// если нет ошибок
-                    $before = null;// предыдущий элимент
                     for($i = 0, $iLen = count($items); $i < $iLen; $i++){
                         $event = $items[$i];// получаем очередной элимент
                         $raid = $raids->get($event["raid"]);
@@ -6951,22 +6939,18 @@ $app = array(// основной массив данных
                         $chapter = $chapters->get($raid["chapter"]);
                         // отделяем каждое событие
                         $lines[++$group] = array();// новая группа строк
-                        $line = $blank;// пустая строка
-                        if($before) array_push($lines[$group], $line);
                         // формируем шапку
-                        if(!$before or $app["fun"]["dateFormat"]("d.m.Y", $before["time"], $timezone) != $app["fun"]["dateFormat"]("d.m.Y", $event["time"], $timezone)){// если нужно выполнить
-                            $line = "```";
-                            array_push($lines[$group], $line);
-                            $line = $names->get("schedule", "icon") . " " . $app["fun"]["dateFormat"]("d", $event["time"], $timezone);
-                            $line .= " " . $months->get($app["fun"]["dateFormat"]("n", $event["time"], $timezone), $language);
-                            $line .= " - " . mb_ucfirst(mb_strtolower($dates->get(mb_strtolower($app["fun"]["dateFormat"]("l", $event["time"], $timezone)), $language)));
-                            array_push($lines[$group], $line);
-                            $line = "```";
+                        if(!$i){// если нужно выполнить
+                            $line = "## " . $names->get("schedule", "icon") . " " . $names->get("schedule", $language);
                             array_push($lines[$group], $line);
                         };
                         // формируем заголовок
-                        $line = "**" . $app["fun"]["dateFormat"]("H:i", $event["time"], $timezone) . "** —" . $type["logotype"];
-                        $line .= "**" . $raid["key"] . "** " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
+                        $line = "### <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "D")) . ">";
+                        $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "t")) . ">";
+                        $line .= " [#" . $app["fun"]["getEventRecord"]($event["id"]) ."](<" . $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"]))) . ">)";
+                        array_push($lines[$group], $line);
+                        // формируем описание
+                        $line = $type["logotype"] . "**" . $raid["key"] . "** - " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");
                         array_push($lines[$group], $line);
                         $line = $event["leader"] ? $additions->get("leader", "icon") . "<@" . $event["leader"] . ">" : $names->get("begin", $language);
                         $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "R")) . ">";
@@ -6975,8 +6959,6 @@ $app = array(// основной массив данных
                         $value = mb_ucfirst(trim(explode("<br>", $event["description"])[0]));
                         $line = $additions->get("reserve", "icon") . " " . $value;
                         if(mb_strlen($value)) array_push($lines[$group], $line);
-                        // сохраняем состояние
-                        $before = $event;
                     };
                 };
                 // формируем встроенный объект
@@ -7111,11 +7093,7 @@ $app = array(// основной массив данных
                         // формируем шапку
                         if(!$index){// если нужно выполнить
                             $lines[++$group] = array();// новая группа строк
-                            $line = "```";
-                            array_push($lines[$group], $line);
-                            $line = $names->get("leaderboard", "icon") . " " . $names->get("leaderboard", $language);
-                            array_push($lines[$group], $line);
-                            $line = "```";
+                            $line = "## " . $names->get("leaderboard", "icon") . " " . $names->get("leaderboard", $language);
                             array_push($lines[$group], $line);
                         };
                         // формируем запись участника
