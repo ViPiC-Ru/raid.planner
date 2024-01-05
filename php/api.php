@@ -2904,6 +2904,9 @@ $app = array(// основной массив данных
                                     // получаем данные из взаимодействия
                                     if(empty($error)){// если нет проблем
                                         $data = $app["fun"]["getInteractionData"]($interaction);
+                                        foreach(array("description", "comment") as $key){
+                                            if(isset($data[$key])) $data[$key] = trim($data[$key]);
+                                        };
                                         if(isset($data["identity"])){// если задано комбинированное поле
                                             $list = explode(" ", $data["identity"], 3);
                                             $data["raid"] = array_pop($list);
@@ -6612,8 +6615,7 @@ $app = array(// основной массив данных
                 if(!$error){// если нет ошибок
                     $lines[++$group] = array();// новая группа строк
                     $line = "## " . (!$event["close"] ? (($limit and $count < $limit) ? $additions->get("member", "icon") : $type["icon"]) : $additions->get("group", "icon"));
-                    $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "D")) . ">";
-                    $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "t")) . ">";
+                    $line .= (mb_strlen($names->get("in", $language)) ? " " . $names->get("in", $language) : "") . " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "F")) . ">";
                     if(!$event["hide"]) $line .= " [#" . $app["fun"]["getEventRecord"]($event["id"]) ."](" . $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"]))) . ")";
                     array_push($lines[$group], $line);
                 };
@@ -6953,9 +6955,7 @@ $app = array(// основной массив данных
                             array_push($lines[$group], $line);
                         };
                         // формируем заголовок
-                        $line = "### * <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "D")) . ">";
-                        $line .= " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "t")) . ">";
-                        $line .= " [#" . $app["fun"]["getEventRecord"]($event["id"]) ."](<" . $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"]))) . ">)";
+                        $line = "### *" . (mb_strlen($names->get("in", $language)) ? " " . $names->get("in", $language) : "") . " <" . implode(":", array("t", $app["fun"]["dateFormat"]("U", $event["time"], $timezone), "F")) . ">";
                         array_push($lines[$group], $line);
                         // формируем описание
                         $line = $type["logotype"] . "**" . $raid["key"] . "** - " . $raid[$language] . (!empty($chapter[$language]) ? " **DLC " . $chapter[$language] . "**" : "");

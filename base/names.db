@@ -2,7 +2,7 @@ key:string	ru:string	en:string	es:string	icon:string
 empty	Ещё нет данных для построения.	There is no data to build yet.	Todavía no hay datos para construir.	
 candidate	Кандидаты	Candidates	Candidatura	
 record	Запись в события	Events signup	Escribir en eventos	
-or	или	or	o	
+in	В		El	
 from	из	of	de	
 notice	Более подробная информация опубликована в следующем канале	More detailed information is published in the next channel	Más información se publica en el siguiente canal	
 instruction	инструкция	instruction	instrucciones	
