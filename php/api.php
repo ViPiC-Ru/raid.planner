@@ -1,4 +1,4 @@
-<?php # 0.3.6 api для бота в discord
+<?php # 0.3.7 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -11,6 +11,7 @@ $app = array(// основной массив данных
     "val" => array(// переменные и константы
         "baseUrl" => "../base|/%group%|/%name%.db",                         // шаблон url для базы данных
         "cacheUrl" => "../cache|/%group%|/%name%|/%id%.json",               // шаблон url для кеша данных
+        "imgUrl" => "../img|/%group%|/%name%|/%id%.png",                    // шаблон url для изображений
         "debugUrl" => null,                                                 // шаблон url для включения режима отладки
         "statusUnknown" => "Server unknown status",                         // сообщение для неизвестного статуса
         "statusLang" => "en",                                               // язык для кодов расшифровок
@@ -2030,6 +2031,7 @@ $app = array(// основной массив данных
                                         "accept" => false,
                                         "reserve" => false,
                                         "notice" => $command["time"] < $message["timestamp"] + $app["val"]["eventTimeNotice"],
+                                        "icon" => "",
                                         "comment" => ""
                                     ), $player);
                                     $player["user"] = $list[$index];// получаем идентификатор пользователя
@@ -3056,6 +3058,7 @@ $app = array(// основной массив данных
                             "accept" => false,
                             "reserve" => false,
                             "notice" => false,
+                            "icon" => "",
                             "comment" => ""
                         ), $change["player"]);
                     };
@@ -3453,7 +3456,7 @@ $app = array(// основной массив данных
                         };
                         // формируем ссылку на изображение
                         if(empty($status)){// если нет ошибок
-                            $link = template($app["val"]["discordContentUrl"], array("group" => "attachments", "id" => $raid["image"]));
+                            $link = $app["fun"]["href"](template($app["val"]["imgUrl"], array("group" => mb_strtolower($game), "name" => "preview", "id" => $app["fun"]["getKeyName"]($raid["key"]))));
                         };
                         break;
                     case "google":// Google
@@ -5827,6 +5830,25 @@ $app = array(// основной массив данных
             // возвращаем результат
             return $value;
         },
+        "getKeyName" => function($key){// получает из ключа имя
+        //@param $key {string} - ключ для преобразования в имя
+        //@return {string} - имя полученное из ключа
+           
+            $name = "";// начальное значение
+            $key = strval($key);// приводим к строковому типу 
+            for($i = 0, $iLen = mb_strlen($key); $i < $iLen; $i++){
+                $char = mb_substr($key, $i, 1);// получаем очередной символ
+                if(!mb_strlen($name)){// если имя ещё пустое
+                    if(ctype_upper($char)) $name .= $char;
+                    elseif(ctype_digit($char)) $name .= $char;
+                }else{// если часть имени уже есть
+                    if(ctype_alnum($char)) $name .= $char;
+                    else break;
+                };
+            };
+            // возвращаем результат
+            return $name;
+        },
         "doRoutineStorage" => function($timestamp, &$status){// делаем регламентные операции с базами данных
         //@param $timestamp {float} - данные о времени для выполнения регламентных операций
         //@param $status {integer} - целое число статуса выполнения
@@ -6829,7 +6851,7 @@ $app = array(// основной массив данных
                     $embed["url"] = $app["fun"]["href"](template($app["val"]["eventUrl"], array("group" => $game, "id" => $event["id"], "name" => $raid["key"])));
                     $embed["description"] = $value . " [#" . trim($app["fun"]["delEmoji"]($channel["name"]), " -_|") . "](" . $app["val"]["discordUrl"] . implode("/", array("channels", $event["guild"], $event["channel"], $event["message"])) . ")";
                     $embed["title"] = $raid["key"] . " - " . $raid[$language] . (!empty($chapter[$language]) ? " DLC " . $chapter[$language] : "");
-                    $embed["image"] = array("url" => template($app["val"]["discordContentUrl"], array("group" => "attachments", "id" => $raid["image"])));
+                    $embed["image"] = array("url" => $app["fun"]["href"](template($app["val"]["imgUrl"], array("group" => mb_strtolower($game), "name" => "preview", "id" => $app["fun"]["getKeyName"]($raid["key"])))));
                     $embed["footer"] = array("text" => ($leader ? (mb_strlen($leader["nick"]) ? $leader["nick"] : $leader["user"]["username"]) . " " : "") . $names->get("invite", "icon") . " " . $session->get("copyright", "value"));
                     $emoji = $app["fun"]["getEmoji"]($type["logotype"], false);
                     if(!empty($emoji["id"])) $embed["thumbnail"] = array("url" => template($app["val"]["discordContentUrl"], array("group" => "emojis", "id" => $emoji["id"])));
@@ -8410,7 +8432,7 @@ $app = array(// основной массив данных
             if("https" == $app["fun"]["getClearParam"]($_SERVER, "HTTP_X_FORWARDED_PROTOCOL", "string")) $flag = true;
             $request = ($flag ? "https" : $app["fun"]["getClearParam"]($_SERVER, "REQUEST_SCHEME", "string")) . "://";
             $value = $app["fun"]["getClearParam"]($_SERVER, "HTTP_HOST", "string"); if(!empty($value)) $request .= $value;
-            $value = $app["fun"]["getClearParam"]($_SERVER, "REQUEST_URI", "string"); $request .= !empty($value) ? $value : $split;
+            $value = $app["fun"]["getClearParam"]($_SERVER, "SCRIPT_NAME", "string"); $request .= !empty($value) ? $value : $split;
             $request = $app["fun"]["url2obj"]($request);
             // вычисляем необходимось добавления абсолютных данных
             $flag = true; foreach(array("scheme", "user", "password", "domain", "port", "path") as $key) if(isset($obj[$key])) $flag = false;

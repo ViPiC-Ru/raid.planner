@@ -1,190 +1,190 @@
-key:string	ru:string	en:string	es:string	image:string	chapter:string	type:string	tank:integer	heal:integer	dd:integer
-nAA	нор. Этерианский архив	nor. Aetherian Archive	nor. Aetherian Archive	782284915177029642/788688285735190598/AA		trial	1	2	9
-nHRC	нор. Цитадель Хель Ра	nor. Hel Ra Citadel	nor. Hel Ra Citadel	782284915177029642/788689089888649246/HRC		trial	1	2	9
-nSO	нор. Святилище Офидии	nor. Sanctum Ophidia	nor. Sanctum Ophidia	782284915177029642/788689268372930570/SO		trial	1	2	9
-nMoL	нор. Пасть Лорхаджа	nor. Maw of Lorkhaj	nor. Maw of Lorkhaj	782284915177029642/788689194218029076/MoL	thieves-guild	trial	1	2	9
-nHoF	нор. Залы фабрикации	nor. Halls of Fabrication	nor. Halls of Fabrication	782284915177029642/788689079880384512/HoF	morrowind	trial	2	2	8
-nAS	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	1	2	9
-nAS+0	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	1	2	9
-nAS+1	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	1	2	9
-nAS+2	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	1	2	9
-nCR	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-nCR+0	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-nCR+1	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-nCR+2	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-nCR+3	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-nSS	нор. Солнечный шпиль	nor. Sunspire	nor. Sunspire	782284915177029642/788689294251655188/SS	elsweyr	trial	1	2	9
-nKA	нор. Эгида Кин	nor. Kyne's Aegis	nor. Kyne's Aegis	782284915177029642/788689140610891786/KA	greymoor	trial	1	2	9
-nRG	нор. Каменная роща	nor. Rockgrove	nor. Rockgrove	782284915177029642/835444410153566249/RG	blackwood	trial	1	2	9
-nDSR	нор. Риф зловещих парусов	nor. Dreadsail Reef	nor. Dreadsail Reef	782284915177029642/982888049023266856/DSR	high-isle	trial	1	2	9
-nSE	нор. Грань Безумия	nor. Sanity's Edge	nor. Sanity's Edge	782284915177029642/1105529406291710072/SE	necrom	trial	1	2	9
-nTRL	нор. Триалы	nor. Trials	nor. Trials	782284915177029642/788689334245130253/TRL		trial	1	2	9
-vAA	вет. Этерианский архив	vet. Aetherian Archive	vet. Aetherian Archive	782284915177029642/788688285735190598/AA		trial	1	2	9
-vHRC	вет. Цитадель Хель Ра	vet. Hel Ra Citadel	vet. Hel Ra Citadel	782284915177029642/788689089888649246/HRC		trial	1	2	9
-vSO	вет. Святилище Офидии	vet. Sanctum Ophidia	vet. Sanctum Ophidia	782284915177029642/788689268372930570/SO		trial	2	2	8
-vMoL	вет. Пасть Лорхаджа	vet. Maw of Lorkhaj	vet. Maw of Lorkhaj	782284915177029642/788689194218029076/MoL	thieves-guild	trial	2	2	8
-vHoF	вет. Залы фабрикации	vet. Halls of Fabrication	vet. Halls of Fabrication	782284915177029642/788689079880384512/HoF	morrowind	trial	2	2	8
-vAS	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	2	2	8
-vAS+0	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	2	2	8
-vAS+1	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	2	2	8
-vAS+2	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	2	2	8
-vCR	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-vCR+0	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	2	2	8
-vCR+1	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	3	2	7
-vCR+2	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	3	2	7
-vCR+3	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	3	2	7
-vSS	вет. Солнечный шпиль	vet. Sunspire	vet. Sunspire	782284915177029642/788689294251655188/SS	elsweyr	trial	2	2	8
-vKA	вет. Эгида Кин	vet. Kyne's Aegis	vet. Kyne's Aegis	782284915177029642/788689140610891786/KA	greymoor	trial	2	2	8
-vRG	вет. Каменная роща	vet. Rockgrove	vet. Rockgrove	782284915177029642/835444410153566249/RG	blackwood	trial	2	2	8
-vDSR	вет. Риф зловещих парусов	vet. Dreadsail Reef	vet. Dreadsail Reef	782284915177029642/982888049023266856/DSR	high-isle	trial	2	2	8
-vSE	вет. Грань Безумия	vet. Sanity's Edge	vet. Sanity's Edge	782284915177029642/1105529406291710072/SE	necrom	trial	2	2	8
-vTRL	вет. Триалы	vet. Trials	vet. Trials	782284915177029642/788689334245130253/TRL		trial	2	2	8
-vAA+HM	хм. Этерианский архив	hm. Aetherian Archive	hm. Aetherian Archive	782284915177029642/788688285735190598/AA		trial	2	2	8
-vHRC+HM	хм. Цитадель Хель Ра	hm. Hel Ra Citadel	hm. Hel Ra Citadel	782284915177029642/788689089888649246/HRC		trial	2	2	8
-vSO+HM	хм. Святилище Офидии	hm. Sanctum Ophidia	hm. Sanctum Ophidia	782284915177029642/788689268372930570/SO		trial	2	2	8
-vMoL+HM	хм. Пасть Лорхаджа	hm. Maw of Lorkhaj	hm. Maw of Lorkhaj	782284915177029642/788689194218029076/MoL	thieves-guild	trial	2	2	8
-vHoF+HM	хм. Залы фабрикации	hm. Halls of Fabrication	hm. Halls of Fabrication	782284915177029642/788689079880384512/HoF	morrowind	trial	2	2	8
-vAS+HM	хм. Изоляционный санктуарий	hm. Asylum Sanctorium	hm. Asylum Sanctorium	782284915177029642/788688308124647454/AS	clockwork-city	trial	2	2	8
-vCR+HM	хм. Клаудрест	hm. Cloudrest	hm. Cloudrest	782284915177029642/788688413049749534/CR	summerset	trial	3	2	7
-vSS+HM	хм. Солнечный шпиль	hm. Sunspire	hm. Sunspire	782284915177029642/788689294251655188/SS	elsweyr	trial	2	2	8
-vKA+HM	хм. Эгида Кин	hm. Kyne's Aegis	hm. Kyne's Aegis	782284915177029642/788689140610891786/KA	greymoor	trial	2	2	8
-vRG+HM	хм. Каменная роща	hm. Rockgrove	hm. Rockgrove	782284915177029642/835444410153566249/RG	blackwood	trial	2	2	8
-vDSR+HM	хм. Риф зловещих парусов	hm. Dreadsail Reef	hm. Dreadsail Reef	782284915177029642/982888049023266856/DSR	high-isle	trial	2	2	8
-vSE+HM	хм. Грань Безумия	hm. Sanity's Edge	hm. Sanity's Edge	782284915177029642/1105529406291710072/SE	necrom	trial	2	2	8
-vTRL+HM	хм. Триалы	hm. Trials	hm. Trials	782284915177029642/788689334245130253/TRL		trial	2	2	8
-nTBC1	нор. Темницы Изгнанников I	nor. The Banished Cells I	nor. The Banished Cells I	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
-nTBC2	нор. Темницы Изгнанников II	nor. The Banished Cells II	nor. The Banished Cells II	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
-nEH1	нор. Элденская расщелина I	nor. Elden Hollow I	nor. Elden Hollow I	782284915177029642/788689010259263488/EH		dungeon	1	1	2
-nEH2	нор. Элденская расщелина II	nor. Elden Hollow II	nor. Elden Hollow II	782284915177029642/788689010259263488/EH		dungeon	1	1	2
-nCoA1	нор. Город Пепла I	nor. City of Ash I	nor. City of Ash I	782284915177029642/788688365230620692/CoA1		dungeon	1	1	2
-nCoA2	нор. Город Пепла II	nor. City of Ash II	nor. City of Ash II	782284915177029642/788688375678107668/CoA2		dungeon	1	1	2
-nMoS	нор. Путь Жертвоприношений	nor. March of Sacrifices	nor. March of Sacrifices	782284915177029642/788689203516407818/MoS	wolfhunter	dungeon	1	1	2
-nTI	нор. Остров Бурь	nor. Tempest Island	nor. Tempest Island	782284915177029642/788689324677791754/TI		dungeon	1	1	2
-nMHK	нор. Крепость Лунного Охотника	nor. Moon Hunter Keep	nor. Moon Hunter Keep	782284915177029642/788689182024794133/MHK	wolfhunter	dungeon	1	1	2
-nSW	нор. Паутина Селены	nor. Selene's Web	nor. Selene's Web	782284915177029642/788689304146018325/SW		dungeon	1	1	2
-nVF	нор. Воленфелл	nor. Volenfell	nor. Volenfell	782284915177029642/788691350756524032/VF		dungeon	1	1	2
-nBH	нор. Гавань Чёрного Сердца	nor. Blackheart Haven	nor. Blackheart Haven	782284915177029642/788688343738351616/BH		dungeon	1	1	2
-nFL	нор. Логово Клыка	nor. Fang Lair	nor. Fang Lair	782284915177029642/788689040567435284/FL	dragon-bones	dungeon	1	1	2
-nSC1	нор. Логово Мёртвой Хватки I	nor. Spindleclutch I	nor. Spindleclutch I	782284915177029642/788689236412071977/SC		dungeon	1	1	2
-nSC2	нор. Логово Мёртвой Хватки II	nor. Spindleclutch II	nor. Spindleclutch II	782284915177029642/788689236412071977/SC		dungeon	1	1	2
-nCoH1	нор. Крипта Сердец I	nor. Crypt of Hearts I	nor. Crypt of Hearts I	782284915177029642/788688388403232788/CoH		dungeon	1	1	2
-nCoH2	нор. Крипта Сердец II	nor. Crypt of Hearts II	nor. Crypt of Hearts II	782284915177029642/788688388403232788/CoH		dungeon	1	1	2
-nSP	нор. Пик Воспевательницы Дракона	nor. Scalecaller Peak	nor. Scalecaller Peak	782284915177029642/788689279383633950/SP	dragon-bones	dungeon	1	1	2
-nWS1	нор. Канализация Вэйреста I	nor. Wayrest Sewers I	nor. Wayrest Sewers I	782284915177029642/788689404020916224/WS		dungeon	1	1	2
-nWS2	нор. Канализация Вэйреста II	nor. Wayrest Sewers II	nor. Wayrest Sewers II	782284915177029642/788689404020916224/WS		dungeon	1	1	2
-nDC1	нор. Пещеры Глубокой Тени I	nor. Darkshade Caverns I	nor. Darkshade Caverns I	782284915177029642/788688946242256946/DC		dungeon	1	1	2
-nDC2	нор. Пещеры Глубокой Тени II	nor. Darkshade Caverns II	nor. Darkshade Caverns II	782284915177029642/788688946242256946/DC		dungeon	1	1	2
-nDK	нор. Крепость Лютых Морозов	nor. Direfrost Keep	nor. Direfrost Keep	782284915177029642/788688955276394496/DK		dungeon	1	1	2
-nFV	нор. Морозное хранилище	nor. Frostvault	nor. Frostvault	782284915177029642/788689063246299146/FV	wrathstone	dungeon	1	1	2
-nBC	нор. Священное Горнило	nor. Blessed Crucible	nor. Blessed Crucible	782284915177029642/788688319830687755/BC		dungeon	1	1	2
-nAC	нор. Аркс-Кориниум	nor. Arx Corinium	nor. Arx Corinium	782284915177029642/788688296615870484/AC		dungeon	1	1	2
-nCoS	нор. Колыбель Теней	nor. Cradle of Shadows	nor. Cradle of Shadows	782284915177029642/788688402555338772/CoS	shadows-of-the-hist	dungeon	1	1	2
-nRoM	нор. Руины Маззатуна	nor. Ruins of Mazzatun	nor. Ruins of Mazzatun	782284915177029642/788689225456418816/RoM	shadows-of-the-hist	dungeon	1	1	2
-nFG1	нор. Грибной грот I	nor. Fungal Grotto I	nor. Fungal Grotto I	782284915177029642/788689021030236200/FG		dungeon	1	1	2
-nFG2	нор. Грибной грот II	nor. Fungal Grotto II	nor. Fungal Grotto II	782284915177029642/788689021030236200/FG		dungeon	1	1	2
-nVoM	нор. Своды Безумия	nor. Vaults of Madness	nor. Vaults of Madness	782284915177029642/788689372463628288/VoM		dungeon	1	1	2
-nBF	нор. Кузница Кровавого Корня	nor. Bloodroot Forge	nor. Bloodroot Forge	782284915177029642/788688330405576764/BF	horns-of-the-reach	dungeon	1	1	2
-nFH	нор. Владение Фолкрит	nor. Falkreath Hold	nor. Falkreath Hold	782284915177029642/788689031789019136/FH	horns-of-the-reach	dungeon	1	1	2
-nWGT	нор. Башня Белого Золота	nor. White-Gold Tower	nor. White-Gold Tower	782284915177029642/788689394643107840/WGT	imperial-city	dungeon	1	1	2
-nICP	нор. Тюрьма Имперского города	nor. Imperial City Prison	nor. Imperial City Prison	782284915177029642/788689099435409428/ICP	imperial-city	dungeon	1	1	2
-nDoM	нор. Глубины Малатара	nor. Depths of Malatar	nor. Depths of Malatar	782284915177029642/788688989687250944/DoM	wrathstone	dungeon	1	1	2
-nMF	нор. Храм Погребённых Лун	nor. Moongrave Fane	nor. Moongrave Fane	782284915177029642/788689171090767932/MF	scalebreaker	dungeon	1	1	2
-nLoM	нор. Логово Марселока	nor. Lair of Maarselok	nor. Lair of Maarselok	782284915177029642/788689161095086090/LoM	scalebreaker	dungeon	1	1	2
-nIR	нор. Ледяной Предел	nor. Icereach	nor. Icereach	782284915177029642/788689118883741707/IR	harrowstorm	dungeon	1	1	2
-nUG	нор. Нечестивая Могила	nor. Unhallowed Grave	nor. Unhallowed Grave	782284915177029642/788689352532295711/UG	harrowstorm	dungeon	1	1	2
-nSG	нор. Каменный Сад	nor. Stone Garden	nor. Stone Garden	782284915177029642/788689246524801034/SG	stonethorn	dungeon	1	1	2
-nCT	нор. Замок Шипов	nor. Castle Thorn	nor. Castle Thorn	782284915177029642/788688927418613790/CT	stonethorn	dungeon	1	1	2
-nBDV	нор. Вилла Чёрного Змея	nor. Black Drake Villa	nor. Black Drake Villa	782284915177029642/827888025237061672/BDV	flames-of-ambition	dungeon	1	1	2
-nTC	нор. Котёл	nor. The Cauldron	nor. The Cauldron	782284915177029642/827887996144975883/TC	flames-of-ambition	dungeon	1	1	2
-nTDC	нор. Ужасный Подвал	nor. The Dread Cellar	nor. The Dread Cellar	782284915177029642/881598650223067146/TDC	waking-flame	dungeon	1	1	2
-nRPB	нор. Оплот Алый Лепесток	nor. Red Petal Bastion	nor. Red Petal Bastion	782284915177029642/881598611442503750/RPB	waking-flame	dungeon	1	1	2
-nSR	нор. Горе Корабела	nor. Shipwright's Regret	nor. Shipwright's Regret	782284915177029642/964174469667106866/SR	ascending-tide	dungeon	1	1	2
-nCA	нор. Коралловое Гнездо	nor. Coral Aerie	nor. Coral Aerie	782284915177029642/964174448557174794/CA	ascending-tide	dungeon	1	1	2
-nERE	нор. Анклав Земного корня	nor. Earthen Root Enclave	nor. Earthen Root Enclave	782284915177029642/1013901520309325885/ERE	lost-depths	dungeon	1	1	2
-nGD	нор. Могильная пучина	nor. Graven Deep	nor. Graven Deep	782284915177029642/1013901550759972894/GD	lost-depths	dungeon	1	1	2
-nBS	нор. Бал-Суннар	nor. Bal Sunnar	nor. Bal Sunnar	782284915177029642/1086913878526525522/BS	scribes-of-fate	dungeon	1	1	2
-nSH	нор. Зал Книжников	nor. Scrivener's Hall	nor. Scrivener's Hall	782284915177029642/1086913844783366194/SH	scribes-of-fate	dungeon	1	1	2
-nRND	нор. Случайное подземелье	nor. Random dungeon	nor. Random dungeon	782284915177029642/788689216057769984/RND		dungeon	1	1	2
-nDNG	нор. Подземелья	nor. Dungeons	nor. Dungeons	782284915177029642/788688977125179402/DNG		dungeon	1	1	2
-vTBC1	вет. Темницы Изгнанников I	vet. The Banished Cells I	vet. The Banished Cells I	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
-vTBC2	вет. Темницы Изгнанников II	vet. The Banished Cells II	vet. The Banished Cells II	782284915177029642/788689315559243826/TBC		dungeon	1	1	2
-vEH1	вет. Элденская расщелина I	vet. Elden Hollow I	vet. Elden Hollow I	782284915177029642/788689010259263488/EH		dungeon	1	1	2
-vEH2	вет. Элденская расщелина II	vet. Elden Hollow II	vet. Elden Hollow II	782284915177029642/788689010259263488/EH		dungeon	1	1	2
-vCoA1	вет. Город Пепла I	vet. City of Ash I	vet. City of Ash I	782284915177029642/788688365230620692/CoA1		dungeon	1	1	2
-vCoA2	вет. Город Пепла II	vet. City of Ash II	vet. City of Ash II	782284915177029642/788688375678107668/CoA2		dungeon	1	1	2
-vMoS	вет. Путь Жертвоприношений	vet. March of Sacrifices	vet. March of Sacrifices	782284915177029642/788689203516407818/MoS	wolfhunter	dungeon	1	1	2
-vTI	вет. Остров Бурь	vet. Tempest Island	vet. Tempest Island	782284915177029642/788689324677791754/TI		dungeon	1	1	2
-vMHK	вет. Крепость Лунного Охотника	vet. Moon Hunter Keep	vet. Moon Hunter Keep	782284915177029642/788689182024794133/MHK	wolfhunter	dungeon	1	1	2
-vSW	вет. Паутина Селены	vet. Selene's Web	vet. Selene's Web	782284915177029642/788689304146018325/SW		dungeon	1	1	2
-vVF	вет. Воленфелл	vet. Volenfell	vet. Volenfell	782284915177029642/788691350756524032/VF		dungeon	1	1	2
-vBH	вет. Гавань Чёрного Сердца	vet. Blackheart Haven	vet. Blackheart Haven	782284915177029642/788688343738351616/BH		dungeon	1	1	2
-vFL	вет. Логово Клыка	vet. Fang Lair	vet. Fang Lair	782284915177029642/788689040567435284/FL	dragon-bones	dungeon	1	1	2
-vSC1	вет. Логово Мёртвой Хватки I	vet. Spindleclutch I	vet. Spindleclutch I	782284915177029642/788689236412071977/SC		dungeon	1	1	2
-vSC2	вет. Логово Мёртвой Хватки II	vet. Spindleclutch II	vet. Spindleclutch II	782284915177029642/788689236412071977/SC		dungeon	1	1	2
-vCoH1	вет. Крипта Сердец I	vet. Crypt of Hearts I	vet. Crypt of Hearts I	782284915177029642/788688388403232788/CoH		dungeon	1	1	2
-vCoH2	вет. Крипта Сердец II	vet. Crypt of Hearts II	vet. Crypt of Hearts II	782284915177029642/788688388403232788/CoH		dungeon	1	1	2
-vSP	вет. Пик Воспевательницы Дракона	vet. Scalecaller Peak	vet. Scalecaller Peak	782284915177029642/788689279383633950/SP	dragon-bones	dungeon	1	1	2
-vWS1	вет. Канализация Вэйреста I	vet. Wayrest Sewers I	vet. Wayrest Sewers I	782284915177029642/788689404020916224/WS		dungeon	1	1	2
-vWS2	вет. Канализация Вэйреста II	vet. Wayrest Sewers II	vet. Wayrest Sewers II	782284915177029642/788689404020916224/WS		dungeon	1	1	2
-vDC1	вет. Пещеры Глубокой Тени I	vet. Darkshade Caverns I	vet. Darkshade Caverns I	782284915177029642/788688946242256946/DC		dungeon	1	1	2
-vDC2	вет. Пещеры Глубокой Тени II	vet. Darkshade Caverns II	vet. Darkshade Caverns II	782284915177029642/788688946242256946/DC		dungeon	1	1	2
-vDK	вет. Крепость Лютых Морозов	vet. Direfrost Keep	vet. Direfrost Keep	782284915177029642/788688955276394496/DK		dungeon	1	1	2
-vFV	вет. Морозное хранилище	vet. Frostvault	vet. Frostvault	782284915177029642/788689063246299146/FV	wrathstone	dungeon	1	1	2
-vBC	вет. Священное Горнило	vet. Blessed Crucible	vet. Blessed Crucible	782284915177029642/788688319830687755/BC		dungeon	1	1	2
-vAC	вет. Аркс-Кориниум	vet. Arx Corinium	vet. Arx Corinium	782284915177029642/788688296615870484/AC		dungeon	1	1	2
-vCoS	вет. Колыбель Теней	vet. Cradle of Shadows	vet. Cradle of Shadows	782284915177029642/788688402555338772/CoS	shadows-of-the-hist	dungeon	1	1	2
-vRoM	вет. Руины Маззатуна	vet. Ruins of Mazzatun	vet. Ruins of Mazzatun	782284915177029642/788689225456418816/RoM	shadows-of-the-hist	dungeon	1	1	2
-vFG1	вет. Грибной грот I	vet. Fungal Grotto I	vet. Fungal Grotto I	782284915177029642/788689021030236200/FG		dungeon	1	1	2
-vFG2	вет. Грибной грот II	vet. Fungal Grotto II	vet. Fungal Grotto II	782284915177029642/788689021030236200/FG		dungeon	1	1	2
-vVoM	вет. Своды Безумия	vet. Vaults of Madness	vet. Vaults of Madness	782284915177029642/788689372463628288/VoM		dungeon	1	1	2
-vBF	вет. Кузница Кровавого Корня	vet. Bloodroot Forge	vet. Bloodroot Forge	782284915177029642/788688330405576764/BF	horns-of-the-reach	dungeon	1	1	2
-vFH	вет. Владение Фолкрит	vet. Falkreath Hold	vet. Falkreath Hold	782284915177029642/788689031789019136/FH	horns-of-the-reach	dungeon	1	1	2
-vWGT	вет. Башня Белого Золота	vet. White-Gold Tower	vet. White-Gold Tower	782284915177029642/788689394643107840/WGT	imperial-city	dungeon	1	1	2
-vICP	вет. Тюрьма Имперского города	vet. Imperial City Prison	vet. Imperial City Prison	782284915177029642/788689099435409428/ICP	imperial-city	dungeon	1	1	2
-vDoM	вет. Глубины Малатара	vet. Depths of Malatar	vet. Depths of Malatar	782284915177029642/788688989687250944/DoM	wrathstone	dungeon	1	1	2
-vMF	вет. Храм Погребённых Лун	vet. Moongrave Fane	vet. Moongrave Fane	782284915177029642/788689171090767932/MF	scalebreaker	dungeon	1	1	2
-vLoM	вет. Логово Марселока	vet. Lair of Maarselok	vet. Lair of Maarselok	782284915177029642/788689161095086090/LoM	scalebreaker	dungeon	1	1	2
-vIR	вет. Ледяной Предел	vet. Icereach	vet. Icereach	782284915177029642/788689118883741707/IR	harrowstorm	dungeon	1	1	2
-vUG	вет. Нечестивая Могила	vet. Unhallowed Grave	vet. Unhallowed Grave	782284915177029642/788689352532295711/UG	harrowstorm	dungeon	1	1	2
-vSG	вет. Каменный Сад	vet. Stone Garden	vet. Stone Garden	782284915177029642/788689246524801034/SG	stonethorn	dungeon	1	1	2
-vCT	вет. Замок Шипов	vet. Castle Thorn	vet. Castle Thorn	782284915177029642/788688927418613790/CT	stonethorn	dungeon	1	1	2
-vBDV	вет. Вилла Чёрного Змея	vet. Black Drake Villa	vet. Black Drake Villa	782284915177029642/827888025237061672/BDV	flames-of-ambition	dungeon	1	1	2
-vTC	вет. Котёл	vet. The Cauldron	vet. The Cauldron	782284915177029642/827887996144975883/TC	flames-of-ambition	dungeon	1	1	2
-vTDC	вет. Ужасный Подвал	vet. The Dread Cellar	vet. The Dread Cellar	782284915177029642/881598650223067146/TDC	waking-flame	dungeon	1	1	2
-vRPB	вет. Оплот Алый Лепесток	vet. Red Petal Bastion	vet. Red Petal Bastion	782284915177029642/881598611442503750/RPB	waking-flame	dungeon	1	1	2
-vSR	вет. Горе Корабела	vet. Shipwright's Regret	vet. Shipwright's Regret	782284915177029642/964174469667106866/SR	ascending-tide	dungeon	1	1	2
-vCA	вет. Коралловое Гнездо	vet. Coral Aerie	vet. Coral Aerie	782284915177029642/964174448557174794/CA	ascending-tide	dungeon	1	1	2
-vERE	вет. Анклав Земного корня	vet. Earthen Root Enclave	vet. Earthen Root Enclave	782284915177029642/1013901520309325885/ERE	lost-depths	dungeon	1	1	2
-vGD	вет. Могильная пучина	vet. Graven Deep	vet. Graven Deep	782284915177029642/1013901550759972894/GD	lost-depths	dungeon	1	1	2
-vBS	вет. Бал-Суннар	vet. Bal Sunnar	vet. Bal Sunnar	782284915177029642/1086913878526525522/BS	scribes-of-fate	dungeon	1	1	2
-vSH	вет. Зал Книжников	vet. Scrivener's Hall	vet. Scrivener's Hall	782284915177029642/1086913844783366194/SH	scribes-of-fate	dungeon	1	1	2
-vRND	вет. Случайное подземелье	vet. Random dungeon	vet. Random dungeon	782284915177029642/788689216057769984/RND		dungeon	1	1	2
-vDNG	вет. Подземелья	vet. Dungeons	vet. Dungeons	782284915177029642/788688977125179402/DNG		dungeon	1	1	2
-1key	Подземелье на 1 ключ	Dungeon for 1 key	Dungeon for 1 llave	782284915177029642/788689151205048320/KEY		undaunted	1	1	2
-2key	Подземелья на 2 ключа	Dungeons for 2 keys	Dungeons for 2 llaves	782284915177029642/788689151205048320/KEY		undaunted	1	1	2
-3key	Подземелья на 3 ключа	Dungeons for 3 keys	Dungeons for 3 llaves	782284915177029642/788689151205048320/KEY		undaunted	1	1	2
-4key	Подземелья на 4 ключа	Dungeons for 4 keys	Dungeons for 4 llaves	782284915177029642/788689151205048320/KEY		undaunted	1	1	2
-5key	Подземелья на 5 ключей	Dungeons for 5 keys	Dungeons for 5 llaves	782284915177029642/788689151205048320/KEY	eso-plus	undaunted	1	1	2
-6key	Подземелья на 6 ключей	Dungeons for 6 keys	Dungeons for 6 llaves	782284915177029642/788689151205048320/KEY	eso-plus	undaunted	1	1	2
-nDSA	нор. Арена Драгонстара	nor. Dragonstar Arena	nor. Dragonstar Arena	782284915177029642/788689000931262494/DSA		arena	1	1	2
-nBRP	нор. Тюрьма Черная Роза	nor. Blackrose Prison	nor. Blackrose Prison	782284915177029642/788688354522693632/BRP	murkmire	arena	1	1	2
-vDSA	вет. Арена Драгонстара	vet. Dragonstar Arena	vet. Dragonstar Arena	782284915177029642/788689000931262494/DSA		arena	1	1	2
-vBRP	вет. Тюрьма Черная Роза	vet. Blackrose Prison	vet. Blackrose Prison	782284915177029642/788688354522693632/BRP	murkmire	arena	1	1	2
-cCRD	Сиродил за синих	Cyrodiil for Daggerfall Covenant	Cyrodiil for Daggerfall Covenant	782284915177029642/788688916873871360/CRD		battle	0	0	0
-pCRD	Сиродил за красных	Cyrodiil for Ebonheart Pact	Cyrodiil for Ebonheart Pact	782284915177029642/788688916873871360/CRD		battle	0	0	0
-dCRD	Сиродил за жёлтых	Cyrodiil for Aldmeri Dominion	Cyrodiil for Aldmeri Dominion	782284915177029642/788688916873871360/CRD		battle	0	0	0
-cIMP	Имперский город за синих	The Imperial City for Covenant	The Imperial City for Covenant	782284915177029642/788689108066238474/IMP	imperial-city	battle	0	0	0
-pIMP	Имперский город за красных	The Imperial City for Pact	The Imperial City for Pact	782284915177029642/788689108066238474/IMP	imperial-city	battle	0	0	0
-dIMP	Имперский город за жёлтых	The Imperial City for Dominion	The Imperial City for Dominion	782284915177029642/788689108066238474/IMP	imperial-city	battle	0	0	0
-nBG	нор. Поля сражений	nor. Battlegrounds	nor. Campos de batalla	782284915177029642/796349657626050620/BG		battle	0	0	0
-vBG	вет. Поля сражений	vet. Battlegrounds	vet. Campos de batalla	782284915177029642/796349657626050620/BG		battle	0	0	0
-SKY	Скайшарды	Sky Shards	Sky Shards	782284915177029642/788689257493430292/SKY		activity	0	0	0
-WB	Мировые боссы	World bosses	Jefes de Mundo	782284915177029642/788689381896618014/WB		activity	0	0	0
-DAY	Ежедневные задания	Daily quest	Misiones diarias	782284915177029642/788688936636514324/DAY		activity	0	0	0
-TRN	Обучение	Training	Entrenamiento	782284915177029642/788689343757549578/TRN		activity	0	0	0
-FSH	Рыбалка	Fishing	Pesca	782284915177029642/788689049971851264/FSH		activity	0	0	0
-DLM	Дольмены	Dolmens	Dolmens	782284915177029642/788688967079297034/DLM		activity	0	0	0
-MTG	Собрание	Meeting	Reunión	782284915177029642/800089315065331743/MTG		meetup	0	0	0
-CMP	Конкурс	Competition	Concurso	782284915177029642/800089375941197844/CMP		meetup	0	0	0
-EXM	Испытание	Examination	Ensayo	782284915177029642/800089341845700630/EXM		meetup	0	0	0
-RP	Ролевая игра	Roleplay	Juego de rol	782284915177029642/800089288661794896/RP		meetup	0	0	0
+key:string	ru:string	en:string	es:string	chapter:string	type:string	tank:integer	heal:integer	dd:integer
+nAA	нор. Этерианский архив	nor. Aetherian Archive	nor. Aetherian Archive		trial	1	2	9
+nHRC	нор. Цитадель Хель Ра	nor. Hel Ra Citadel	nor. Hel Ra Citadel		trial	1	2	9
+nSO	нор. Святилище Офидии	nor. Sanctum Ophidia	nor. Sanctum Ophidia		trial	1	2	9
+nMoL	нор. Пасть Лорхаджа	nor. Maw of Lorkhaj	nor. Maw of Lorkhaj	thieves-guild	trial	1	2	9
+nHoF	нор. Залы фабрикации	nor. Halls of Fabrication	nor. Halls of Fabrication	morrowind	trial	2	2	8
+nAS	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	clockwork-city	trial	1	2	9
+nAS+0	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	clockwork-city	trial	1	2	9
+nAS+1	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	clockwork-city	trial	1	2	9
+nAS+2	нор. Изоляционный санктуарий	nor. Asylum Sanctorium	nor. Asylum Sanctorium	clockwork-city	trial	1	2	9
+nCR	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	summerset	trial	2	2	8
+nCR+0	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	summerset	trial	2	2	8
+nCR+1	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	summerset	trial	2	2	8
+nCR+2	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	summerset	trial	2	2	8
+nCR+3	нор. Клаудрест	nor. Cloudrest	nor. Cloudrest	summerset	trial	2	2	8
+nSS	нор. Солнечный шпиль	nor. Sunspire	nor. Sunspire	elsweyr	trial	1	2	9
+nKA	нор. Эгида Кин	nor. Kyne's Aegis	nor. Kyne's Aegis	greymoor	trial	1	2	9
+nRG	нор. Каменная роща	nor. Rockgrove	nor. Rockgrove	blackwood	trial	1	2	9
+nDSR	нор. Риф зловещих парусов	nor. Dreadsail Reef	nor. Dreadsail Reef	high-isle	trial	1	2	9
+nSE	нор. Грань Безумия	nor. Sanity's Edge	nor. Sanity's Edge	necrom	trial	1	2	9
+nTRL	нор. Триалы	nor. Trials	nor. Trials		trial	1	2	9
+vAA	вет. Этерианский архив	vet. Aetherian Archive	vet. Aetherian Archive		trial	1	2	9
+vHRC	вет. Цитадель Хель Ра	vet. Hel Ra Citadel	vet. Hel Ra Citadel		trial	1	2	9
+vSO	вет. Святилище Офидии	vet. Sanctum Ophidia	vet. Sanctum Ophidia		trial	2	2	8
+vMoL	вет. Пасть Лорхаджа	vet. Maw of Lorkhaj	vet. Maw of Lorkhaj	thieves-guild	trial	2	2	8
+vHoF	вет. Залы фабрикации	vet. Halls of Fabrication	vet. Halls of Fabrication	morrowind	trial	2	2	8
+vAS	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	clockwork-city	trial	2	2	8
+vAS+0	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	clockwork-city	trial	2	2	8
+vAS+1	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	clockwork-city	trial	2	2	8
+vAS+2	вет. Изоляционный санктуарий	vet. Asylum Sanctorium	vet. Asylum Sanctorium	clockwork-city	trial	2	2	8
+vCR	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	summerset	trial	2	2	8
+vCR+0	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	summerset	trial	2	2	8
+vCR+1	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	summerset	trial	3	2	7
+vCR+2	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	summerset	trial	3	2	7
+vCR+3	вет. Клаудрест	vet. Cloudrest	vet. Cloudrest	summerset	trial	3	2	7
+vSS	вет. Солнечный шпиль	vet. Sunspire	vet. Sunspire	elsweyr	trial	2	2	8
+vKA	вет. Эгида Кин	vet. Kyne's Aegis	vet. Kyne's Aegis	greymoor	trial	2	2	8
+vRG	вет. Каменная роща	vet. Rockgrove	vet. Rockgrove	blackwood	trial	2	2	8
+vDSR	вет. Риф зловещих парусов	vet. Dreadsail Reef	vet. Dreadsail Reef	high-isle	trial	2	2	8
+vSE	вет. Грань Безумия	vet. Sanity's Edge	vet. Sanity's Edge	necrom	trial	2	2	8
+vTRL	вет. Триалы	vet. Trials	vet. Trials		trial	2	2	8
+vAA+HM	хм. Этерианский архив	hm. Aetherian Archive	hm. Aetherian Archive		trial	2	2	8
+vHRC+HM	хм. Цитадель Хель Ра	hm. Hel Ra Citadel	hm. Hel Ra Citadel		trial	2	2	8
+vSO+HM	хм. Святилище Офидии	hm. Sanctum Ophidia	hm. Sanctum Ophidia		trial	2	2	8
+vMoL+HM	хм. Пасть Лорхаджа	hm. Maw of Lorkhaj	hm. Maw of Lorkhaj	thieves-guild	trial	2	2	8
+vHoF+HM	хм. Залы фабрикации	hm. Halls of Fabrication	hm. Halls of Fabrication	morrowind	trial	2	2	8
+vAS+HM	хм. Изоляционный санктуарий	hm. Asylum Sanctorium	hm. Asylum Sanctorium	clockwork-city	trial	2	2	8
+vCR+HM	хм. Клаудрест	hm. Cloudrest	hm. Cloudrest	summerset	trial	3	2	7
+vSS+HM	хм. Солнечный шпиль	hm. Sunspire	hm. Sunspire	elsweyr	trial	2	2	8
+vKA+HM	хм. Эгида Кин	hm. Kyne's Aegis	hm. Kyne's Aegis	greymoor	trial	2	2	8
+vRG+HM	хм. Каменная роща	hm. Rockgrove	hm. Rockgrove	blackwood	trial	2	2	8
+vDSR+HM	хм. Риф зловещих парусов	hm. Dreadsail Reef	hm. Dreadsail Reef	high-isle	trial	2	2	8
+vSE+HM	хм. Грань Безумия	hm. Sanity's Edge	hm. Sanity's Edge	necrom	trial	2	2	8
+vTRL+HM	хм. Триалы	hm. Trials	hm. Trials		trial	2	2	8
+nTBC1	нор. Темницы Изгнанников I	nor. The Banished Cells I	nor. The Banished Cells I		dungeon	1	1	2
+nTBC2	нор. Темницы Изгнанников II	nor. The Banished Cells II	nor. The Banished Cells II		dungeon	1	1	2
+nEH1	нор. Элденская расщелина I	nor. Elden Hollow I	nor. Elden Hollow I		dungeon	1	1	2
+nEH2	нор. Элденская расщелина II	nor. Elden Hollow II	nor. Elden Hollow II		dungeon	1	1	2
+nCoA1	нор. Город Пепла I	nor. City of Ash I	nor. City of Ash I		dungeon	1	1	2
+nCoA2	нор. Город Пепла II	nor. City of Ash II	nor. City of Ash II		dungeon	1	1	2
+nMoS	нор. Путь Жертвоприношений	nor. March of Sacrifices	nor. March of Sacrifices	wolfhunter	dungeon	1	1	2
+nTI	нор. Остров Бурь	nor. Tempest Island	nor. Tempest Island		dungeon	1	1	2
+nMHK	нор. Крепость Лунного Охотника	nor. Moon Hunter Keep	nor. Moon Hunter Keep	wolfhunter	dungeon	1	1	2
+nSW	нор. Паутина Селены	nor. Selene's Web	nor. Selene's Web		dungeon	1	1	2
+nVF	нор. Воленфелл	nor. Volenfell	nor. Volenfell		dungeon	1	1	2
+nBH	нор. Гавань Чёрного Сердца	nor. Blackheart Haven	nor. Blackheart Haven		dungeon	1	1	2
+nFL	нор. Логово Клыка	nor. Fang Lair	nor. Fang Lair	dragon-bones	dungeon	1	1	2
+nSC1	нор. Логово Мёртвой Хватки I	nor. Spindleclutch I	nor. Spindleclutch I		dungeon	1	1	2
+nSC2	нор. Логово Мёртвой Хватки II	nor. Spindleclutch II	nor. Spindleclutch II		dungeon	1	1	2
+nCoH1	нор. Крипта Сердец I	nor. Crypt of Hearts I	nor. Crypt of Hearts I		dungeon	1	1	2
+nCoH2	нор. Крипта Сердец II	nor. Crypt of Hearts II	nor. Crypt of Hearts II		dungeon	1	1	2
+nSP	нор. Пик Воспевательницы Дракона	nor. Scalecaller Peak	nor. Scalecaller Peak	dragon-bones	dungeon	1	1	2
+nWS1	нор. Канализация Вэйреста I	nor. Wayrest Sewers I	nor. Wayrest Sewers I		dungeon	1	1	2
+nWS2	нор. Канализация Вэйреста II	nor. Wayrest Sewers II	nor. Wayrest Sewers II		dungeon	1	1	2
+nDC1	нор. Пещеры Глубокой Тени I	nor. Darkshade Caverns I	nor. Darkshade Caverns I		dungeon	1	1	2
+nDC2	нор. Пещеры Глубокой Тени II	nor. Darkshade Caverns II	nor. Darkshade Caverns II		dungeon	1	1	2
+nDK	нор. Крепость Лютых Морозов	nor. Direfrost Keep	nor. Direfrost Keep		dungeon	1	1	2
+nFV	нор. Морозное хранилище	nor. Frostvault	nor. Frostvault	wrathstone	dungeon	1	1	2
+nBC	нор. Священное Горнило	nor. Blessed Crucible	nor. Blessed Crucible		dungeon	1	1	2
+nAC	нор. Аркс-Кориниум	nor. Arx Corinium	nor. Arx Corinium		dungeon	1	1	2
+nCoS	нор. Колыбель Теней	nor. Cradle of Shadows	nor. Cradle of Shadows	shadows-of-the-hist	dungeon	1	1	2
+nRoM	нор. Руины Маззатуна	nor. Ruins of Mazzatun	nor. Ruins of Mazzatun	shadows-of-the-hist	dungeon	1	1	2
+nFG1	нор. Грибной грот I	nor. Fungal Grotto I	nor. Fungal Grotto I		dungeon	1	1	2
+nFG2	нор. Грибной грот II	nor. Fungal Grotto II	nor. Fungal Grotto II		dungeon	1	1	2
+nVoM	нор. Своды Безумия	nor. Vaults of Madness	nor. Vaults of Madness		dungeon	1	1	2
+nBF	нор. Кузница Кровавого Корня	nor. Bloodroot Forge	nor. Bloodroot Forge	horns-of-the-reach	dungeon	1	1	2
+nFH	нор. Владение Фолкрит	nor. Falkreath Hold	nor. Falkreath Hold	horns-of-the-reach	dungeon	1	1	2
+nWGT	нор. Башня Белого Золота	nor. White-Gold Tower	nor. White-Gold Tower	imperial-city	dungeon	1	1	2
+nICP	нор. Тюрьма Имперского города	nor. Imperial City Prison	nor. Imperial City Prison	imperial-city	dungeon	1	1	2
+nDoM	нор. Глубины Малатара	nor. Depths of Malatar	nor. Depths of Malatar	wrathstone	dungeon	1	1	2
+nMF	нор. Храм Погребённых Лун	nor. Moongrave Fane	nor. Moongrave Fane	scalebreaker	dungeon	1	1	2
+nLoM	нор. Логово Марселока	nor. Lair of Maarselok	nor. Lair of Maarselok	scalebreaker	dungeon	1	1	2
+nIR	нор. Ледяной Предел	nor. Icereach	nor. Icereach	harrowstorm	dungeon	1	1	2
+nUG	нор. Нечестивая Могила	nor. Unhallowed Grave	nor. Unhallowed Grave	harrowstorm	dungeon	1	1	2
+nSG	нор. Каменный Сад	nor. Stone Garden	nor. Stone Garden	stonethorn	dungeon	1	1	2
+nCT	нор. Замок Шипов	nor. Castle Thorn	nor. Castle Thorn	stonethorn	dungeon	1	1	2
+nBDV	нор. Вилла Чёрного Змея	nor. Black Drake Villa	nor. Black Drake Villa	flames-of-ambition	dungeon	1	1	2
+nTC	нор. Котёл	nor. The Cauldron	nor. The Cauldron	flames-of-ambition	dungeon	1	1	2
+nTDC	нор. Ужасный Подвал	nor. The Dread Cellar	nor. The Dread Cellar	waking-flame	dungeon	1	1	2
+nRPB	нор. Оплот Алый Лепесток	nor. Red Petal Bastion	nor. Red Petal Bastion	waking-flame	dungeon	1	1	2
+nSR	нор. Горе Корабела	nor. Shipwright's Regret	nor. Shipwright's Regret	ascending-tide	dungeon	1	1	2
+nCA	нор. Коралловое Гнездо	nor. Coral Aerie	nor. Coral Aerie	ascending-tide	dungeon	1	1	2
+nERE	нор. Анклав Земного корня	nor. Earthen Root Enclave	nor. Earthen Root Enclave	lost-depths	dungeon	1	1	2
+nGD	нор. Могильная пучина	nor. Graven Deep	nor. Graven Deep	lost-depths	dungeon	1	1	2
+nBS	нор. Бал-Суннар	nor. Bal Sunnar	nor. Bal Sunnar	scribes-of-fate	dungeon	1	1	2
+nSH	нор. Зал Книжников	nor. Scrivener's Hall	nor. Scrivener's Hall	scribes-of-fate	dungeon	1	1	2
+nRND	нор. Случайное подземелье	nor. Random dungeon	nor. Random dungeon		dungeon	1	1	2
+nDNG	нор. Подземелья	nor. Dungeons	nor. Dungeons		dungeon	1	1	2
+vTBC1	вет. Темницы Изгнанников I	vet. The Banished Cells I	vet. The Banished Cells I		dungeon	1	1	2
+vTBC2	вет. Темницы Изгнанников II	vet. The Banished Cells II	vet. The Banished Cells II		dungeon	1	1	2
+vEH1	вет. Элденская расщелина I	vet. Elden Hollow I	vet. Elden Hollow I		dungeon	1	1	2
+vEH2	вет. Элденская расщелина II	vet. Elden Hollow II	vet. Elden Hollow II		dungeon	1	1	2
+vCoA1	вет. Город Пепла I	vet. City of Ash I	vet. City of Ash I		dungeon	1	1	2
+vCoA2	вет. Город Пепла II	vet. City of Ash II	vet. City of Ash II		dungeon	1	1	2
+vMoS	вет. Путь Жертвоприношений	vet. March of Sacrifices	vet. March of Sacrifices	wolfhunter	dungeon	1	1	2
+vTI	вет. Остров Бурь	vet. Tempest Island	vet. Tempest Island		dungeon	1	1	2
+vMHK	вет. Крепость Лунного Охотника	vet. Moon Hunter Keep	vet. Moon Hunter Keep	wolfhunter	dungeon	1	1	2
+vSW	вет. Паутина Селены	vet. Selene's Web	vet. Selene's Web		dungeon	1	1	2
+vVF	вет. Воленфелл	vet. Volenfell	vet. Volenfell		dungeon	1	1	2
+vBH	вет. Гавань Чёрного Сердца	vet. Blackheart Haven	vet. Blackheart Haven		dungeon	1	1	2
+vFL	вет. Логово Клыка	vet. Fang Lair	vet. Fang Lair	dragon-bones	dungeon	1	1	2
+vSC1	вет. Логово Мёртвой Хватки I	vet. Spindleclutch I	vet. Spindleclutch I		dungeon	1	1	2
+vSC2	вет. Логово Мёртвой Хватки II	vet. Spindleclutch II	vet. Spindleclutch II		dungeon	1	1	2
+vCoH1	вет. Крипта Сердец I	vet. Crypt of Hearts I	vet. Crypt of Hearts I		dungeon	1	1	2
+vCoH2	вет. Крипта Сердец II	vet. Crypt of Hearts II	vet. Crypt of Hearts II		dungeon	1	1	2
+vSP	вет. Пик Воспевательницы Дракона	vet. Scalecaller Peak	vet. Scalecaller Peak	dragon-bones	dungeon	1	1	2
+vWS1	вет. Канализация Вэйреста I	vet. Wayrest Sewers I	vet. Wayrest Sewers I		dungeon	1	1	2
+vWS2	вет. Канализация Вэйреста II	vet. Wayrest Sewers II	vet. Wayrest Sewers II		dungeon	1	1	2
+vDC1	вет. Пещеры Глубокой Тени I	vet. Darkshade Caverns I	vet. Darkshade Caverns I		dungeon	1	1	2
+vDC2	вет. Пещеры Глубокой Тени II	vet. Darkshade Caverns II	vet. Darkshade Caverns II		dungeon	1	1	2
+vDK	вет. Крепость Лютых Морозов	vet. Direfrost Keep	vet. Direfrost Keep		dungeon	1	1	2
+vFV	вет. Морозное хранилище	vet. Frostvault	vet. Frostvault	wrathstone	dungeon	1	1	2
+vBC	вет. Священное Горнило	vet. Blessed Crucible	vet. Blessed Crucible		dungeon	1	1	2
+vAC	вет. Аркс-Кориниум	vet. Arx Corinium	vet. Arx Corinium		dungeon	1	1	2
+vCoS	вет. Колыбель Теней	vet. Cradle of Shadows	vet. Cradle of Shadows	shadows-of-the-hist	dungeon	1	1	2
+vRoM	вет. Руины Маззатуна	vet. Ruins of Mazzatun	vet. Ruins of Mazzatun	shadows-of-the-hist	dungeon	1	1	2
+vFG1	вет. Грибной грот I	vet. Fungal Grotto I	vet. Fungal Grotto I		dungeon	1	1	2
+vFG2	вет. Грибной грот II	vet. Fungal Grotto II	vet. Fungal Grotto II		dungeon	1	1	2
+vVoM	вет. Своды Безумия	vet. Vaults of Madness	vet. Vaults of Madness		dungeon	1	1	2
+vBF	вет. Кузница Кровавого Корня	vet. Bloodroot Forge	vet. Bloodroot Forge	horns-of-the-reach	dungeon	1	1	2
+vFH	вет. Владение Фолкрит	vet. Falkreath Hold	vet. Falkreath Hold	horns-of-the-reach	dungeon	1	1	2
+vWGT	вет. Башня Белого Золота	vet. White-Gold Tower	vet. White-Gold Tower	imperial-city	dungeon	1	1	2
+vICP	вет. Тюрьма Имперского города	vet. Imperial City Prison	vet. Imperial City Prison	imperial-city	dungeon	1	1	2
+vDoM	вет. Глубины Малатара	vet. Depths of Malatar	vet. Depths of Malatar	wrathstone	dungeon	1	1	2
+vMF	вет. Храм Погребённых Лун	vet. Moongrave Fane	vet. Moongrave Fane	scalebreaker	dungeon	1	1	2
+vLoM	вет. Логово Марселока	vet. Lair of Maarselok	vet. Lair of Maarselok	scalebreaker	dungeon	1	1	2
+vIR	вет. Ледяной Предел	vet. Icereach	vet. Icereach	harrowstorm	dungeon	1	1	2
+vUG	вет. Нечестивая Могила	vet. Unhallowed Grave	vet. Unhallowed Grave	harrowstorm	dungeon	1	1	2
+vSG	вет. Каменный Сад	vet. Stone Garden	vet. Stone Garden	stonethorn	dungeon	1	1	2
+vCT	вет. Замок Шипов	vet. Castle Thorn	vet. Castle Thorn	stonethorn	dungeon	1	1	2
+vBDV	вет. Вилла Чёрного Змея	vet. Black Drake Villa	vet. Black Drake Villa	flames-of-ambition	dungeon	1	1	2
+vTC	вет. Котёл	vet. The Cauldron	vet. The Cauldron	flames-of-ambition	dungeon	1	1	2
+vTDC	вет. Ужасный Подвал	vet. The Dread Cellar	vet. The Dread Cellar	waking-flame	dungeon	1	1	2
+vRPB	вет. Оплот Алый Лепесток	vet. Red Petal Bastion	vet. Red Petal Bastion	waking-flame	dungeon	1	1	2
+vSR	вет. Горе Корабела	vet. Shipwright's Regret	vet. Shipwright's Regret	ascending-tide	dungeon	1	1	2
+vCA	вет. Коралловое Гнездо	vet. Coral Aerie	vet. Coral Aerie	ascending-tide	dungeon	1	1	2
+vERE	вет. Анклав Земного корня	vet. Earthen Root Enclave	vet. Earthen Root Enclave	lost-depths	dungeon	1	1	2
+vGD	вет. Могильная пучина	vet. Graven Deep	vet. Graven Deep	lost-depths	dungeon	1	1	2
+vBS	вет. Бал-Суннар	vet. Bal Sunnar	vet. Bal Sunnar	scribes-of-fate	dungeon	1	1	2
+vSH	вет. Зал Книжников	vet. Scrivener's Hall	vet. Scrivener's Hall	scribes-of-fate	dungeon	1	1	2
+vRND	вет. Случайное подземелье	vet. Random dungeon	vet. Random dungeon		dungeon	1	1	2
+vDNG	вет. Подземелья	vet. Dungeons	vet. Dungeons		dungeon	1	1	2
+1key	Подземелье на 1 ключ	Dungeon for 1 key	Dungeon for 1 llave		undaunted	1	1	2
+2key	Подземелья на 2 ключа	Dungeons for 2 keys	Dungeons for 2 llaves		undaunted	1	1	2
+3key	Подземелья на 3 ключа	Dungeons for 3 keys	Dungeons for 3 llaves		undaunted	1	1	2
+4key	Подземелья на 4 ключа	Dungeons for 4 keys	Dungeons for 4 llaves		undaunted	1	1	2
+5key	Подземелья на 5 ключей	Dungeons for 5 keys	Dungeons for 5 llaves	eso-plus	undaunted	1	1	2
+6key	Подземелья на 6 ключей	Dungeons for 6 keys	Dungeons for 6 llaves	eso-plus	undaunted	1	1	2
+nDSA	нор. Арена Драгонстара	nor. Dragonstar Arena	nor. Dragonstar Arena		arena	1	1	2
+nBRP	нор. Тюрьма Черная Роза	nor. Blackrose Prison	nor. Blackrose Prison	murkmire	arena	1	1	2
+vDSA	вет. Арена Драгонстара	vet. Dragonstar Arena	vet. Dragonstar Arena		arena	1	1	2
+vBRP	вет. Тюрьма Черная Роза	vet. Blackrose Prison	vet. Blackrose Prison	murkmire	arena	1	1	2
+cCRD	Сиродил за синих	Cyrodiil for Daggerfall Covenant	Cyrodiil for Daggerfall Covenant		battle	0	0	0
+pCRD	Сиродил за красных	Cyrodiil for Ebonheart Pact	Cyrodiil for Ebonheart Pact		battle	0	0	0
+dCRD	Сиродил за жёлтых	Cyrodiil for Aldmeri Dominion	Cyrodiil for Aldmeri Dominion		battle	0	0	0
+cIMP	Имперский город за синих	The Imperial City for Covenant	The Imperial City for Covenant	imperial-city	battle	0	0	0
+pIMP	Имперский город за красных	The Imperial City for Pact	The Imperial City for Pact	imperial-city	battle	0	0	0
+dIMP	Имперский город за жёлтых	The Imperial City for Dominion	The Imperial City for Dominion	imperial-city	battle	0	0	0
+nBG	нор. Поля сражений	nor. Battlegrounds	nor. Campos de batalla		battle	0	0	0
+vBG	вет. Поля сражений	vet. Battlegrounds	vet. Campos de batalla		battle	0	0	0
+SKY	Скайшарды	Sky Shards	Sky Shards		activity	0	0	0
+WB	Мировые боссы	World bosses	Jefes de Mundo		activity	0	0	0
+DAY	Ежедневные задания	Daily quest	Misiones diarias		activity	0	0	0
+TRN	Обучение	Training	Entrenamiento		activity	0	0	0
+FSH	Рыбалка	Fishing	Pesca		activity	0	0	0
+DLM	Дольмены	Dolmens	Dolmens		activity	0	0	0
+MTG	Собрание	Meeting	Reunión		meetup	0	0	0
+CMP	Конкурс	Competition	Concurso		meetup	0	0	0
+EXM	Испытание	Examination	Ensayo		meetup	0	0	0
+RP	Ролевая игра	Roleplay	Juego de rol		meetup	0	0	0
