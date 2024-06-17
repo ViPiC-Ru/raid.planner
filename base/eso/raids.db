@@ -18,6 +18,7 @@ nKA	нор. Эгида Кин	nor. Kyne's Aegis	nor. Kyne's Aegis	greymoor	trial
 nRG	нор. Каменная роща	nor. Rockgrove	nor. Rockgrove	blackwood	trial	1	2	9
 nDSR	нор. Риф зловещих парусов	nor. Dreadsail Reef	nor. Dreadsail Reef	high-isle	trial	1	2	9
 nSE	нор. Грань Безумия	nor. Sanity's Edge	nor. Sanity's Edge	necrom	trial	1	2	9
+nLC	нор. Цитадель Люцентов	nor. Lucent Citadel	nor. Lucent Citadel	gold-road	trial	1	2	9
 nTRL	нор. Триалы	nor. Trials	nor. Trials		trial	1	2	9
 vAA	вет. Этерианский архив	vet. Aetherian Archive	vet. Aetherian Archive		trial	1	2	9
 vHRC	вет. Цитадель Хель Ра	vet. Hel Ra Citadel	vet. Hel Ra Citadel		trial	1	2	9
@@ -38,6 +39,7 @@ vKA	вет. Эгида Кин	vet. Kyne's Aegis	vet. Kyne's Aegis	greymoor	trial
 vRG	вет. Каменная роща	vet. Rockgrove	vet. Rockgrove	blackwood	trial	2	2	8
 vDSR	вет. Риф зловещих парусов	vet. Dreadsail Reef	vet. Dreadsail Reef	high-isle	trial	2	2	8
 vSE	вет. Грань Безумия	vet. Sanity's Edge	vet. Sanity's Edge	necrom	trial	2	2	8
+vLC	вет. Цитадель Люцентов	vet. Lucent Citadel	vet. Lucent Citadel	gold-road	trial	2	2	8
 vTRL	вет. Триалы	vet. Trials	vet. Trials		trial	2	2	8
 vAA+HM	хм. Этерианский архив	hm. Aetherian Archive	hm. Aetherian Archive		trial	2	2	8
 vHRC+HM	хм. Цитадель Хель Ра	hm. Hel Ra Citadel	hm. Hel Ra Citadel		trial	2	2	8
@@ -51,6 +53,7 @@ vKA+HM	хм. Эгида Кин	hm. Kyne's Aegis	hm. Kyne's Aegis	greymoor	trial	
 vRG+HM	хм. Каменная роща	hm. Rockgrove	hm. Rockgrove	blackwood	trial	2	2	8
 vDSR+HM	хм. Риф зловещих парусов	hm. Dreadsail Reef	hm. Dreadsail Reef	high-isle	trial	2	2	8
 vSE+HM	хм. Грань Безумия	hm. Sanity's Edge	hm. Sanity's Edge	necrom	trial	2	2	8
+vLC+HM	хм. Цитадель Люцентов	hm. Lucent Citadel	hm. Lucent Citadel	gold-road	trial	2	2	8
 vTRL+HM	хм. Триалы	hm. Trials	hm. Trials		trial	2	2	8
 nTBC1	нор. Темницы Изгнанников I	nor. The Banished Cells I	nor. The Banished Cells I		dungeon	1	1	2
 nTBC2	нор. Темницы Изгнанников II	nor. The Banished Cells II	nor. The Banished Cells II		dungeon	1	1	2
