@@ -11,3 +11,4 @@ id:integer	ru:string	en:string
 309	Не удалось записать данные в базу данных	Failed to write data to the database
 310	Не корректный внутренний запрос	Do not correct the inner query
 311	Не удалось записать данные в файловый кеш	Failed to write data to the file cache
+312	Соединение с удалённым сервером было неожиданно прервано	The connection to the remote server was unexpectedly interrupted

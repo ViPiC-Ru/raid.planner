@@ -1,4 +1,4 @@
-<?php # 0.3.7 api для бота в discord
+<?php # 0.3.8 api для бота в discord
 
 include_once "../../libs/File-0.1.inc.php";                                 // 0.1.6 класс для многопоточной работы с файлом
 include_once "../../libs/FileStorage-0.5.inc.php";                          // 0.5.10 класс для работы с файловым реляционным хранилищем
@@ -36,6 +36,7 @@ $app = array(// основной массив данных
         "discordUrl" => "https://discord.com/",                             // базовый url для взаимодействия с Discord
         "discordWebSocketHost" => "gateway.discord.gg",                     // адрес хоста для взаимодействия с Discord через WebSocket
         "discordWebSocketLoop" => 1000,                                     // лимит итераций цикла общения WebSocket с Discord
+        "discordWebSocketWait" => 5,                                        // время ожидания пустого ответа через WebSocket с Discord
         "discordMessageLength" => 2000,                                     // максимальная длина сообщения в Discord
         "discordMessageTime" => 6*60,                                       // максимально допустимое время между сгруппированными сообщениями
         "discordMessageLimit" => 50,                                        // максимальное количество кешируемых сообщений в канале
@@ -111,8 +112,13 @@ $app = array(// основной массив данных
                 do{// выполняем циклическую обработку
                     // получаем данные из подключения
                     if($websocket){// если создано подключение
+                        $websocketReadTime = microtime(true);
                         $data = websocket_read($websocket, $error);
-                        if($data) $data = json_decode($data, true);
+                        $websocketAnswerTime = microtime(true);
+                        if($data){// если получены данные
+                            $data = json_decode($data, true);
+                        }elseif($websocketAnswerTime - $websocketReadTime > $app["val"]["discordWebSocketWait"] / 2){
+                        }else $status = 312;// соединение с удалённым сервером было неожиданно прервано
                     }else $data = array("op" => 7);// reconnect
                     $now = microtime(true);// текущее время
                     // обрабатываем код уведомления
@@ -682,7 +688,7 @@ $app = array(// основной массив данных
                             // инициализируем новое подключение
                             $app["fun"]["setDebug"](1, "reconnect");// отладочная информация
                             if(websocket_check($websocket)) websocket_close($websocket);// закрываем старое подключение
-                            $websocket = websocket_open($app["val"]["discordWebSocketHost"], 443, null, $error, 5, true);
+                            $websocket = websocket_open($app["val"]["discordWebSocketHost"], 443, null, $error, $app["val"]["discordWebSocketWait"], true);
                             if($websocket){// если удалось создать подключение к веб-сокету
                                 $heartbeatInterval = 0;// отключаем проверку соединения
                             }else $status = 305;// не удалось установить соединение с удалённым сервером
