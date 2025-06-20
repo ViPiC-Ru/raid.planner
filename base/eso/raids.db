@@ -112,6 +112,8 @@ nBS	нор. Бал-Суннар	nor. Bal Sunnar	nor. Bal Sunnar	scribes-of-fate	
 nSH	нор. Зал Книжников	nor. Scrivener's Hall	nor. Scrivener's Hall	scribes-of-fate	dungeon	1	1	2
 nOP	нор. Храм Верных Клятве	nor. Oathsworn Pit	nor. Oathsworn Pit	scions-of-ithelia	dungeon	1	1	2
 nBV	нор. Завеса Хаоса	nor. Bedlam Veil	nor. Bedlam Veil	scions-of-ithelia	dungeon	1	1	2
+nER	нор. Оплот Изгнания	nor. Exiled Redoubt	nor. Exiled Redoubt	fallen-banners	dungeon	1	1	2
+nLS	нор. Леп-Секлуза	nor. Lep Seclusa	nor. Lep Seclusa	fallen-banners	dungeon	1	1	2
 nRND	нор. Случайное подземелье	nor. Random dungeon	nor. Random dungeon		dungeon	1	1	2
 nDNG	нор. Подземелья	nor. Dungeons	nor. Dungeons		dungeon	1	1	2
 vTBC1	вет. Темницы Изгнанников I	vet. The Banished Cells I	vet. The Banished Cells I		dungeon	1	1	2
@@ -168,6 +170,8 @@ vBS	вет. Бал-Суннар	vet. Bal Sunnar	vet. Bal Sunnar	scribes-of-fate	
 vSH	вет. Зал Книжников	vet. Scrivener's Hall	vet. Scrivener's Hall	scribes-of-fate	dungeon	1	1	2
 vOP	вет. Храм Верных Клятве	vet. Oathsworn Pit	vet. Oathsworn Pit	scions-of-ithelia	dungeon	1	1	2
 vBV	вет. Завеса Хаоса	vet. Bedlam Veil	vet. Bedlam Veil	scions-of-ithelia	dungeon	1	1	2
+vER	вет. Оплот Изгнания	vet. Exiled Redoubt	vet. Exiled Redoubt	fallen-banners	dungeon	1	1	2
+vLS	вет. Леп-Секлуза	vet. Lep Seclusa	vet. Lep Seclusa	fallen-banners	dungeon	1	1	2
 vRND	вет. Случайное подземелье	vet. Random dungeon	vet. Random dungeon		dungeon	1	1	2
 vDNG	вет. Подземелья	vet. Dungeons	vet. Dungeons		dungeon	1	1	2
 1key	Подземелье на 1 ключ	Dungeon for 1 key	Dungeon for 1 llave		undaunted	1	1	2
