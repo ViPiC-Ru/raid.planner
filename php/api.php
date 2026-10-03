@@ -7295,6 +7295,11 @@ $app = array(// основной массив данных
             $game = $app["val"]["game"];
             // загружаем все необходимые базы данных
             if(empty($status)){// если нет ошибок
+                $session = $app["fun"]["getStorage"]($game, "session", true);
+                if(!empty($session)){// если удалось получить доступ к базе данных
+                }else $status = 304;// не удалось загрузить одну из многих баз данных
+            };
+            if(empty($status)){// если нет ошибок
                 $raids = $app["fun"]["getStorage"]($game, "raids", false);
                 if(!empty($raids)){// если удалось получить доступ к базе данных
                 }else $status = 304;// не удалось загрузить одну из многих баз данных
@@ -7482,6 +7487,7 @@ $app = array(// основной массив данных
                     if(mb_strlen($value)){// если найдено ключевое значение
                         $value = array_pop($list);
                         $flag = !in_array($value, $command[$key]);
+                        $flag = ($flag and $value != $session->get("bot", "value"));
                         if($flag) array_push($command[$key], $value);
                         continue;
                     };
