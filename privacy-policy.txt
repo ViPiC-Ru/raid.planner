@@ -1,0 +1,274 @@
+PRIVACY POLICY
+
+Effective date: September 6, 2026
+Version: 1.0
+
+1. INTRODUCTION
+
+This Privacy Policy applies to the Application ("the Application", "we",
+"us", or "our"), a third-party Discord application that provides
+functionality for Discord communities.
+
+The Application is developed independently and is not affiliated with,
+endorsed by, sponsored by, or operated by Discord Inc.
+
+This Privacy Policy explains what information the Application may access,
+how that information is used, and how it is handled.
+
+The Application may be open source and its source code may be made
+available through a public repository maintained by its developer.
+
+By using the Application, you acknowledge that the Application operates
+within Discord and that Discord independently processes information in
+accordance with its own policies and terms.
+
+2. INFORMATION THE APPLICATION MAY ACCESS
+
+Depending on the features used and the configuration of a Discord server,
+the Application may receive limited information from Discord, including:
+
+- Discord user ID;
+- Discord server (guild) ID;
+- Discord channel ID;
+- Discord message ID;
+- username or display name made available by Discord;
+- information about roles and permissions required to determine whether a
+  user may perform an operation;
+- information contained in interactions with the Application;
+- message content when required to receive and process a command;
+- information voluntarily provided by users through the Application's
+  features, such as participation information, comments, preferences,
+  settings, or other user-submitted content.
+
+The Application does not request or store Discord passwords,
+authentication credentials, or users' Discord account tokens.
+
+3. MESSAGE CONTENT
+
+The Application may use the Discord Message Content privileged intent
+solely to receive and process commands sent by users.
+
+Message content is processed only to the extent necessary to identify and
+execute the relevant command.
+
+Message content is not collected for advertising, profiling, targeted
+marketing, sale of information, or any unrelated purpose.
+
+The Application does not intentionally maintain a permanent database of
+users' message history solely because it has access to Message Content.
+
+4. PURPOSE OF PROCESSING
+
+Information accessed by the Application is used only as necessary to
+operate its features, including:
+
+- receiving and processing user commands;
+- creating, modifying, storing, and managing application-related data;
+- displaying information relevant to the Application's functionality;
+- checking the permissions required to perform an operation;
+- temporarily caching information to improve performance;
+- reducing unnecessary requests to Discord;
+- maintaining, troubleshooting, and securing the Application.
+
+The Application does not use user information for advertising,
+behavioral profiling, selling personal information, or building
+advertising profiles.
+
+5. STORAGE AND CACHING
+
+Information received from Discord may temporarily exist in the
+Application's operational memory and temporary caches.
+
+Caching is used solely to improve Application performance and reduce
+repeated requests to Discord.
+
+Temporary data is not intended to constitute permanent storage of Discord
+message content.
+
+When the Application process terminates, information held in its
+operational memory is released as part of the normal operation of the
+hosting environment.
+
+Temporary cached information is removed as part of normal cache cleanup
+and Application operation.
+
+The Application does not guarantee that data can never remain temporarily
+in operating-system, hosting, backup, logging, or other technical
+infrastructure outside the Application's direct control.
+
+6. SHARING AND DISCLOSURE
+
+The Application does not sell user information.
+
+The Application does not provide message content or user information to
+advertising networks, data brokers, or other third parties for
+advertising or profiling purposes.
+
+Information accessed by the Application is used solely for operating the
+Application and providing its functionality.
+
+The Application may necessarily communicate with Discord through
+Discord's API and infrastructure. Information transmitted to or received
+from Discord is subject to Discord's own terms and privacy practices.
+
+The Application may also disclose information when disclosure is required
+by applicable law or is reasonably necessary to protect the Application,
+its developer, users, or the security of the service.
+
+7. THIRD-PARTY SERVICES
+
+The Application relies on Discord and Discord APIs to provide its
+functionality.
+
+Discord is an independent service provider and processes information
+under its own Privacy Policy and applicable terms:
+
+https://discord.com/privacy
+
+The Application does not control how Discord independently processes
+information within the Discord platform.
+
+Apart from the services required to operate the Application, the
+developer does not intentionally transfer user information to unrelated
+third parties.
+
+8. DATA RETENTION
+
+The Application is designed to keep operational data only for as long as
+reasonably necessary for the functionality for which it is used.
+
+Message content received through Message Content is intended for
+transient command processing and temporary caching rather than permanent
+message-history storage.
+
+Some operational information may remain available for the period
+necessary to provide the Application's functionality.
+
+Technical information may be retained temporarily for operational,
+security, troubleshooting, diagnostic, or abuse-prevention purposes.
+
+No specific universal retention period is promised for every category of
+data because retention may depend on the type of information, the
+Application's operation, technical circumstances, and applicable legal
+requirements.
+
+9. DATA DELETION
+
+Users may request deletion of Application data associated with them where
+such data is maintained by the Application and can reasonably be
+identified.
+
+Deletion requests may be submitted through the public repository,
+support channel, or contact method designated by the developer.
+
+A request may require sufficient information to identify the relevant
+data, such as the user's Discord ID.
+
+Upon a valid request, data may be deleted or anonymized where reasonably
+practicable, unless retention is required or reasonably necessary for
+legal obligations, security, dispute resolution, fraud prevention, or
+other legitimate technical purposes.
+
+Deleting information from the Application does not delete information
+stored by Discord or other independent services. Such information remains
+subject to the policies of those services.
+
+10. USER-CONTROLLED INFORMATION
+
+Users and Discord server administrators control the information they
+choose to submit through Discord and the configuration of the server.
+
+Users should avoid sending passwords, payment information, government
+identification documents, medical information, or other highly sensitive
+information through commands or features of the Application unless such
+information is explicitly required.
+
+The Application is not designed to require such information.
+
+11. SECURITY
+
+Reasonable technical measures are used to reduce the risk of unauthorized
+access to information handled by the Application.
+
+However, no application, server, network, storage system, or
+transmission over the Internet can be guaranteed to be completely secure.
+
+Accordingly, the developer does not guarantee absolute security or
+uninterrupted availability of stored or transmitted information.
+
+12. CHILDREN
+
+The Application is not specifically directed at children and is not
+designed to intentionally collect information from children.
+
+Users must comply with the age requirements and other applicable
+requirements established by Discord and applicable law.
+
+13. CHANGES TO THIS PRIVACY POLICY
+
+This Privacy Policy may be updated from time to time.
+
+Changes may be made to reflect changes in the Application, its
+functionality, Discord requirements, technical infrastructure, or
+applicable law.
+
+The current version of this Privacy Policy should be considered the
+applicable version after it has been published at the location where
+this Policy is made available.
+
+14. APPLICATION AVAILABILITY AND DISCLAIMER
+
+The Application is provided on an "AS IS" and "AS AVAILABLE" basis.
+
+The developer does not guarantee that the Application will operate
+without interruption, errors, data loss, or delays.
+
+The developer is not responsible for failures, outages, changes,
+restrictions, or other actions by Discord, Discord APIs, hosting
+providers, network providers, operating systems, or other infrastructure
+outside the developer's reasonable control.
+
+The developer does not guarantee that any particular feature will remain
+available indefinitely.
+
+15. CONTACT
+
+Questions regarding this Privacy Policy or the handling of information by
+the Application may be submitted through the public repository, support
+channel, or contact method designated by the developer.
+
+Users should avoid including unnecessary personal or sensitive
+information in public communications.
+
+16. DISCORD RELATIONSHIP
+
+The Application is a third-party Discord application.
+
+The Application is not owned, operated, sponsored, or endorsed by
+Discord Inc.
+
+Discord's own Privacy Policy, Terms of Service, Developer Terms of
+Service, Developer Policy, and other applicable Discord policies remain
+independently applicable to the use of Discord and Discord services.
+
+Discord Privacy Policy:
+
+https://discord.com/privacy
+
+17. LIMITATION OF SCOPE
+
+This Privacy Policy applies only to information processed by the
+Application.
+
+It does not apply to:
+
+- information processed directly by Discord;
+- information processed by Discord server owners or administrators;
+- information processed by other Discord bots or applications;
+- information processed by external websites or services that users may
+  access independently.
+
+Users should review the privacy policies and terms of any third-party
+service they choose to use.
+
+END OF PRIVACY POLICY
