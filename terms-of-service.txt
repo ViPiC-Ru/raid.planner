@@ -1,0 +1,232 @@
+TERMS OF SERVICE
+
+Effective date: September 6, 2026
+Version: 1.0
+
+1. ACCEPTANCE OF TERMS
+
+These Terms of Service ("Terms") govern the use of the Application
+("the Application", "we", "us", or "our"), a third-party Discord
+application.
+
+By inviting, accessing, using, interacting with, or otherwise utilizing
+the Application, you agree to be bound by these Terms.
+
+If you do not agree to these Terms, you must not use the Application.
+
+2. RELATIONSHIP WITH DISCORD
+
+The Application operates through Discord and relies on Discord services
+and APIs.
+
+The Application is not owned, operated, sponsored, endorsed, or
+affiliated with Discord Inc.
+
+Use of Discord remains subject to Discord's Terms of Service, Privacy
+Policy, Developer Policies, and any other applicable Discord rules.
+
+If Discord suspends, restricts, removes, or otherwise limits access to
+your account, server, or content, the Application may become partially or
+fully unavailable to you.
+
+3. ELIGIBILITY
+
+You may use the Application only if you are permitted to use Discord
+under Discord's applicable terms and applicable law.
+
+You are responsible for ensuring that your use of the Application is
+lawful in your jurisdiction.
+
+4. LICENSE TO USE THE APPLICATION
+
+Subject to compliance with these Terms, the developer grants you a
+limited, non-exclusive, non-transferable, revocable license to use the
+Application solely through Discord and solely for its intended purposes.
+
+No ownership rights are transferred to users.
+
+All rights not expressly granted are reserved by the developer.
+
+5. USER RESPONSIBILITIES
+
+You agree that you will not:
+
+- violate any applicable law or regulation;
+- violate Discord's Terms of Service, Community Guidelines, Developer
+  Policies, or other applicable rules;
+- use the Application for unlawful, fraudulent, abusive, or harmful
+  purposes;
+- attempt to gain unauthorized access to the Application or related
+  systems;
+- interfere with the operation, security, availability, or performance
+  of the Application;
+- exploit bugs, vulnerabilities, or unintended functionality;
+- reverse engineer, decompile, or attempt to obtain proprietary
+  components of the Application except where such restrictions are
+  prohibited by applicable law;
+- use automated means to abuse, overload, or disrupt the Application.
+
+6. USER CONTENT
+
+Users may submit, generate, store, or manage information through the
+Application.
+
+You remain responsible for any content, commands, messages, data,
+configuration, or information that you submit through the Application.
+
+You represent that you have all necessary rights, permissions, and
+authority required for any content you provide.
+
+The developer does not claim ownership of user content.
+
+7. SERVER ADMINISTRATOR RESPONSIBILITIES
+
+Discord server owners and administrators are responsible for deciding
+whether to add the Application to their servers.
+
+Server administrators are responsible for configuring permissions,
+roles, channels, and access controls within their servers.
+
+The developer is not responsible for how server owners or administrators
+use information made available through the Application.
+
+8. AVAILABILITY OF THE APPLICATION
+
+The Application is provided on an "AS IS" and "AS AVAILABLE" basis.
+
+The developer may modify, suspend, restrict, discontinue, remove, or
+replace any feature of the Application at any time without prior notice.
+
+The developer does not guarantee that the Application will always be
+available, uninterrupted, secure, error-free, or compatible with future
+Discord changes.
+
+9. THIRD-PARTY SERVICES
+
+The Application may rely on Discord or other third-party infrastructure
+to function.
+
+The developer has no control over third-party services and is not
+responsible for their availability, performance, security, policies, or
+actions.
+
+Third-party services remain subject to their own agreements and
+policies.
+
+10. DATA AND PRIVACY
+
+Use of the Application is also governed by the applicable Privacy Policy.
+
+By using the Application, you acknowledge that the Application may
+receive, process, store, cache, or transmit information as described in
+the Privacy Policy.
+
+11. INTELLECTUAL PROPERTY
+
+Except for user-owned content and third-party property, the Application,
+including its software, functionality, documentation, design elements,
+and related materials, is owned by the developer or licensed to the
+developer.
+
+Users may not copy, distribute, sell, sublicense, or commercially
+exploit the Application unless expressly authorized.
+
+12. OPEN SOURCE COMPONENTS
+
+The Application may include or depend upon open-source software
+components.
+
+Such components remain subject to their respective licenses.
+
+Nothing in these Terms overrides applicable open-source license rights
+or obligations.
+
+13. TERMINATION
+
+The developer may suspend, restrict, or terminate access to the
+Application at any time, with or without notice, including where:
+
+- these Terms are violated;
+- abuse or misuse is suspected;
+- security concerns arise;
+- required by law;
+- required by Discord policies;
+- necessary for operational reasons.
+
+Users may stop using the Application at any time.
+
+Termination does not affect provisions that are intended by their nature
+to survive termination.
+
+14. DISCLAIMER OF WARRANTIES
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE APPLICATION IS
+PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND,
+WHETHER EXPRESS OR IMPLIED.
+
+THE DEVELOPER DISCLAIMS ALL WARRANTIES INCLUDING, WITHOUT LIMITATION,
+WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE,
+NON-INFRINGEMENT, ACCURACY, RELIABILITY, AND AVAILABILITY.
+
+THE DEVELOPER DOES NOT WARRANT THAT THE APPLICATION WILL BE ERROR-FREE,
+SECURE, OR CONTINUOUSLY AVAILABLE.
+
+15. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE DEVELOPER SHALL
+NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL,
+EXEMPLARY, OR PUNITIVE DAMAGES.
+
+THE DEVELOPER SHALL NOT BE LIABLE FOR LOSS OF DATA, LOSS OF PROFITS,
+LOSS OF BUSINESS, LOSS OF REPUTATION, LOSS OF GOODWILL, SERVICE
+INTERRUPTIONS, OR OTHER LOSSES ARISING OUT OF OR RELATED TO THE USE OR
+INABILITY TO USE THE APPLICATION.
+
+WHERE LIABILITY CANNOT BE EXCLUDED UNDER APPLICABLE LAW, LIABILITY SHALL
+BE LIMITED TO THE MINIMUM EXTENT PERMITTED BY LAW.
+
+16. INDEMNIFICATION
+
+You agree to indemnify and hold harmless the developer from claims,
+losses, liabilities, damages, costs, and expenses arising from:
+
+- your use of the Application;
+- your violation of these Terms;
+- your violation of applicable law;
+- your violation of the rights of another person or entity.
+
+17. CHANGES TO THESE TERMS
+
+These Terms may be updated from time to time.
+
+Updated versions become effective when published through the location
+where these Terms are made available.
+
+Continued use of the Application after publication of updated Terms
+constitutes acceptance of the revised Terms.
+
+18. GOVERNING LAW
+
+These Terms shall be governed by and interpreted in accordance with
+applicable law, without regard to conflict-of-law rules, to the extent
+permitted by law.
+
+Where applicable law requires otherwise, mandatory local consumer rights
+remain unaffected.
+
+19. CONTACT
+
+Questions regarding these Terms may be submitted through the public
+repository, support channel, or contact method designated by the
+developer.
+
+Users should avoid including unnecessary personal or sensitive
+information in public communications.
+
+20. ENTIRE AGREEMENT
+
+These Terms constitute the entire agreement between the user and the
+developer regarding the use of the Application and supersede prior
+understandings relating to the same subject matter.
+
+END OF TERMS OF SERVICE
